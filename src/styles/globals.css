@@ -1,0 +1,281 @@
+/* ========================================
+   HEARTS AGLOW — Global Styles
+   ======================================== */
+
+/* --- CSS Variables (Design Tokens) --- */
+:root {
+  /* Deep space / shadow */
+  --void: #0a0612;
+  --deep: #1a0f2e;
+  --deep-alt: #12082a;
+  
+  /* The glow spectrum - Turrell-inspired */
+  --turrell-rose: #e8456c;
+  --turrell-magenta: #c44b8c;
+  --turrell-violet: #7b4fa0;
+  --turrell-blue: #4a6fa5;
+  --turrell-teal: #4a9b9b;
+  
+  /* Soft light */
+  --glow: rgba(232, 180, 200, 0.6);
+  --glow-strong: rgba(232, 180, 200, 0.9);
+  --mist: rgba(200, 200, 230, 0.08);
+  --mist-strong: rgba(200, 200, 230, 0.15);
+  
+  /* Text */
+  --text-primary: #f0e8f0;
+  --text-secondary: rgba(240, 232, 240, 0.7);
+  --text-dim: rgba(240, 232, 240, 0.5);
+  
+  /* Typography */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Raleway', -apple-system, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: 4rem;
+  --space-xl: 8rem;
+  
+  /* Transitions */
+  --transition-slow: 0.6s ease;
+  --transition-medium: 0.3s ease;
+  --transition-fast: 0.15s ease;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  background-color: var(--void);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+}
+
+h2 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+h3 {
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+p {
+  max-width: 65ch;
+  margin-bottom: 1em;
+}
+
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--turrell-rose);
+}
+
+/* --- Utility Classes --- */
+.glow-text {
+  text-shadow: 
+    0 0 10px var(--glow),
+    0 0 30px var(--glow),
+    0 0 50px rgba(196, 75, 140, 0.3);
+}
+
+.glow-text-subtle {
+  text-shadow: 
+    0 0 20px rgba(232, 180, 200, 0.3),
+    0 0 40px rgba(196, 75, 140, 0.15);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-dim {
+  color: var(--text-dim);
+}
+
+/* --- Glass Panel Effect --- */
+.glass-panel {
+  background: rgba(20, 10, 40, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 180, 220, 0.1);
+  box-shadow: 
+    0 0 40px rgba(200, 100, 180, 0.05),
+    inset 0 0 30px rgba(255, 255, 255, 0.02);
+}
+
+/* --- Animated Gradient Background --- */
+.gradient-bg {
+  background: linear-gradient(
+    -45deg,
+    var(--void),
+    var(--deep),
+    var(--deep-alt),
+    #1f0a3d,
+    var(--deep),
+    var(--void)
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 25s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* --- Subtle Radial Glow (Turrell/Belson) --- */
+.radial-glow {
+  position: relative;
+}
+
+.radial-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(196, 75, 140, 0.08) 0%,
+    rgba(123, 79, 160, 0.04) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Fade In Animation --- */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 1s ease forwards;
+}
+
+.fade-in-delayed {
+  opacity: 0;
+  animation: fade-in 1s ease forwards;
+  animation-delay: 0.3s;
+}
+
+.fade-in-delayed-2 {
+  opacity: 0;
+  animation: fade-in 1s ease forwards;
+  animation-delay: 0.6s;
+}
+
+.fade-in-delayed-3 {
+  opacity: 0;
+  animation: fade-in 1s ease forwards;
+  animation-delay: 0.9s;
+}
+
+/* --- Breathing/Pulse Animation --- */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* --- Section Base --- */
+.section {
+  min-height: 100vh;
+  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: var(--space-md) var(--space-sm);
+  }
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(196, 75, 140, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 75, 140, 0.5);
+}
+
+/* --- Selection Color --- */
+::selection {
+  background: rgba(196, 75, 140, 0.4);
+  color: var(--text-primary);
+}
