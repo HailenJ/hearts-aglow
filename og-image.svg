@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#020106"/>
+    </radialGradient>
+    <radialGradient id="glow1" cx="30%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="60%" r="40%">
+      <stop offset="0%" style="stop-color:#ff4d6d;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#ff4d6d;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="50%" cy="80%" r="30%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Glows -->
+  <ellipse cx="360" cy="250" rx="400" ry="300" fill="url(#glow1)"/>
+  <ellipse cx="840" cy="380" rx="350" ry="250" fill="url(#glow2)"/>
+  <ellipse cx="600" cy="500" rx="300" ry="200" fill="url(#glow3)"/>
+  
+  <!-- Logo -->
+  <text x="600" y="260" font-family="Georgia, serif" font-size="42" fill="#ff4d6d" text-anchor="middle" style="filter: drop-shadow(0 0 20px rgba(255,77,109,0.5))">✦</text>
+  
+  <!-- Title -->
+  <text x="600" y="340" font-family="Georgia, serif" font-size="72" font-weight="300" fill="white" text-anchor="middle" letter-spacing="4">Hearts Aglow</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="400" font-family="monospace" font-size="16" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="6" text-transform="uppercase">LIGHT, SOUND, AND WHAT HUMS BENEATH</text>
+  
+  <!-- Subtle border -->
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" rx="8"/>
+</svg>
