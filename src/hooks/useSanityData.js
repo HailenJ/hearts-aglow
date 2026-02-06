@@ -17,17 +17,26 @@ export function useSanityData() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    fetchAllContent()
-      .then(sanityData => {
-        if (Object.keys(sanityData).length > 0) {
-          setData(prev => ({ ...prev, ...sanityData }))
-        }
-        setIsLoaded(true)
-      })
-      .catch(err => {
-        console.error('[Sanity] Fetch failed:', err)
-        setIsLoaded(true)
-      })
+    console.log('[Sanity] Starting fetch...')
+    try {
+      const promise = fetchAllContent()
+      console.log('[Sanity] Promise created:', promise)
+      promise
+        .then(sanityData => {
+          console.log('[Sanity] Data received:', sanityData)
+          if (Object.keys(sanityData).length > 0) {
+            setData(prev => ({ ...prev, ...sanityData }))
+          }
+          setIsLoaded(true)
+        })
+        .catch(err => {
+          console.error('[Sanity] Fetch failed:', err)
+          setIsLoaded(true)
+        })
+    } catch (err) {
+      console.error('[Sanity] Sync error:', err)
+      setIsLoaded(true)
+    }
   }, [])
 
   return { data, isLoaded }
