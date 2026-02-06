@@ -9,6 +9,9 @@ const ALL_CONTENT_QUERY = `{
     description,
     "url": link,
     "image": artwork.asset->url,
+    artist,
+    bandcampId,
+    tracks,
     order
   },
   "games": *[_type == "game"] | order(year desc) {

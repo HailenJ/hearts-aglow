@@ -157,7 +157,7 @@ function AboutContent({ aboutParagraphs }) {
   )
 }
 
-function ProjectGrid({ items, emptyTitle, emptyDescription }) {
+function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSelect, onBack }) {
   if (items.length === 0) {
     return (
       <div className="works__section">
@@ -171,16 +171,49 @@ function ProjectGrid({ items, emptyTitle, emptyDescription }) {
     )
   }
 
+  if (selectedItem) {
+    return (
+      <div className="works__detail">
+        <button className="works__back" onClick={onBack}>&larr; Back</button>
+        <div className="works__detail-header">
+          {selectedItem.image && (
+            <div className="works__detail-artwork">
+              <img src={selectedItem.image} alt={selectedItem.title} />
+            </div>
+          )}
+          <div className="works__detail-info">
+            <h2 className="works__detail-title">{selectedItem.title}</h2>
+            <span className="works__detail-meta">
+              {selectedItem.year}
+              {selectedItem.status === 'development' ? ' · In Development' : ''}
+            </span>
+            {selectedItem.url && (
+              <a
+                href={selectedItem.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="works__detail-link"
+              >
+                View Project &rarr;
+              </a>
+            )}
+          </div>
+        </div>
+        {selectedItem.description && (
+          <p className="works__detail-desc">{selectedItem.description}</p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="works__section">
       <div className="works__grid">
         {items.map(item => (
-          <a
+          <button
             key={item.id}
             className="works__item"
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => onSelect(item)}
           >
             {item.image && (
               <div className="works__artwork">
@@ -190,9 +223,8 @@ function ProjectGrid({ items, emptyTitle, emptyDescription }) {
             <div className="works__info">
               <h3 className="works__title">{item.title}</h3>
               <span className="works__meta">{item.year}{item.status === 'development' ? ' · In Development' : ''}</span>
-              {item.description && <p className="works__desc">{item.description}</p>}
             </div>
-          </a>
+          </button>
         ))}
       </div>
     </div>
@@ -306,11 +338,11 @@ function WorksContent({ musicReleases, games, software }) {
       )}
 
       {activeTab === 'games' && (
-        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." />
+        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
       )}
 
       {activeTab === 'software' && (
-        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." />
+        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
       )}
     </div>
   )

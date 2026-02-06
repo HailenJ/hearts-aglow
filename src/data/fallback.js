@@ -79,7 +79,7 @@ export const musicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/exalt',
     image: 'https://f4.bcbits.com/img/a0774289478_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Exalt I', 'Exalt II', 'Exalt III', 'Exalt IV', 'Exalt V', 'Exalt VI', 'Exalt VII', 'Exalt VIII'],
+    tracks: ['julytwentyfirst', 'decelerate', 'en_passant', 'five_am', 'fare', 'exalt', 'meander', 'rmbr'],
     description: `Beat-driven electronic album exploring hip-hop and downtempo territories.`,
     bandcampId: ''
   },
