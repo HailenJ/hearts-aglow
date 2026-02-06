@@ -24,7 +24,8 @@ export function useSanityData() {
         }
         setIsLoaded(true)
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('[Sanity] Fetch failed:', err)
         setIsLoaded(true)
       })
   }, [])
