@@ -129,6 +129,10 @@ export const socialLinks = [
   { name: 'TikTok', url: 'https://tiktok.com/@hearts_aglow', label: '@hearts_aglow' },
 ]
 
+export const games = []
+
+export const software = []
+
 export const heroTitle = 'Hearts Aglow'
 export const heroSubtitle = 'Light, sound, and what hums beneath.'
 

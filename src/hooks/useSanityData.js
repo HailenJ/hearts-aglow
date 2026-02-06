@@ -5,6 +5,8 @@ import * as fallback from '../data/fallback'
 const initialData = {
   musicReleases: fallback.musicReleases,
   socialLinks: fallback.socialLinks,
+  games: fallback.games,
+  software: fallback.software,
   heroTitle: fallback.heroTitle,
   heroSubtitle: fallback.heroSubtitle,
   aboutParagraphs: fallback.aboutParagraphs,

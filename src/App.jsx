@@ -157,10 +157,52 @@ function AboutContent({ aboutParagraphs }) {
   )
 }
 
-function WorksContent({ musicReleases }) {
+function ProjectGrid({ items, emptyTitle, emptyDescription }) {
+  if (items.length === 0) {
+    return (
+      <div className="works__section">
+        <div className="works__empty">
+          <div className="works__empty-icon">&loz;</div>
+          <h3>{emptyTitle}</h3>
+          <p>{emptyDescription}</p>
+          <span className="works__empty-status">Coming Soon</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="works__section">
+      <div className="works__grid">
+        {items.map(item => (
+          <a
+            key={item.id}
+            className="works__item"
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {item.image && (
+              <div className="works__artwork">
+                <img src={item.image} alt={item.title} loading="lazy" />
+              </div>
+            )}
+            <div className="works__info">
+              <h3 className="works__title">{item.title}</h3>
+              <span className="works__meta">{item.year}{item.status === 'development' ? ' · In Development' : ''}</span>
+              {item.description && <p className="works__desc">{item.description}</p>}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function WorksContent({ musicReleases, games, software }) {
   const [activeTab, setActiveTab] = useState('music')
   const [selectedRelease, setSelectedRelease] = useState(null)
-  const tabs = ['music', 'software', 'games']
+  const tabs = ['music', 'games', 'software']
 
   const handleReleaseClick = (release) => {
     setSelectedRelease(release)
@@ -263,26 +305,12 @@ function WorksContent({ musicReleases }) {
         </>
       )}
 
-      {activeTab === 'software' && (
-        <div className="works__section">
-          <div className="works__empty">
-            <div className="works__empty-icon">&loz;</div>
-            <h3>Software</h3>
-            <p>Tools and utilities in development.</p>
-            <span className="works__empty-status">Coming Soon</span>
-          </div>
-        </div>
+      {activeTab === 'games' && (
+        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." />
       )}
 
-      {activeTab === 'games' && (
-        <div className="works__section">
-          <div className="works__empty">
-            <div className="works__empty-icon">&loz;</div>
-            <h3>Games</h3>
-            <p>Interactive experiences in development.</p>
-            <span className="works__empty-status">Coming Soon</span>
-          </div>
-        </div>
+      {activeTab === 'software' && (
+        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." />
       )}
     </div>
   )
@@ -385,7 +413,7 @@ function App() {
 
   const windowContent = {
     about: <AboutContent aboutParagraphs={data.aboutParagraphs} />,
-    works: <WorksContent musicReleases={data.musicReleases} />,
+    works: <WorksContent musicReleases={data.musicReleases} games={data.games} software={data.software} />,
     contact: <ContactContent socialLinks={data.socialLinks} />
   }
 

@@ -8,13 +8,33 @@ const ALL_CONTENT_QUERY = `{
     year,
     description,
     "url": link,
+    "image": artwork.asset->url,
     order
   },
-  "siteSettings": *[_type == "siteSettings"][0] {
-    heroTitle,
-    heroSubtitle,
-    aboutParagraphs[] { text, linkText, linkUrl },
-    socialLinks[] { label, url }
+  "games": *[_type == "game"] | order(year desc) {
+    "id": _id,
+    title,
+    year,
+    description,
+    status,
+    url,
+    "image": artwork.asset->url
+  },
+  "software": *[_type == "software"] | order(year desc) {
+    "id": _id,
+    title,
+    year,
+    description,
+    status,
+    url,
+    "image": artwork.asset->url
+  },
+  "socialLinks": *[_type == "social"] | order(order asc) {
+    "id": _id,
+    name,
+    label,
+    url,
+    order
   }
 }`
 
@@ -27,23 +47,16 @@ export async function fetchAllContent() {
     data.musicReleases = result.musicReleases
   }
 
-  if (result.siteSettings) {
-    const s = result.siteSettings
+  if (result.games?.length) {
+    data.games = result.games
+  }
 
-    if (s.heroTitle) data.heroTitle = s.heroTitle
-    if (s.heroSubtitle) data.heroSubtitle = s.heroSubtitle
+  if (result.software?.length) {
+    data.software = result.software
+  }
 
-    if (s.aboutParagraphs?.length) {
-      data.aboutParagraphs = s.aboutParagraphs
-    }
-
-    if (s.socialLinks?.length) {
-      data.socialLinks = s.socialLinks.map(link => ({
-        name: link.label,
-        url: link.url,
-        label: link.label,
-      }))
-    }
+  if (result.socialLinks?.length) {
+    data.socialLinks = result.socialLinks
   }
 
   return data
