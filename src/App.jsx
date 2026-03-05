@@ -370,12 +370,12 @@ function ContactContent({ socialLinks }) {
   )
 }
 
-function Hero({ hasOpenWindows, heroTitle, heroSubtitle }) {
+function Hero({ hasOpenWindows, heroSubtitle }) {
   if (hasOpenWindows) return null
 
   return (
     <div className="hero">
-      <h1 className="hero__title">{heroTitle}</h1>
+      <img src="/logo.png" alt="Hearts Aglow" className="hero__logo" />
       <p className="hero__tagline">{heroSubtitle}</p>
     </div>
   )
@@ -383,11 +383,7 @@ function Hero({ hasOpenWindows, heroTitle, heroSubtitle }) {
 
 function DesktopBackground() {
   return (
-    <div className="desktop__bg">
-      <div className="desktop__aperture" />
-      <div className="desktop__haze" />
-      <div className="desktop__grain" />
-    </div>
+    <div className="desktop__bg" />
   )
 }
 
@@ -455,7 +451,7 @@ function App() {
       <TitleBar />
 
       <main className="desktop__content">
-        <Hero hasOpenWindows={openWindows.length > 0} heroTitle={data.heroTitle} heroSubtitle={data.heroSubtitle} />
+        <Hero hasOpenWindows={openWindows.length > 0} heroSubtitle={data.heroSubtitle} />
 
         {Object.entries(windowConfigs).map(([id, config]) => (
           <Window
