@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSanityData } from './hooks/useSanityData'
+import Particles from './components/Particles'
 import './styles/globals.css'
 
 const releaseTypes = [
@@ -383,7 +384,19 @@ function Hero({ hasOpenWindows, heroSubtitle }) {
 
 function DesktopBackground() {
   return (
-    <div className="desktop__bg" />
+    <div className="desktop__bg">
+      <Particles
+        particleCount={120}
+        particleSpread={12}
+        speed={0.025}
+        particleColors={['#2a2a2a', '#3a3a3a', '#1a1a1a', '#444444']}
+        moveParticlesOnHover={true}
+        particleHoverFactor={0.5}
+        particleBaseSize={60}
+        sizeRandomness={1.2}
+        cameraDistance={22}
+      />
+    </div>
   )
 }
 
