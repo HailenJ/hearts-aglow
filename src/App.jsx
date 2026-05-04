@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import Particles from './components/Particles'
+import ErrorBoundary from './components/ErrorBoundary'
+import SocialIcon from './components/SocialIcon'
+import * as fallbackData from './data/fallback'
 import './styles/globals.css'
 
 const releaseTypes = [
@@ -8,6 +11,14 @@ const releaseTypes = [
   { key: 'album', label: 'Albums' },
   { key: 'soundtrack', label: 'Soundtracks' },
 ]
+
+const SOCIAL_ORDER = ['email', 'bandcamp', 'bluesky', 'instagram', 'twitter', 'x', 'tiktok']
+const socialRank = (name) => {
+  const key = (name || '').toLowerCase().replace(/[^a-z]/g, '')
+  const i = SOCIAL_ORDER.indexOf(key)
+  return i === -1 ? SOCIAL_ORDER.length : i
+}
+const isPrimary = (name) => /^email$/i.test((name || '').trim())
 
 // ============================================
 // COMPONENTS
@@ -19,14 +30,15 @@ function TitleBar() {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      setTime(now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
+      const formatted = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true
-      }))
+        hour12: true,
+      }).toLowerCase().replace(' ', ' ')
+      setTime(formatted)
     }
     updateTime()
-    const interval = setInterval(updateTime, 1000)
+    const interval = setInterval(updateTime, 30_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -49,16 +61,20 @@ function Dock({ openWindows, onToggleWindow }) {
   ]
 
   return (
-    <nav className="dock">
-      {items.map(item => (
-        <button
-          key={item.id}
-          className={`dock__item ${openWindows.includes(item.id) ? 'dock__item--active' : ''}`}
-          onClick={() => onToggleWindow(item.id)}
-        >
-          {item.label}
-        </button>
-      ))}
+    <nav className="dock" aria-label="Primary">
+      {items.map(item => {
+        const open = openWindows.includes(item.id)
+        return (
+          <button
+            key={item.id}
+            className={`dock__item ${open ? 'dock__item--active' : ''}`}
+            onClick={() => onToggleWindow(item.id)}
+            aria-pressed={open}
+          >
+            <span>{item.label}</span>
+          </button>
+        )
+      })}
     </nav>
   )
 }
@@ -88,8 +104,13 @@ function Window({ title, isOpen, isFocused, onClose, onFocus, defaultPosition, d
 
   const handlePointerMove = (e) => {
     if (!dragState.current.active) return
-    const x = e.clientX - dragState.current.offsetX
-    const y = e.clientY - dragState.current.offsetY
+    const rect = windowRef.current.getBoundingClientRect()
+    const minX = -(rect.width - 120)
+    const maxX = window.innerWidth - 120
+    const minY = 40
+    const maxY = window.innerHeight - 80
+    const x = Math.max(minX, Math.min(maxX, e.clientX - dragState.current.offsetX))
+    const y = Math.max(minY, Math.min(maxY, e.clientY - dragState.current.offsetY))
     windowRef.current.style.left = `${x}px`
     windowRef.current.style.top = `${y}px`
   }
@@ -115,12 +136,19 @@ function Window({ title, isOpen, isFocused, onClose, onFocus, defaultPosition, d
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <span className="window__title">{title}</span>
+        <span className="window__title">
+          <span className="window__dot" aria-hidden="true" />
+          {title}
+        </span>
         <button
           className="window__close"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           aria-label="Close window"
-        >&times;</button>
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </button>
       </header>
       <div className="window__content">
         {children}
@@ -158,6 +186,20 @@ function AboutContent({ aboutParagraphs }) {
   )
 }
 
+function ArtworkPlaceholder({ title }) {
+  const seed = (title || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  const h = (seed * 17) % 360
+  const h2 = (h + 180) % 360
+  return (
+    <div
+      className="works__artwork works__artwork--placeholder"
+      style={{ '--placeholder-h': h, '--placeholder-h2': h2 }}
+    >
+      <span className="works__artwork-glyph">{(title || '·').trim()[0]}</span>
+    </div>
+  )
+}
+
 function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSelect, onBack }) {
   if (items.length === 0) {
     return (
@@ -177,11 +219,18 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
       <div className="works__detail">
         <button className="works__back" onClick={onBack}>&larr; Back</button>
         <div className="works__detail-header">
-          {selectedItem.image && (
-            <div className="works__detail-artwork">
-              <img src={selectedItem.image} alt={selectedItem.title} />
-            </div>
-          )}
+          {selectedItem.image
+            ? (
+              <div className="works__detail-artwork">
+                <img src={selectedItem.image} alt={selectedItem.title} />
+              </div>
+            )
+            : (
+              <div className="works__detail-artwork">
+                <ArtworkPlaceholder title={selectedItem.title} />
+              </div>
+            )
+          }
           <div className="works__detail-info">
             <h2 className="works__detail-title">{selectedItem.title}</h2>
             <span className="works__detail-meta">
@@ -216,11 +265,14 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
             className="works__item"
             onClick={() => onSelect(item)}
           >
-            {item.image && (
-              <div className="works__artwork">
-                <img src={item.image} alt={item.title} loading="lazy" />
-              </div>
-            )}
+            {item.image
+              ? (
+                <div className="works__artwork">
+                  <img src={item.image} alt={item.title} loading="lazy" />
+                </div>
+              )
+              : <ArtworkPlaceholder title={item.title} />
+            }
             <div className="works__info">
               <h3 className="works__title">{item.title}</h3>
               <span className="works__meta">{item.year}{item.status === 'development' ? ' · In Development' : ''}</span>
@@ -300,19 +352,25 @@ function WorksContent({ musicReleases, games, software }) {
               {releaseTypes.map(type => {
                 const releases = musicReleases.filter(r => r.type === type.key)
                 if (releases.length === 0) return null
+                const featuredEnabled = type.key === 'drift' && releases.length > 2
                 return (
                   <div key={type.key} className="works__type-section">
                     <h3 className="works__type-label">{type.label}</h3>
-                    <div className="works__grid">
-                      {releases.map(release => (
+                    <div className={`works__grid ${featuredEnabled ? 'works__grid--featured' : ''}`}>
+                      {releases.map((release, idx) => (
                         <button
                           key={release.id}
-                          className="works__item"
+                          className={`works__item ${featuredEnabled && idx === 0 ? 'works__item--featured' : ''}`}
                           onClick={() => handleReleaseClick(release)}
                         >
-                          <div className="works__artwork">
-                            <img src={release.image} alt={release.title} loading="lazy" />
-                          </div>
+                          {release.image
+                            ? (
+                              <div className="works__artwork">
+                                <img src={release.image} alt={release.title} loading="lazy" />
+                              </div>
+                            )
+                            : <ArtworkPlaceholder title={release.title} />
+                          }
                           <div className="works__info">
                             <h3 className="works__title">{release.title}</h3>
                             <span className="works__meta">{release.year}</span>
@@ -350,12 +408,40 @@ function WorksContent({ musicReleases, games, software }) {
 }
 
 function ContactContent({ socialLinks }) {
+  const seen = new Set(socialLinks.map(l => (l.name || '').toLowerCase().trim()))
+  const filledFromFallback = fallbackData.socialLinks.filter(
+    l => !seen.has((l.name || '').toLowerCase().trim())
+  )
+  const merged = [...socialLinks, ...filledFromFallback].sort(
+    (a, b) => socialRank(a.name) - socialRank(b.name)
+  )
+
+  const primary = merged.find(l => isPrimary(l.name))
+  const secondary = merged.filter(l => !isPrimary(l.name))
+
   return (
     <div className="contact">
+      {primary && (
+        <a
+          className="contact__primary"
+          href={primary.url}
+          target={primary.url.startsWith('mailto') ? undefined : '_blank'}
+          rel={primary.url.startsWith('mailto') ? undefined : 'noopener noreferrer'}
+        >
+          <span className="contact__primary-label">Inquiries &amp; collaboration</span>
+          <span className="contact__primary-value">
+            <SocialIcon name={primary.name} className="contact__icon" />
+            {primary.label}
+          </span>
+        </a>
+      )}
       <ul className="contact__list">
-        {socialLinks.map((link, i) => (
-          <li key={i} className="contact__item">
-            <span className="contact__label">{link.name}</span>
+        {secondary.map((link, i) => (
+          <li key={`${link.name}-${i}`} className="contact__item">
+            <span className="contact__label">
+              <SocialIcon name={link.name} className="contact__icon" />
+              {link.name}
+            </span>
             <a
               href={link.url}
               target={link.url.startsWith('mailto') ? undefined : '_blank'}
@@ -385,17 +471,20 @@ function Hero({ hasOpenWindows, heroSubtitle }) {
 function DesktopBackground() {
   return (
     <div className="desktop__bg">
-      <Particles
-        particleCount={120}
-        particleSpread={12}
-        speed={0.025}
-        particleColors={['#2a2a2a', '#3a3a3a', '#1a1a1a', '#444444']}
-        moveParticlesOnHover={true}
-        particleHoverFactor={0.5}
-        particleBaseSize={60}
-        sizeRandomness={1.2}
-        cameraDistance={22}
-      />
+      <div className="desktop__mesh" aria-hidden="true" />
+      <ErrorBoundary>
+        <Particles
+          particleCount={140}
+          particleSpread={12}
+          speed={0.022}
+          particleColors={['#2a2a2a', '#3a3a3a', '#1a1a1a', '#5a3a2e', '#3d2722', '#42332e']}
+          moveParticlesOnHover={true}
+          particleHoverFactor={0.5}
+          particleBaseSize={60}
+          sizeRandomness={1.2}
+          cameraDistance={22}
+        />
+      </ErrorBoundary>
     </div>
   )
 }
@@ -413,35 +502,36 @@ function App() {
   const windowConfigs = {
     about: {
       title: 'About',
-      position: { top: '15%', left: '10%', width: '420px', height: 'auto' }
+      position: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
     },
     works: {
       title: 'Works',
-      position: { top: '10%', left: '30%', width: '600px', height: '70%' }
+      position: { top: '9%', left: '28%', width: '640px', height: '76%' }
     },
     contact: {
       title: 'Connect',
-      position: { top: '20%', left: '55%', width: '380px', height: 'auto' }
+      position: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
     }
   }
 
   const toggleWindow = (id) => {
-    if (openWindows.includes(id)) {
-      setOpenWindows(openWindows.filter(w => w !== id))
-      if (focusedWindow === id) {
-        setFocusedWindow(openWindows.filter(w => w !== id)[0] || null)
-      }
-    } else {
-      setOpenWindows([...openWindows, id])
-      setFocusedWindow(id)
-    }
+    setOpenWindows(prev => {
+      const isOpen = prev.includes(id)
+      const next = isOpen ? prev.filter(w => w !== id) : [...prev, id]
+      setFocusedWindow(curr => {
+        if (isOpen) return curr === id ? (next[next.length - 1] ?? null) : curr
+        return id
+      })
+      return next
+    })
   }
 
   const closeWindow = (id) => {
-    setOpenWindows(openWindows.filter(w => w !== id))
-    if (focusedWindow === id) {
-      setFocusedWindow(openWindows.filter(w => w !== id)[0] || null)
-    }
+    setOpenWindows(prev => {
+      const next = prev.filter(w => w !== id)
+      setFocusedWindow(curr => (curr === id ? (next[next.length - 1] ?? null) : curr))
+      return next
+    })
   }
 
   const focusWindow = (id) => {

@@ -85,7 +85,13 @@ export default function Particles({
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new Renderer({ dpr: Math.min(window.devicePixelRatio, 2), depth: false, alpha: true });
+    let renderer;
+    try {
+      renderer = new Renderer({ dpr: Math.min(window.devicePixelRatio, 2), depth: false, alpha: true });
+      if (!renderer.gl) throw new Error('No WebGL context');
+    } catch {
+      return;
+    }
     const gl = renderer.gl;
     container.appendChild(gl.canvas);
     gl.clearColor(0, 0, 0, 0);

@@ -122,7 +122,7 @@ export const musicReleases = [
 ]
 
 export const socialLinks = [
-  { name: 'Email', url: 'mailto:Hailen@Hailen.info', label: 'Hailen@Hailen.info' },
+  { name: 'Email', url: 'mailto:hailen@heartsaglow.io', label: 'hailen@heartsaglow.io' },
   { name: 'Bandcamp', url: 'https://hailenjackson.bandcamp.com', label: 'hailenjackson.bandcamp.com' },
   { name: 'Bluesky', url: 'https://bsky.app/profile/heartsaglow.io', label: '@heartsaglow.io' },
   { name: 'Twitter', url: 'https://twitter.com/heartsaglow', label: '@heartsaglow' },
