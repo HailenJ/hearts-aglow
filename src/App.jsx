@@ -85,23 +85,28 @@ function App() {
       setWorksSlug(null)
       return
     }
+    // Below 768px only one window is ever visible. Closing the rest happens
+    // here, in the same dispatch pass that opens the new route, rather than
+    // in openWindow before the hash is even written — that would render an
+    // intermediate `focused: null` state and race the projection effect
+    // against this listener over what the hash should be.
+    if (compact) {
+      openIds(windows).filter(id => id !== windowToOpen).forEach(id => dispatch({ type: 'CLOSE', id }))
+    }
     dispatch({ type: 'OPEN', id: windowToOpen })
     setWorksSlug(slug)
   })
 
   // User-initiated navigation: writes the hash directly (a real assignment,
   // not replaceState) so opening a window or drilling into a release detail
-  // leaves a history entry for the back button to land on.
+  // leaves a history entry for the back button to land on. Reconciling which
+  // windows end up open — including the mobile one-at-a-time rule — is the
+  // hashchange listener's job above; this just requests the route.
   const openWindow = (id) => {
     const isOpen = windows[id].open && !windows[id].minimized
     if (isOpen) {
       dispatch({ type: 'CLOSE', id })
       return
-    }
-    // Below 768px only one window is ever visible — close the rest before
-    // the hashchange listener opens this one, so the sheet metaphor holds.
-    if (compact) {
-      openIds(windows).filter(w => w !== id).forEach(w => dispatch({ type: 'CLOSE', id: w }))
     }
     window.location.hash = buildHash(id, null)
   }

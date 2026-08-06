@@ -1115,62 +1115,16 @@ a:hover {
 .player__close:hover { color: var(--signal); }
 .player__frame { display: block; width: 100%; height: 340px; border: 0; }
 
-/* --- Responsive --- */
-@media (max-width: 768px) {
+/* --- Responsive ---
+   Single mobile breakpoint. Below 768px the desktop metaphor becomes
+   one-app-at-a-time: windows are full-bleed sheets, the dock is a fixed
+   bottom bar. Sheet entry animates only transform/opacity — never
+   width/height/inset — so it stays off the layout thread. */
+@media (max-width: 767px) {
   .titlebar__time {
     display: none;
   }
 
-  .dock {
-    bottom: var(--s-4);
-  }
-
-  .dock__item {
-    padding: var(--s-2) var(--s-4);
-  }
-
-  .window {
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    max-width: none !important;
-    top: 50px !important;
-    max-height: calc(100vh - 130px) !important;
-  }
-
-  .window__body {
-    padding: var(--s-5);
-  }
-
-  .works__grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--s-2);
-  }
-
-  .works__grid--featured {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .works__item--featured {
-    grid-column: span 2;
-    grid-row: span 1;
-  }
-
-  .works__detail-header {
-    flex-direction: column;
-  }
-
-  .works__detail-artwork {
-    width: 100px;
-    height: 100px;
-  }
-}
-
-/* Below 768px the desktop metaphor becomes one-app-at-a-time: windows are
-   full-bleed sheets, the dock is a fixed bottom bar. Sheet entry animates
-   only transform/opacity — never width/height/inset — so it stays off the
-   layout thread. */
-@media (max-width: 767px) {
   .window {
     position: fixed;
     inset: 34px 0 62px 0 !important;
@@ -1216,6 +1170,29 @@ a:hover {
 
   .player { left: var(--s-3); right: var(--s-3); bottom: 70px; width: auto; }
   .hero__logo { width: 74vw; }
+
+  .works__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-2);
+  }
+
+  .works__grid--featured {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .works__item--featured {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .works__detail-header {
+    flex-direction: column;
+  }
+
+  .works__detail-artwork {
+    width: 100px;
+    height: 100px;
+  }
 }
 
 /* ========================================
