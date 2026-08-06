@@ -57,6 +57,10 @@ function App() {
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
+  // Only ids with registered content actually mount a Window — `game` doesn't
+  // yet, so it must not count toward "something is covering the hero."
+  const renderableOpen = openIds(windows).filter(id => windowConfigs[id])
+
   return (
     <div className="desktop">
       <DesktopBackground />
@@ -64,7 +68,7 @@ function App() {
 
       <main className="desktop__content">
         <Hero
-          visible={openIds(windows).length === 0}
+          visible={renderableOpen.length === 0}
           heroSubtitle={data.heroSubtitle}
           game={data.game}
           onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}

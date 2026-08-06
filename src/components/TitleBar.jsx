@@ -21,7 +21,7 @@ function TitleBar({ nowPlaying }) {
   return (
     <header className="titlebar">
       <div className="titlebar__brand">
-        <span className="titlebar__dot" />
+        <span className={`titlebar__dot ${nowPlaying ? 'titlebar__dot--live' : ''}`} />
         <span>heartsaglow</span>
       </div>
       {nowPlaying && <span className="titlebar__np">♪ {nowPlaying}</span>}

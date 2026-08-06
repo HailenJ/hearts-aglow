@@ -14,12 +14,20 @@
   /* Signal — focus, active state, live data. Nowhere else. */
   --signal: #dff4ff;
 
-  /* Text */
-  --text: rgba(255, 255, 255, 0.92);
-  /* 0.62 measured ~3.2:1 against the bloom's brightest phase behind
-     .hero__tagline; raised to clear 4.5:1 there (see task-8-report.md). */
-  --text-dim: rgba(255, 255, 255, 0.88);
-  --text-faint: rgba(255, 255, 255, 0.42);
+  /* Glow — bloom/signal colours at the alpha the box-shadows need. Same
+     source colours as above; kept as separate tokens so a shadow's alpha
+     doesn't have to be re-derived by eye at every call site. */
+  --glow-warm: rgba(196, 138, 255, 0.4);
+  --glow-warm-soft: rgba(196, 138, 255, 0.35);
+  --glow-signal: rgba(223, 244, 255, 0.4);
+
+  /* Text — contrast checked against the field's true peak brightness behind
+     the hero (~rgb(90,64,103), see task-8-report.md fix-report for the
+     arithmetic). Hierarchy here is carried mainly by size/weight/letter-
+     spacing, not by these alpha steps — the steps stay small on purpose. */
+  --text: rgba(255, 255, 255, 0.95);
+  --text-dim: rgba(255, 255, 255, 0.80);
+  --text-faint: rgba(255, 255, 255, 0.66);
 
   /* Chrome */
   --hairline: rgba(255, 255, 255, 0.11);
@@ -179,6 +187,11 @@ a:hover {
 .titlebar__brand { display: flex; align-items: center; gap: var(--s-2); }
 .titlebar__dot {
   width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-faint);
+}
+/* Signal is reserved for live data — the dot only earns it while something is
+   actually playing, matching the shape's promise of a live indicator. */
+.titlebar__dot--live {
   background: var(--signal);
   box-shadow: 0 0 10px var(--signal);
 }
@@ -225,7 +238,7 @@ a:hover {
 }
 .hero__cta:hover {
   border-color: var(--hairline-focus);
-  box-shadow: 0 0 40px -8px rgba(196, 138, 255, 0.4);
+  box-shadow: 0 0 40px -8px var(--glow-warm);
 }
 .hero__cta-name {
   font-family: var(--font-display);
@@ -267,7 +280,7 @@ a:hover {
 .dock__item--active {
   color: var(--signal);
   border-color: var(--hairline-focus);
-  box-shadow: 0 0 24px -6px rgba(223, 244, 255, 0.4);
+  box-shadow: 0 0 24px -6px var(--glow-signal);
 }
 .dock__item--min { color: var(--text-faint); border-style: dashed; }
 
@@ -293,7 +306,7 @@ a:hover {
 .window--focused {
   border-color: var(--hairline-focus);
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55),
-              0 0 60px -12px rgba(196, 138, 255, 0.35);
+              0 0 60px -12px var(--glow-warm-soft);
 }
 
 @keyframes window-open {
