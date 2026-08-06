@@ -7,6 +7,7 @@ import TitleBar from './components/TitleBar'
 import Player from './components/Player'
 import Dock from './components/Dock'
 import Hero from './components/Hero'
+import Boot from './components/Boot'
 import About from './windows/About'
 import Works from './windows/Works'
 import Game from './windows/Game'
@@ -38,6 +39,7 @@ function App() {
   const [windows, dispatch] = useReducer(windowsReducer, initialWindows)
   const focused = focusedId(windows)
   const [playing, setPlaying] = useState(null)
+  const [booted, setBooted] = useState(false)
 
   const windowConfigs = {
     about: {
@@ -70,12 +72,13 @@ function App() {
 
   return (
     <div className="desktop">
+      <Boot onDone={() => setBooted(true)} />
       <DesktopBackground />
       <TitleBar nowPlaying={playing?.title ?? null} />
 
       <main className="desktop__content">
         <Hero
-          visible={renderableOpen.length === 0}
+          visible={booted && renderableOpen.length === 0}
           heroSubtitle={data.heroSubtitle}
           game={data.game}
           onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}
