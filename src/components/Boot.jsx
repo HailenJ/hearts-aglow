@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 const LINES = [
   'aglow.os',
@@ -37,17 +37,36 @@ export default function Boot({ onDone }) {
   const [shown, setShown] = useState(skip ? LINES.length : 0)
   const [leaving, setLeaving] = useState(false)
 
+  // onDone is whatever identity the caller passes on a given render (App.jsx
+  // passes an inline arrow, so it's a new function every render). Reading it
+  // through a ref kept current by a layout effect means our own effect below
+  // depends only on `skip` — it never tears down and reschedules every timer
+  // just because the parent re-rendered mid-boot (e.g. a Sanity fetch
+  // resolving). Pattern matches src/hooks/useHashRoute.js.
+  const doneRef = useRef(onDone)
+  useLayoutEffect(() => { doneRef.current = onDone })
+
+  // Guards onDone against firing more than once per mount (e.g. the
+  // completion timer and a skip landing on the same tick).
+  const firedRef = useRef(false)
+
   useEffect(() => {
-    if (skip) { onDone(); return }
+    const fire = () => {
+      if (firedRef.current) return
+      firedRef.current = true
+      doneRef.current()
+    }
+
+    if (skip) { fire(); return }
 
     const timers = LINES.map((_, i) => setTimeout(() => setShown(i + 1), 380 + i * 420))
     const out = setTimeout(() => setLeaving(true), 380 + LINES.length * 420 + 300)
-    const done = setTimeout(() => { markBooted(); onDone() }, 380 + LINES.length * 420 + 700)
+    const done = setTimeout(() => { markBooted(); fire() }, 380 + LINES.length * 420 + 700)
 
     const bail = () => {
       timers.forEach(clearTimeout); clearTimeout(out); clearTimeout(done)
       markBooted()
-      onDone()
+      fire()
     }
     window.addEventListener('keydown', bail)
     window.addEventListener('pointerdown', bail)
@@ -57,7 +76,7 @@ export default function Boot({ onDone }) {
       window.removeEventListener('keydown', bail)
       window.removeEventListener('pointerdown', bail)
     }
-  }, [skip, onDone])
+  }, [skip])
 
   if (skip) return null
 
