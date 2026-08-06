@@ -1,4 +1,6 @@
-export const musicReleases = [
+import { slugify } from '../lib/route.js'
+
+const rawMusicReleases = [
   {
     id: 1,
     title: 'Drift 6',
@@ -121,6 +123,11 @@ export const musicReleases = [
   },
 ]
 
+// `slugify` returns '' for a title made entirely of punctuation, and an empty
+// slug silently degrades a deep link to the bare window route. `id` is always
+// present and unique, so it is the fallback that keeps every release linkable.
+export const musicReleases = rawMusicReleases.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
+
 export const socialLinks = [
   { name: 'Email', url: 'mailto:hailen@heartsaglow.io', label: 'hailen@heartsaglow.io' },
   { name: 'Bandcamp', url: 'https://hailenjackson.bandcamp.com', label: 'hailenjackson.bandcamp.com' },
@@ -129,9 +136,23 @@ export const socialLinks = [
   { name: 'TikTok', url: 'https://tiktok.com/@hearts_aglow', label: '@hearts_aglow' },
 ]
 
-export const games = []
+const rawGames = []
+export const games = rawGames.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
 
-export const software = []
+const rawSoftware = []
+export const software = rawSoftware.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
+
+// Real product truth: one title, in development, publicly teased, not yet
+// named in site data. Every field stays empty until the real value arrives —
+// a placeholder title here would ship as a claim.
+export const game = {
+  title: '',
+  year: '',
+  status: 'in development',
+  logline: '',
+  keyArt: '',
+  storeUrl: '',
+}
 
 export const heroTitle = 'Hearts Aglow'
 export const heroSubtitle = 'Light, sound, and what hums beneath.'

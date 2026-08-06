@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchAllContent } from '../lib/queries'
+import { slugify } from '../lib/route'
 import * as fallback from '../data/fallback'
 
 const initialData = {
@@ -7,9 +8,27 @@ const initialData = {
   socialLinks: fallback.socialLinks,
   games: fallback.games,
   software: fallback.software,
+  game: fallback.game,
   heroTitle: fallback.heroTitle,
   heroSubtitle: fallback.heroSubtitle,
   aboutParagraphs: fallback.aboutParagraphs,
+}
+
+const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug || slugify(item.title) || String(item.id) }))
+
+// The featured game is simply the newest one. Sanity's `game` type already
+// carries every field the Game window needs, so there is nothing to add there.
+const featured = (games) => {
+  const g = games?.[0]
+  if (!g) return fallback.game
+  return {
+    title: g.title ?? '',
+    year: g.year ?? '',
+    status: g.status ?? 'in development',
+    logline: g.description ?? '',
+    keyArt: g.image ?? '',
+    storeUrl: g.url ?? '',
+  }
 }
 
 export function useSanityData() {
@@ -17,26 +36,19 @@ export function useSanityData() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    console.log('[Sanity] Starting fetch...')
-    try {
-      const promise = fetchAllContent()
-      console.log('[Sanity] Promise created:', promise)
-      promise
-        .then(sanityData => {
-          console.log('[Sanity] Data received:', sanityData)
-          if (Object.keys(sanityData).length > 0) {
-            setData(prev => ({ ...prev, ...sanityData }))
-          }
-          setIsLoaded(true)
-        })
-        .catch(err => {
-          console.error('[Sanity] Fetch failed:', err)
-          setIsLoaded(true)
-        })
-    } catch (err) {
-      console.error('[Sanity] Sync error:', err)
-      setIsLoaded(true)
-    }
+    let live = true
+    fetchAllContent()
+      .then(sanityData => {
+        if (!live || !Object.keys(sanityData).length) return
+        const next = { ...sanityData }
+        if (next.musicReleases) next.musicReleases = withSlugs(next.musicReleases)
+        if (next.games) { next.games = withSlugs(next.games); next.game = featured(next.games) }
+        if (next.software) next.software = withSlugs(next.software)
+        setData(prev => ({ ...prev, ...next }))
+      })
+      .catch(err => console.error('[Sanity] fetch failed:', err))
+      .finally(() => { if (live) setIsLoaded(true) })
+    return () => { live = false }
   }, [])
 
   return { data, isLoaded }
