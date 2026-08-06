@@ -1,34 +1,42 @@
 import { useSyncExternalStore } from 'react'
 
-// One MediaQueryList per query string, shared across every call site/render.
-// Without this, `subscribe` below would get a new closure (over a fresh
-// `matchMedia()` call) on every render, and useSyncExternalStore would tear
-// down and re-add the change listener each time instead of subscribing once.
+// One MediaQueryList per query string, shared across every call site/render,
+// with the subscribe/getSnapshot closures cached alongside it. Without this,
+// each render would hand useSyncExternalStore a fresh `subscribe` function
+// (a new closure over a fresh `matchMedia()` call), and it would tear down
+// and re-add the change listener every render instead of subscribing once.
 const mqls = new Map()
 function getMql(query) {
   if (typeof window === 'undefined') return null
-  let mql = mqls.get(query)
-  if (!mql) {
-    mql = window.matchMedia(query)
-    mqls.set(query, mql)
+  let entry = mqls.get(query)
+  if (!entry) {
+    const mql = window.matchMedia(query)
+    entry = {
+      mql,
+      subscribe: (cb) => {
+        mql.addEventListener('change', cb)
+        return () => mql.removeEventListener('change', cb)
+      },
+      getSnapshot: () => mql.matches,
+    }
+    mqls.set(query, entry)
   }
-  return mql
+  return entry
 }
+
+const noopSubscribe = () => () => {}
+const getServerSnapshot = () => false
 
 // A bare `matchMedia(q).matches` read during render is stale — nothing
 // re-renders when the viewport crosses the breakpoint, so rotating a phone
 // or dragging a desktop window across it would leave the wrong affordances
 // mounted. Subscribe via useSyncExternalStore instead.
 export function useMediaQuery(query) {
-  const mql = getMql(query)
+  const entry = getMql(query)
   return useSyncExternalStore(
-    (cb) => {
-      if (!mql) return () => {}
-      mql.addEventListener('change', cb)
-      return () => mql.removeEventListener('change', cb)
-    },
-    () => (mql ? mql.matches : false),
-    () => false,
+    entry ? entry.subscribe : noopSubscribe,
+    entry ? entry.getSnapshot : getServerSnapshot,
+    getServerSnapshot,
   )
 }
 

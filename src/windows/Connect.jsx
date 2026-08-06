@@ -10,13 +10,11 @@ const socialRank = (name) => {
 const isPrimary = (name) => /^email$/i.test((name || '').trim())
 
 function Connect({ socialLinks }) {
-  const seen = new Set(socialLinks.map(l => (l.name || '').toLowerCase().trim()))
-  const filledFromFallback = fallbackData.socialLinks.filter(
-    l => !seen.has((l.name || '').toLowerCase().trim())
-  )
-  const merged = [...socialLinks, ...filledFromFallback].sort(
-    (a, b) => socialRank(a.name) - socialRank(b.name)
-  )
+  // Sanity, when it returns anything at all, is the complete list — a link
+  // deleted there must disappear from the live site, not get backfilled from
+  // the local fallback. Only fall back wholesale when Sanity has nothing.
+  const links = socialLinks.length > 0 ? socialLinks : fallbackData.socialLinks
+  const merged = [...links].sort((a, b) => socialRank(a.name) - socialRank(b.name))
 
   const primary = merged.find(l => isPrimary(l.name))
   const secondary = merged.filter(l => !isPrimary(l.name))

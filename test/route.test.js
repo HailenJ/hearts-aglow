@@ -91,10 +91,10 @@ test('resolveRoute resolves a software detail route to the software tab, not mus
   )
 })
 
-test('resolveRoute resolves a games detail route to the games tab', () => {
+test('resolveRoute does not resolve a games slug — games has its own window now, not a Works tab', () => {
   assert.deepEqual(
     resolveRoute({ id: 'works', detail: 'orbit' }, collections),
-    { windowToOpen: 'works', slug: 'orbit', activeTab: 'games' }
+    { windowToOpen: 'works', slug: null, activeTab: null }
   )
 })
 

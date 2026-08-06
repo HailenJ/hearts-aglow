@@ -106,12 +106,6 @@ export default function LightField() {
     resize()
     window.addEventListener('resize', resize)
 
-    const onMotionChange = () => {
-      program.uniforms.uMotion.value = reduced.matches ? 0 : 1
-      renderer.render({ scene: mesh })
-    }
-    reduced.addEventListener('change', onMotionChange)
-
     let raf = 0
     const start = performance.now()
     const loop = () => {
@@ -119,6 +113,19 @@ export default function LightField() {
       program.uniforms.uTime.value = (performance.now() - start) / 1000
       renderer.render({ scene: mesh })
     }
+
+    const onMotionChange = () => {
+      const reduce = reduced.matches
+      program.uniforms.uMotion.value = reduce ? 0 : 1
+      if (reduce) {
+        cancelAnimationFrame(raf)
+        raf = 0
+        renderer.render({ scene: mesh })
+      } else if (!raf) {
+        loop()
+      }
+    }
+    reduced.addEventListener('change', onMotionChange)
 
     if (reduced.matches) {
       renderer.render({ scene: mesh })

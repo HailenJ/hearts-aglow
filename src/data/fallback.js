@@ -154,7 +154,6 @@ export const game = {
   storeUrl: '',
 }
 
-export const heroTitle = 'Hearts Aglow'
 export const heroSubtitle = 'Light, sound, and what hums beneath.'
 
 export const aboutParagraphs = [

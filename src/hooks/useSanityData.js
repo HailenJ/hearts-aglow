@@ -9,7 +9,6 @@ const initialData = {
   games: fallback.games,
   software: fallback.software,
   game: fallback.game,
-  heroTitle: fallback.heroTitle,
   heroSubtitle: fallback.heroSubtitle,
   aboutParagraphs: fallback.aboutParagraphs,
 }

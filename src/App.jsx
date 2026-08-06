@@ -54,9 +54,15 @@ function App() {
   const compact = useMediaQuery(COMPACT)
   const [playing, setPlaying] = useState(null)
   const [booted, setBooted] = useState(false)
-  const [worksSlug, setWorksSlug] = useState(
-    () => resolveRoute(parseHash(window.location.hash), data).slug
-  )
+  // The raw detail segment from the hash, not a record resolved against
+  // `data` — at mount `data` is still the local fallback, and Sanity hasn't
+  // loaded yet, so resolving eagerly here would null out any slug that only
+  // exists in Sanity. Works re-resolves this string against current `data`
+  // at render time, so it naturally picks up the match once Sanity arrives.
+  const [worksSlug, setWorksSlug] = useState(() => {
+    const route = parseHash(window.location.hash)
+    return route && route.id === 'works' ? route.detail : null
+  })
 
   // Window state is the single source of truth for what is open — the hash
   // can only ever hold one route, but several windows can be open at once,
@@ -79,7 +85,11 @@ function App() {
   // ignored — otherwise back-ing all the way out leaves a window open under
   // a blank URL.
   useHashRoute((route) => {
-    const { windowToOpen, slug } = resolveRoute(route, data)
+    // windowToOpen depends only on the route's id/detail presence, not on
+    // whether the detail matches anything in `data` — so it's safe to read
+    // here even before Sanity has loaded. The detail string itself is
+    // stashed raw (see worksSlug above) rather than resolved.
+    const { windowToOpen } = resolveRoute(route, data)
     if (!windowToOpen) {
       openIds(windows).forEach(id => dispatch({ type: 'CLOSE', id }))
       setWorksSlug(null)
@@ -94,7 +104,10 @@ function App() {
       openIds(windows).filter(id => id !== windowToOpen).forEach(id => dispatch({ type: 'CLOSE', id }))
     }
     dispatch({ type: 'OPEN', id: windowToOpen })
-    setWorksSlug(slug)
+    // Only the works window carries a detail slug — opening any other
+    // window (e.g. About) must not clobber whatever Works detail was
+    // already selected underneath it.
+    if (windowToOpen === 'works') setWorksSlug(route.detail)
   })
 
   // User-initiated navigation: writes the hash directly (a real assignment,
@@ -104,8 +117,12 @@ function App() {
   // hashchange listener's job above; this just requests the route.
   const openWindow = (id) => {
     const isOpen = windows[id].open && !windows[id].minimized
-    if (isOpen) {
+    if (isOpen && focused === id) {
       dispatch({ type: 'CLOSE', id })
+      return
+    }
+    if (isOpen) {
+      dispatch({ type: 'FOCUS', id })
       return
     }
     window.location.hash = buildHash(id, null)
@@ -137,7 +154,7 @@ function App() {
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
+    works: <Works musicReleases={data.musicReleases} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
     game: <Game game={data.game} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }

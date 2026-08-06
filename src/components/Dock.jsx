@@ -11,6 +11,7 @@ export default function Dock({ windows, onToggle }) {
         return (
           <button
             key={id}
+            id={`dock-${id}`}
             className={`dock__item ${active ? 'dock__item--active' : ''} ${w.minimized ? 'dock__item--min' : ''}`}
             onClick={() => onToggle(id)}
             aria-pressed={w.open}

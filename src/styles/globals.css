@@ -294,8 +294,7 @@ a:hover {
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   transition: border-color var(--dur-fast) var(--ease-out),
-              box-shadow var(--dur-mid) var(--ease-out),
-              inset var(--dur-slow) var(--ease-out);
+              box-shadow var(--dur-mid) var(--ease-out);
   animation: window-open var(--dur-mid) var(--ease-out);
 }
 

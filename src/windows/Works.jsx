@@ -105,9 +105,9 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   )
 }
 
-function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect }) {
+function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
   const [manualTab, setManualTab] = useState('music')
-  const tabs = ['music', 'games', 'software']
+  const tabs = ['music', 'software']
 
   // The tab follows a deep-linked slug (so a software link doesn't land on
   // the music tab rendering music-only fields); with no slug selected, the
@@ -115,10 +115,10 @@ function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect 
   // turn a hash into a window + slug, reused here to turn a slug into a tab.
   const resolved = resolveRoute(
     selectedSlug ? { id: 'works', detail: selectedSlug } : null,
-    { musicReleases, games, software }
+    { musicReleases, software }
   )
   const activeTab = resolved.activeTab ?? manualTab
-  const collectionsByTab = { music: musicReleases, games, software }
+  const collectionsByTab = { music: musicReleases, software }
   const selectedRelease = resolved.slug
     ? collectionsByTab[resolved.activeTab].find(r => r.slug === resolved.slug) ?? null
     : null
@@ -144,19 +144,24 @@ function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect 
               <button className="works__back" onClick={() => onSelect(null)}>&larr; Back</button>
               <div className="works__detail-header">
                 <div className="works__detail-artwork">
-                  <img src={selectedRelease.image} alt={selectedRelease.title} />
+                  {selectedRelease.image
+                    ? <img src={selectedRelease.image} alt={selectedRelease.title} />
+                    : <ArtworkPlaceholder title={selectedRelease.title} />
+                  }
                 </div>
                 <div className="works__detail-info">
                   <h2 className="works__detail-title">{selectedRelease.title}</h2>
                   <span className="works__detail-meta">{selectedRelease.year} &middot; {selectedRelease.artist}</span>
-                  <a
-                    href={selectedRelease.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="works__detail-link"
-                  >
-                    Listen on Bandcamp &rarr;
-                  </a>
+                  {selectedRelease.url && (
+                    <a
+                      href={selectedRelease.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="works__detail-link"
+                    >
+                      Listen on Bandcamp &rarr;
+                    </a>
+                  )}
                   {selectedRelease.bandcampId
                     ? <button className="works__play" onClick={() => onPlay(selectedRelease)}>▶ Play here</button>
                     : null}
@@ -223,10 +228,6 @@ function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect 
             </>
           )}
         </>
-      )}
-
-      {activeTab === 'games' && (
-        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." selectedItem={selectedRelease} onSelect={(item) => onSelect(item.slug)} onBack={() => onSelect(null)} />
       )}
 
       {activeTab === 'software' && (

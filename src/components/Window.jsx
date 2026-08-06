@@ -13,12 +13,21 @@ export default function Window({
   const drag = useRef(null)
 
   const opened = state.open && !state.minimized
+  const wasOpened = useRef(false)
   useEffect(() => {
     // Move focus into a newly-opened window so keyboard users land inside it.
     // Deliberately no trap: Tab must be able to leave for the dock and the
-    // other windows, exactly as a real desktop behaves.
-    if (opened) winRef.current?.focus()
-  }, [opened])
+    // other windows, exactly as a real desktop behaves. On close, return
+    // focus to the dock button that opened it, rather than dropping it on
+    // <body> and losing the keyboard user's place.
+    if (opened) {
+      winRef.current?.focus()
+      wasOpened.current = true
+    } else if (wasOpened.current) {
+      wasOpened.current = false
+      document.getElementById(`dock-${id}`)?.focus()
+    }
+  }, [opened, id])
 
   if (!state.open || state.minimized) return null
 
@@ -67,7 +76,7 @@ export default function Window({
   return (
     <section
       ref={winRef}
-      className={`window ${isFocused ? 'window--focused' : ''} ${state.maximized ? 'window--max' : ''}`}
+      className={`window ${isFocused ? 'window--focused' : ''}`}
       style={{ ...style, zIndex: 10 + state.z }}
       aria-label={title}
       tabIndex={-1}

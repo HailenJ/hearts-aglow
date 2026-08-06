@@ -31,12 +31,12 @@ export function buildHash(id, detail) {
 // selection. Kept collection-agnostic about *which* window carries detail
 // slugs today (only 'works' does) so this stays a plain lookup, not a
 // hardcoded branch.
-export function resolveRoute(route, { musicReleases = [], games = [], software = [] } = {}) {
+export function resolveRoute(route, { musicReleases = [], software = [] } = {}) {
   if (!route) return { windowToOpen: null, slug: null, activeTab: null }
   if (route.id !== 'works' || !route.detail) {
     return { windowToOpen: route.id, slug: null, activeTab: null }
   }
-  const byTab = { music: musicReleases, games, software }
+  const byTab = { music: musicReleases, software }
   const activeTab = Object.keys(byTab).find(tab => byTab[tab].some(item => item.slug === route.detail)) ?? null
   return activeTab
     ? { windowToOpen: 'works', slug: route.detail, activeTab }
