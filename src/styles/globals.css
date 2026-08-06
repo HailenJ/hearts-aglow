@@ -1166,6 +1166,58 @@ a:hover {
   }
 }
 
+/* Below 768px the desktop metaphor becomes one-app-at-a-time: windows are
+   full-bleed sheets, the dock is a fixed bottom bar. Sheet entry animates
+   only transform/opacity — never width/height/inset — so it stays off the
+   layout thread. */
+@media (max-width: 767px) {
+  .window {
+    position: fixed;
+    inset: 34px 0 62px 0 !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    animation: sheet-up var(--dur-mid) var(--ease-out);
+  }
+  @keyframes sheet-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .window__bar { cursor: default; }
+  .window__body { padding: var(--s-4); }
+
+  .dock {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    justify-content: space-around;
+    padding: var(--s-2) var(--s-2) calc(var(--s-2) + env(safe-area-inset-bottom));
+    background: rgba(8, 7, 11, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--hairline);
+  }
+  .dock__item {
+    flex: 1;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-2) var(--s-1);
+    text-align: center;
+    border: 0;
+    background: transparent;
+  }
+  .dock__item--active { box-shadow: none; }
+
+  .player { left: var(--s-3); right: var(--s-3); bottom: 70px; width: auto; }
+  .hero__logo { width: 74vw; }
+}
+
 /* ========================================
    BOOT SEQUENCE
    ======================================== */

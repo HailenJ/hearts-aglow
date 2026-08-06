@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useMediaQuery, COMPACT } from '../hooks/useMediaQuery'
 
 const MIN_W = 320
 const MIN_H = 240
@@ -7,6 +8,7 @@ export default function Window({
   id, title, state, isFocused, defaultGeom,
   onFocus, onClose, onMinimize, onMaximize, onMove, onResize, children,
 }) {
+  const compact = useMediaQuery(COMPACT)
   const winRef = useRef(null)
   const drag = useRef(null)
 
@@ -74,19 +76,23 @@ export default function Window({
     >
       <header
         className="window__bar"
-        onPointerDown={beginDrag('move')}
-        onPointerMove={move}
-        onPointerUp={end}
-        onPointerCancel={end}
+        onPointerDown={compact ? onFocus : beginDrag('move')}
+        onPointerMove={compact ? undefined : move}
+        onPointerUp={compact ? undefined : end}
+        onPointerCancel={compact ? undefined : end}
       >
         <h2 className="window__title">{title}</h2>
         <div className="window__btns">
-          <button className="window__btn" onClick={onMinimize} aria-label={`Minimize ${title}`} title="Minimize">
-            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-          </button>
-          <button className="window__btn" onClick={onMaximize} aria-label={`${state.maximized ? 'Restore' : 'Maximize'} ${title}`} aria-pressed={state.maximized} title="Maximize">
-            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="1.2"/></svg>
-          </button>
+          {!compact && (
+            <button className="window__btn" onClick={onMinimize} aria-label={`Minimize ${title}`} title="Minimize">
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            </button>
+          )}
+          {!compact && (
+            <button className="window__btn" onClick={onMaximize} aria-label={`${state.maximized ? 'Restore' : 'Maximize'} ${title}`} aria-pressed={state.maximized} title="Maximize">
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" fill="none" stroke="currentColor" strokeWidth="1.2"/></svg>
+            </button>
+          )}
           <button className="window__btn" onClick={onClose} aria-label={`Close ${title}`} title="Close">
             <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 8 8M8 2 2 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
           </button>
@@ -95,7 +101,7 @@ export default function Window({
 
       <div className="window__body" id={`window-${id}`}>{children}</div>
 
-      {!state.maximized && (
+      {!compact && !state.maximized && (
         <div
           className="window__grip"
           role="separator"

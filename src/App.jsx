@@ -1,6 +1,7 @@
 import { useReducer, useState, useEffect } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import { useHashRoute } from './hooks/useHashRoute'
+import { useMediaQuery, COMPACT } from './hooks/useMediaQuery'
 import { buildHash, resolveRoute, parseHash } from './lib/route'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -50,6 +51,7 @@ function App() {
     return windowToOpen ? windowsReducer(blank, { type: 'OPEN', id: windowToOpen }) : blank
   })
   const focused = focusedId(windows)
+  const compact = useMediaQuery(COMPACT)
   const [playing, setPlaying] = useState(null)
   const [booted, setBooted] = useState(false)
   const [worksSlug, setWorksSlug] = useState(
@@ -94,9 +96,14 @@ function App() {
     const isOpen = windows[id].open && !windows[id].minimized
     if (isOpen) {
       dispatch({ type: 'CLOSE', id })
-    } else {
-      window.location.hash = buildHash(id, null)
+      return
     }
+    // Below 768px only one window is ever visible — close the rest before
+    // the hashchange listener opens this one, so the sheet metaphor holds.
+    if (compact) {
+      openIds(windows).filter(w => w !== id).forEach(w => dispatch({ type: 'CLOSE', id: w }))
+    }
+    window.location.hash = buildHash(id, null)
   }
 
   const selectRelease = (slug) => {
