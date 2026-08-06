@@ -114,10 +114,10 @@ html, body, #root {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-weight: 300;
   font-size: 16px;
-  background: var(--bg);
+  background: var(--void);
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -125,7 +125,7 @@ body {
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-weight: 400;
   line-height: 1.2;
 }
@@ -136,8 +136,8 @@ p:last-child { margin-bottom: 0; }
 a {
   color: var(--text);
   text-decoration: none;
-  border-bottom: 1px solid var(--border);
-  transition: border-color var(--transition);
+  border-bottom: 1px solid var(--hairline);
+  transition: border-color var(--dur-mid) var(--ease-out);
 }
 
 a:hover {
@@ -376,9 +376,11 @@ a:hover {
   background: linear-gradient(135deg, transparent 50%, var(--hairline) 50%, var(--hairline) 62%, transparent 62%);
 }
 
-/* --- About --- */
+/* --- About ---
+   .about__lead is prose (a <p>, not a title/label/tab), so it takes the
+   body voice even though it reads as a stylized lead-in. */
 .about__lead {
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: 2rem;
   font-weight: 300;
   font-style: italic;
@@ -397,13 +399,13 @@ a:hover {
   top: -0.6em;
   width: 28px;
   height: 1px;
-  background: var(--warm);
+  background: var(--bloom-warm);
   opacity: 0.6;
 }
 
 .about__text {
   font-size: 0.92rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   max-width: 48ch;
   line-height: 1.7;
 }
@@ -414,8 +416,8 @@ a:hover {
 }
 
 .about__text a:hover {
-  color: var(--warm);
-  border-bottom-color: var(--warm);
+  color: var(--bloom-warm);
+  border-bottom-color: var(--bloom-warm);
 }
 
 /* --- Works --- */
@@ -423,29 +425,34 @@ a:hover {
   display: flex;
   gap: var(--s-5);
   margin-bottom: var(--s-6);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--hairline);
 }
 
+/* Tab label — display voice. Active state is signal, matching
+   .dock__item--active; the resting/hover steps mirror that same
+   dim -> text -> signal ladder. */
 .works__tab {
   position: relative;
-  padding: var(--space-sm) 0 var(--space-md);
+  padding: var(--s-2) 0 var(--s-4);
   background: transparent;
   border: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color var(--transition);
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .works__tab:hover {
-  color: var(--text-mid);
+  color: var(--text);
 }
 
 .works__tab--active {
-  color: var(--text);
+  color: var(--signal);
 }
 
 .works__tab--active::after {
@@ -455,8 +462,8 @@ a:hover {
   right: 0;
   bottom: -1px;
   height: 1px;
-  background: var(--warm);
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.5);
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--glow-signal);
 }
 
 .works__type-section {
@@ -467,33 +474,36 @@ a:hover {
   margin-bottom: 0;
 }
 
+/* Section label — display voice (release-type group heading). */
 .works__type-label {
   display: flex;
   align-items: baseline;
-  gap: var(--space-sm);
-  font-family: var(--font-serif);
-  font-size: 1rem;
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--text-mid);
-  margin-bottom: var(--space-md);
-  padding-bottom: var(--space-xs);
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: var(--s-4);
+  padding-bottom: var(--s-1);
 }
 
 .works__type-label::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, var(--border), transparent);
+  background: linear-gradient(90deg, var(--hairline), transparent);
   align-self: center;
-  margin-left: var(--space-sm);
+  margin-left: var(--s-2);
 }
 
 .works__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 
 .works__grid--featured {
@@ -510,19 +520,19 @@ a:hover {
 .works__item--featured::after {
   content: 'Latest';
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
+  top: var(--s-2);
+  right: var(--s-2);
   padding: 4px 8px;
   background: rgba(17, 17, 17, 0.7);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.55rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
   border: 1px solid rgba(232, 149, 120, 0.25);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   pointer-events: none;
   z-index: 2;
 }
@@ -533,11 +543,11 @@ a:hover {
 
 .works__item {
   display: block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--pane);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
   overflow: hidden;
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  transition: transform var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -570,19 +580,23 @@ a:hover {
 }
 
 .works__info {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--s-2) var(--s-4);
 }
 
+/* Release title — display voice, not data. */
 .works__title {
-  font-family: var(--font-sans);
-  font-size: 0.88rem;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text);
   margin-bottom: 2px;
 }
 
 .works__meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.62rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -594,26 +608,30 @@ a:hover {
   animation: fade-in 0.2s ease;
 }
 
+/* Nav/action label — display voice, not data. Hover no longer widens the
+   gap (that forced layout); it nudges the whole label sideways instead. */
 .works__back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: transparent;
   border: none;
-  padding: 0 0 var(--space-xs);
-  font-family: var(--font-mono);
+  padding: 0 0 var(--s-1);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.62rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mid);
+  color: var(--text-dim);
   cursor: pointer;
   margin-bottom: var(--s-5);
-  transition: color var(--transition), gap var(--transition);
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .works__back:hover {
-  color: var(--warm);
-  gap: 10px;
+  color: var(--bloom-warm);
+  transform: translateX(-3px);
 }
 
 .works__detail-header {
@@ -626,9 +644,9 @@ a:hover {
   width: 140px;
   height: 140px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
 }
 
 .works__detail-artwork img {
@@ -641,74 +659,84 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-xs);
+  gap: var(--s-1);
 }
 
+/* Release title — display voice, not data. */
 .works__detail-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.95rem;
-  font-weight: 400;
+  font-weight: 300;
+  font-stretch: 118%;
   color: var(--text);
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .works__detail-meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
 
+/* CTA label — display voice, not data. */
 .works__detail-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: var(--space-sm);
-  padding: 9px var(--space-md) 10px;
-  font-family: var(--font-mono);
+  margin-top: var(--s-2);
+  padding: 9px var(--s-4) 10px;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 70%),
     transparent;
   border: 1px solid rgba(232, 149, 120, 0.35);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  border-radius: 2px;
+  transition: color var(--dur-mid) var(--ease-out), background var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
   text-decoration: none;
   width: fit-content;
 }
 
 .works__detail-link:hover {
-  color: var(--bg);
-  background: var(--warm);
-  border-color: var(--warm);
+  color: var(--void);
+  background: var(--bloom-warm);
+  border-color: var(--bloom-warm);
   box-shadow: 0 0 24px rgba(232, 149, 120, 0.3);
 }
 
 .works__detail-desc {
   font-size: 0.9rem;
   line-height: 1.7;
-  color: var(--text-mid);
+  color: var(--text-dim);
   margin-bottom: var(--s-5);
   max-width: 54ch;
 }
 
 .works__detail-tracks {
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--border);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--hairline);
 }
 
+/* Section label — display voice. */
 .works__detail-tracks h4 {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 1rem;
-  color: var(--text-mid);
-  margin-bottom: var(--space-md);
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: 118%;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: var(--s-4);
 }
 
 .works__detail-tracks ol {
@@ -725,21 +753,22 @@ a:hover {
   display: grid;
   grid-template-columns: 22px 1fr;
   align-items: baseline;
-  gap: var(--space-sm);
+  gap: var(--s-2);
   padding: 7px 0;
   font-size: 0.88rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
-  transition: color var(--transition);
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .works__detail-tracks li:hover {
   color: var(--text);
 }
 
+/* Track number — data voice (explicitly the mono role). */
 .works__detail-tracks li::before {
   content: counter(track, decimal-leading-zero);
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   color: var(--text-dim);
@@ -769,22 +798,25 @@ a:hover {
 .works__empty h3 {
   font-size: 1.1rem;
   font-weight: 400;
-  color: var(--text-mid);
-  margin-bottom: var(--space-sm);
+  color: var(--text-dim);
+  margin-bottom: var(--s-2);
 }
 
 .works__empty p {
   font-size: 0.85rem;
   color: var(--text-dim);
   margin-bottom: var(--s-5);
+  max-width: 68ch;
+  margin-inline: auto;
 }
 
+/* Status readout — data voice (explicitly named in the rule). */
 .works__empty-status {
   display: inline-block;
-  padding: var(--space-xs) var(--space-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  padding: var(--s-1) var(--s-4);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  font-family: var(--font-data);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -796,24 +828,27 @@ a:hover {
   text-align: center;
 }
 
+/* CTA label — display voice, not data. */
 .works__link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: var(--space-sm) var(--s-5);
-  font-family: var(--font-mono);
+  padding: var(--s-2) var(--s-5);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mid);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  color: var(--text-dim);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), background var(--dur-mid) var(--ease-out);
 }
 
 .works__link:hover {
   border-color: rgba(232, 149, 120, 0.4);
-  color: var(--warm);
+  color: var(--bloom-warm);
   background: rgba(232, 149, 120, 0.04);
 }
 
@@ -822,38 +857,43 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: var(--space-md) var(--s-5);
+  padding: var(--s-4) var(--s-5);
   margin-bottom: var(--s-5);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 60%),
-    var(--surface-raised);
+    var(--pane);
   border: 1px solid rgba(232, 149, 120, 0.25);
-  border-radius: var(--radius-md);
+  border-radius: 3px;
   text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color var(--dur-slow) var(--ease-out), background var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
 }
 
 .contact__primary:hover {
   border-color: rgba(232, 149, 120, 0.5);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.18), transparent 60%),
-    var(--surface-raised);
+    var(--pane);
   transform: translateY(-1px);
 }
 
+/* Eyebrow label — display voice. */
 .contact__primary-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.58rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
+/* This is a contact value (an address/handle), not a release title, so it
+   takes the body voice like its sibling .contact__value below. */
 .contact__primary-value {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-serif);
+  gap: var(--s-2);
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 1.2rem;
   color: var(--text);
@@ -867,30 +907,34 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border);
-  transition: padding var(--transition);
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .contact__item:hover {
-  padding-left: 6px;
+  transform: translateX(4px);
 }
 
 .contact__item:hover .contact__icon {
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
 .contact__item:last-child {
   border-bottom: none;
 }
 
+/* Field label — display voice, not data. */
 .contact__label {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-mono);
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -901,14 +945,14 @@ a:hover {
 }
 
 .contact__primary .contact__icon {
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
 .contact__value {
   font-size: 0.9rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   border-bottom: 1px solid transparent;
-  transition: all var(--transition);
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out);
 }
 
 .contact__value:hover {
@@ -916,12 +960,17 @@ a:hover {
   border-bottom-color: var(--text-dim);
 }
 
-/* --- Artwork Placeholder --- */
+/* --- Artwork Placeholder ---
+   --placeholder-h/-h2 are set per-instance as an inline style by
+   Works.jsx; the declarations below are just the default hue so the
+   custom properties resolve even before JS sets them. */
 .works__artwork--placeholder {
+  --placeholder-h: 18;
+  --placeholder-h2: 260;
   aspect-ratio: 1;
   background:
-    radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h, 18), 60%, 55%, 0.22), transparent 60%),
-    radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2, 260), 45%, 50%, 0.14), transparent 65%),
+    radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h), 60%, 55%, 0.22), transparent 60%),
+    radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2), 45%, 50%, 0.14), transparent 65%),
     linear-gradient(135deg, #1a1a1a, #242420);
   display: grid;
   place-items: center;
@@ -937,7 +986,7 @@ a:hover {
 }
 
 .works__artwork-glyph {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 300;
   font-size: 2.6rem;
@@ -977,7 +1026,7 @@ a:hover {
 
   .works__grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-sm);
+    gap: var(--s-2);
   }
 
   .works__grid--featured {
