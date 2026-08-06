@@ -1901,15 +1901,42 @@ Below 768px the desktop metaphor becomes one-app-at-a-time.
 - Modify: `src/styles/globals.css`
 - Modify: `src/components/Window.jsx`
 
-- [ ] **Step 1: Suppress desktop-only affordances**
+- [ ] **Step 1: Add a reactive media-query hook**
+
+A bare `window.matchMedia(...).matches` read inside a component is stale: nothing re-renders when the viewport crosses the breakpoint, so rotating a phone or dragging a desktop window across 768px leaves the wrong affordances mounted. Subscribe instead.
+
+Create `src/hooks/useMediaQuery.js`:
+
+```js
+import { useSyncExternalStore } from 'react'
+
+export function useMediaQuery(query) {
+  const mql = typeof window === 'undefined' ? null : window.matchMedia(query)
+  return useSyncExternalStore(
+    (cb) => {
+      if (!mql) return () => {}
+      mql.addEventListener('change', cb)
+      return () => mql.removeEventListener('change', cb)
+    },
+    () => (mql ? mql.matches : false),
+    () => false,
+  )
+}
+
+export const COMPACT = '(max-width: 767px)'
+```
+
+- [ ] **Step 1b: Suppress desktop-only affordances**
 
 In `src/components/Window.jsx`, add at the top of the component:
 
 ```jsx
-const compact = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+const compact = useMediaQuery(COMPACT)
 ```
 
-Guard the drag handlers (`onPointerDown={compact ? undefined : beginDrag('move')}` and likewise for move/up) and render the grip and the minimize/maximize buttons only when `!compact`. Close remains in every case.
+importing `useMediaQuery, COMPACT` from `../hooks/useMediaQuery`.
+
+Guard the drag handlers (`onPointerDown={compact ? onFocus : beginDrag('move')}` and `onPointerMove`/`onPointerUp` set to `undefined` when compact), and render the grip and the minimize/maximize buttons only when `!compact`. Close remains in every case.
 
 - [ ] **Step 2: Write the sheet CSS**
 
@@ -1955,16 +1982,26 @@ Guard the drag handlers (`onPointerDown={compact ? undefined : beginDrag('move')
 
 - [ ] **Step 2b: Only one window at a time on mobile**
 
-In `src/App.jsx`, when `compact`, opening a window closes the others. Add to the toggle handler:
+In `src/App.jsx`, use the same hook — `const compact = useMediaQuery(COMPACT)` — and close the others before opening, inside the `openWindow` handler defined in Task 12:
 
 ```jsx
 const openWindow = (id) => {
-  if (window.matchMedia('(max-width: 767px)').matches) {
+  const isOpen = windows[id].open && !windows[id].minimized
+  if (isOpen) {
+    dispatch({ type: 'CLOSE', id })
+    if (openIds(windows).filter(w => w !== id).length === 0) {
+      history.replaceState(null, '', window.location.pathname)
+    }
+    return
+  }
+  if (compact) {
     openIds(windows).filter(w => w !== id).forEach(w => dispatch({ type: 'CLOSE', id: w }))
   }
-  dispatch({ type: 'TOGGLE', id })
+  window.location.hash = buildHash(id, null)
 }
 ```
+
+This replaces the Task 12 version of `openWindow` rather than sitting beside it — there is exactly one such handler in the finished file.
 
 - [ ] **Step 3: Verify**
 
