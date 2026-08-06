@@ -144,7 +144,7 @@ Slugs derive from titles (`Drift 6` → `drift-6`). Opening a window pushes its 
 
 Bandcamp's embed iframe cannot be styled and would fight this world if placed inline. It is therefore wrapped: a dedicated **Player** window — chrome we control around an embed we do not — that persists while other windows open and close, because it lives outside the window map in the component tree.
 
-- Offered only for releases carrying a `bandcampId`. Four of ten currently qualify.
+- Offered only for releases carrying a `bandcampId`. Five of ten currently qualify.
 - Releases without an ID show `Listen on Bandcamp →` and no player affordance. No broken player, no fake one.
 - The title bar shows a small mono "now playing" readout when the player is open.
 
@@ -238,7 +238,7 @@ Non-negotiable, and load-bearing given a moving background:
 These do not block starting. They block finishing, and none of them may be invented:
 
 1. **Game:** title, key art, logline, year, status. Store URL when it exists.
-2. **Bandcamp IDs** for the six releases lacking one — Drift 4, Drift 3, Exalt, Drift 2, Drift, Rebuild.
+2. **Bandcamp IDs** for the five releases lacking one — Drift 3, Exalt, Drift 2, Drift, Rebuild.
 3. **Email endpoint** — provider account and form URL.
 
 Each renders as an honest empty or reduced state until supplied. No placeholders that could be mistaken for real content.
