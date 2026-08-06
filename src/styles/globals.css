@@ -2,49 +2,93 @@
    HEARTS AGLOW
    ======================================== */
 
-/* --- Design Tokens --- */
 :root {
-  --bg: #111111;
-  --surface: #191919;
-  --surface-raised: #1e1e1e;
+  /* Ground */
+  --void: #08070b;
 
-  --border: #333333;
-  --border-hover: #555555;
+  /* Bloom — the field's own colours, mirrored from the shader constants */
+  --bloom-warm: #c48aff;
+  --bloom-warm-2: #ffa878;
+  --bloom-deep: #483478;
 
-  --text: #e8e8e8;
-  --text-mid: #999999;
-  --text-dim: #555555;
+  /* Signal — focus, active state, live data. Nowhere else. */
+  --signal: #dff4ff;
 
-  --accent: #e8e8e8;
-  --accent-hover: #ffffff;
-  --warm: #e89578;
-  --warm-deep: #b86a4e;
+  /* Text */
+  --text: rgba(255, 255, 255, 0.92);
+  --text-dim: rgba(255, 255, 255, 0.62);
+  --text-faint: rgba(255, 255, 255, 0.42);
 
-  --font-sans: 'Outfit', -apple-system, Helvetica Neue, sans-serif;
-  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
-  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  /* Chrome */
+  --hairline: rgba(255, 255, 255, 0.11);
+  --hairline-focus: rgba(223, 244, 255, 0.34);
+  --pane: rgba(255, 255, 255, 0.045);
+  --pane-blur: 20px;
 
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4.5rem;
+  /* Type */
+  --font-display: 'Anybody', system-ui, sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-data: 'Martian Mono', ui-monospace, monospace;
 
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  /* Spacing — one rhythm for the whole surface */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
 
-  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --transition: 0.32s var(--ease-soft);
-  --transition-fast: 0.18s var(--ease-soft);
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-mid: 240ms;
+  --dur-slow: 380ms;
 }
 
-/* --- Focus Rings (subtle but visible) --- */
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lightfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.lightfield canvas { display: block; width: 100%; height: 100%; }
+
+/* Film grain — anti-banding and the shoegaze texture, doing one job each. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+
+/* Focus is visible against the bloom, which a default outline is not. */
 :focus-visible {
-  outline: 1px solid rgba(232, 149, 120, 0.55);
+  outline: 1px solid var(--signal);
   outline-offset: 2px;
-  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* --- Reset & Base --- */
@@ -110,28 +154,6 @@ a:hover {
   overflow: hidden;
 }
 
-.desktop__mesh {
-  position: absolute;
-  inset: -15%;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 60% 55% at 22% 32%, rgba(232, 149, 120, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 78% 70%, rgba(120, 100, 180, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 80% 50% at 50% 105%, rgba(232, 149, 120, 0.06) 0%, transparent 65%);
-  filter: blur(40px);
-  animation: mesh-drift 38s ease-in-out infinite alternate;
-  will-change: transform;
-}
-
-@keyframes mesh-drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  50%  { transform: translate3d(2%, -2%, 0) scale(1.04); }
-  100% { transform: translate3d(-2%, 2%, 0) scale(1.02); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .desktop__mesh { animation: none; }
-}
 
 /* --- Title Bar --- */
 .titlebar {

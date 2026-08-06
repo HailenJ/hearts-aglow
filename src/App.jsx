@@ -471,7 +471,7 @@ function Hero({ hasOpenWindows, heroSubtitle }) {
 function DesktopBackground() {
   return (
     <div className="desktop__bg">
-      <div className="desktop__mesh" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
       <ErrorBoundary>
         <LightField />
       </ErrorBoundary>
