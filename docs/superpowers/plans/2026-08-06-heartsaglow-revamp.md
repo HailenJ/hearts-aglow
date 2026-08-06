@@ -44,7 +44,7 @@ Create `src/components/LightField.jsx`:
 
 ```jsx
 import { useEffect, useRef } from 'react'
-import { Renderer, Camera, Geometry, Program, Mesh, Triangle } from 'ogl'
+import { Renderer, Program, Mesh, Triangle } from 'ogl'
 
 const vertex = /* glsl */ `
   attribute vec2 uv;
@@ -184,7 +184,7 @@ export default function LightField() {
 }
 ```
 
-Note: `Camera` and `Geometry` are imported by the old `Particles.jsx` but are not needed here — do not import them.
+Note: the old `Particles.jsx` imports `Camera` and `Geometry`; this component needs neither.
 
 - [ ] **Step 2: Swap it into the app**
 
@@ -584,7 +584,7 @@ In `eslint.config.js`, add this object to the array returned by `defineConfig`, 
 In `package.json`, add to `"scripts"`:
 
 ```json
-    "test": "node --test test/",
+    "test": "node --test 'test/**/*.js'",
 ```
 
 Run: `npm test`
@@ -1107,7 +1107,10 @@ import { slugify } from '../lib/route.js'
 and wrap each exported array so every entry carries a slug. Replace `export const musicReleases = [` with `const rawMusicReleases = [`, then after the array's closing bracket add:
 
 ```js
-export const musicReleases = rawMusicReleases.map(r => ({ ...r, slug: slugify(r.title) }))
+// `slugify` returns '' for a title made entirely of punctuation, and an empty
+// slug silently degrades a deep link to the bare window route. `id` is always
+// present and unique, so it is the fallback that keeps every release linkable.
+export const musicReleases = rawMusicReleases.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
 ```
 
 Do the same for `games` and `software` (both currently empty arrays — the map is a no-op today and correct tomorrow).
@@ -1119,7 +1122,7 @@ Do the same for `games` and `software` (both currently empty arrays — the map 
 In `src/hooks/useSanityData.js`, import `slugify` from `../lib/route`, add `game: fallback.game` to `initialData`, and add these two helpers above the hook:
 
 ```js
-const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug ?? slugify(item.title) }))
+const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug || slugify(item.title) || String(item.id) }))
 
 // The featured game is simply the newest one. Sanity's `game` type already
 // carries every field the Game window needs, so there is nothing to add there.
@@ -1147,10 +1150,36 @@ if (next.software) next.software = withSlugs(next.software)
 setData(prev => ({ ...prev, ...next }))
 ```
 
+- [ ] **Step 3b: Fix the pre-existing lint error in this file**
+
+`src/hooks/useSanityData.js:38` has a pre-existing `react-hooks/set-state-in-effect` error: `setIsLoaded(true)` is called synchronously inside the effect's `catch` block. Since you are rewriting this effect anyway, fix it properly.
+
+`fetchAllContent()` is already `async`, so it cannot throw synchronously — the outer `try`/`catch` and the `console.log`/`console.error` debugging noise around it are all dead weight. Replace the whole effect body with:
+
+```js
+useEffect(() => {
+  let live = true
+  fetchAllContent()
+    .then(sanityData => {
+      if (!live || !Object.keys(sanityData).length) return
+      const next = { ...sanityData }
+      if (next.musicReleases) next.musicReleases = withSlugs(next.musicReleases)
+      if (next.games) { next.games = withSlugs(next.games); next.game = featured(next.games) }
+      if (next.software) next.software = withSlugs(next.software)
+      setData(prev => ({ ...prev, ...next }))
+    })
+    .catch(err => console.error('[Sanity] fetch failed:', err))
+    .finally(() => { if (live) setIsLoaded(true) })
+  return () => { live = false }
+}, [])
+```
+
+The `live` flag prevents a setState after unmount; every setState now happens in a callback rather than synchronously in the effect body, which is what the rule asks for.
+
 - [ ] **Step 4: Verify**
 
 Run: `npm test && npm run lint && npm run dev`
-Expected: clean; the site renders unchanged.
+Expected: all clean — including lint, which should now report **zero** problems repo-wide.
 
 Confirm slugs exist by adding a temporary `console.log(data.musicReleases[0].slug)` in `App`, checking it prints `drift-6`, then removing the log before committing.
 
@@ -1383,7 +1412,97 @@ git commit -m "feat: restyle shell and put the game CTA in the first viewport"
 
 ---
 
-### Task 9: Game window and email capture
+### Task 9: Window content in the new world
+
+Tasks 2, 5, and 8 rewrote the tokens, the window chrome, and the shell. The **content inside** About, Works, and Connect was never rewritten, so those rules still reference roughly 130 custom properties that no longer exist (`--bg`, `--surface`, `--border`, `--warm`, `--font-sans`, `--font-serif`, `--font-mono`, `--radius-*`, `--transition*`, `--space-xs/sm/md`). An undefined `var()` silently resolves to nothing, so without this task those three windows ship visibly broken.
+
+**Files:**
+- Modify: `src/styles/globals.css` (the `.about*`, `.works*`, and `.contact*` sections)
+
+**Interfaces:**
+- Consumes: every token from Task 2. Introduces none.
+
+- [ ] **Step 1: Inventory what is dead**
+
+```bash
+grep -oE '\-\-[a-z0-9-]+' src/styles/globals.css | sort -u > /tmp/used.txt
+grep -oE '^\s+\-\-[a-z0-9-]+' src/styles/globals.css | tr -d ' ' | sort -u > /tmp/defined.txt
+comm -23 /tmp/used.txt /tmp/defined.txt
+```
+
+Every token this prints is referenced but never defined. That list is your work queue; it must be empty when you finish.
+
+- [ ] **Step 2: Repoint every dead token**
+
+Work through the `.about*`, `.works*`, and `.contact*` rules and map each dead token to its replacement. Use this mapping exactly — do not invent new values, and do not add new custom properties:
+
+| Dead token | Replacement |
+|---|---|
+| `--bg` | `var(--void)` |
+| `--surface` | `var(--pane)` |
+| `--border` | `var(--hairline)` |
+| `--warm` | `var(--bloom-warm)` |
+| `--font-sans` | `var(--font-body)` |
+| `--font-serif` | `var(--font-display)` |
+| `--font-mono` | `var(--font-data)` |
+| `--space-xs` | `var(--s-1)` |
+| `--space-sm` | `var(--s-2)` |
+| `--space-md` | `var(--s-4)` |
+| `--radius-sm` | `2px` |
+| `--radius-md` | `3px` |
+| `--transition` | `var(--dur-mid) var(--ease-out)` |
+| `--transition-fast` | `var(--dur-fast) var(--ease-out)` |
+
+Any dead token not in this table: replace it with the nearest equivalent from the Task 2 token block and note the substitution in your report.
+
+- [ ] **Step 3: Fix the hover that animates layout**
+
+`.contact__item` currently declares `transition: padding var(--transition)` with `.contact__item:hover { padding-left: 6px }`. Animating padding forces layout on every frame of the hover. Replace both rules with a transform, which does not:
+
+```css
+.contact__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.contact__item:hover {
+  transform: translateX(4px);
+}
+```
+
+Then scan the `.about*`, `.works*`, and `.contact*` rules for any other transition or animation targeting `width`, `height`, `padding`, `margin`, `top`, `left`, `right`, or `bottom`, and convert each to `transform` or `opacity`. Report each one you changed.
+
+- [ ] **Step 4: Bring the type into the three-voice system**
+
+Within these sections only, enforce the rule that governs the whole site:
+- `var(--font-display)` for release titles, section labels, and tab labels — uppercase, letter-spacing at or above `0.12em`, weight 300 or lighter, `font-stretch: 118%`.
+- `var(--font-body)` for descriptions and paragraphs — set `max-width: 68ch` on any paragraph block so the measure stays readable.
+- `var(--font-data)` **only** for years, track durations, track numbers, and status readouts. A release *title* is not data and does not get mono.
+
+- [ ] **Step 5: Verify nothing is dead**
+
+Re-run the Step 1 command.
+Expected: **no output.** Every referenced token now resolves.
+
+Then run `npm run lint && npm run build` — expect lint to report exactly one pre-existing error in `src/hooks/useSanityData.js:38` (assigned to Task 7; if Task 7 has already run, expect zero) and the build to be clean.
+
+Finally, in `npm run dev`, open About, Works, and Connect in turn and confirm each renders as deliberate design rather than unstyled text: readable body copy, correct fonts, hairline borders visible, no element sitting flush against a window edge.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/styles/globals.css
+git commit -m "feat: restyle window content onto the new token system"
+```
+
+---
+
+### Task 10: Game window and email capture
 
 **Files:**
 - Create: `src/windows/Game.jsx`
@@ -1573,7 +1692,7 @@ git commit -m "feat: add game window with email capture and store-link slot"
 
 ---
 
-### Task 10: Persistent player
+### Task 11: Persistent player
 
 Wraps Bandcamp's unstylable iframe in chrome we control, living outside the window map so it survives other windows opening and closing.
 
@@ -1687,7 +1806,7 @@ git commit -m "feat: add persistent player wrapping the Bandcamp embed"
 
 ---
 
-### Task 11: Boot sequence
+### Task 12: Boot sequence
 
 An aperture opening. Theatre, but gated correctly.
 
@@ -1818,7 +1937,7 @@ git commit -m "feat: add aperture boot sequence"
 
 ---
 
-### Task 12: Connect hash routing to window state
+### Task 13: Connect hash routing to window state
 
 **Files:**
 - Modify: `src/App.jsx`
@@ -1893,7 +2012,7 @@ git commit -m "feat: bind hash routes to window and release state"
 
 ---
 
-### Task 13: Mobile
+### Task 14: Mobile
 
 Below 768px the desktop metaphor becomes one-app-at-a-time.
 
@@ -1901,15 +2020,42 @@ Below 768px the desktop metaphor becomes one-app-at-a-time.
 - Modify: `src/styles/globals.css`
 - Modify: `src/components/Window.jsx`
 
-- [ ] **Step 1: Suppress desktop-only affordances**
+- [ ] **Step 1: Add a reactive media-query hook**
+
+A bare `window.matchMedia(...).matches` read inside a component is stale: nothing re-renders when the viewport crosses the breakpoint, so rotating a phone or dragging a desktop window across 768px leaves the wrong affordances mounted. Subscribe instead.
+
+Create `src/hooks/useMediaQuery.js`:
+
+```js
+import { useSyncExternalStore } from 'react'
+
+export function useMediaQuery(query) {
+  const mql = typeof window === 'undefined' ? null : window.matchMedia(query)
+  return useSyncExternalStore(
+    (cb) => {
+      if (!mql) return () => {}
+      mql.addEventListener('change', cb)
+      return () => mql.removeEventListener('change', cb)
+    },
+    () => (mql ? mql.matches : false),
+    () => false,
+  )
+}
+
+export const COMPACT = '(max-width: 767px)'
+```
+
+- [ ] **Step 1b: Suppress desktop-only affordances**
 
 In `src/components/Window.jsx`, add at the top of the component:
 
 ```jsx
-const compact = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+const compact = useMediaQuery(COMPACT)
 ```
 
-Guard the drag handlers (`onPointerDown={compact ? undefined : beginDrag('move')}` and likewise for move/up) and render the grip and the minimize/maximize buttons only when `!compact`. Close remains in every case.
+importing `useMediaQuery, COMPACT` from `../hooks/useMediaQuery`.
+
+Guard the drag handlers (`onPointerDown={compact ? onFocus : beginDrag('move')}` and `onPointerMove`/`onPointerUp` set to `undefined` when compact), and render the grip and the minimize/maximize buttons only when `!compact`. Close remains in every case.
 
 - [ ] **Step 2: Write the sheet CSS**
 
@@ -1955,16 +2101,26 @@ Guard the drag handlers (`onPointerDown={compact ? undefined : beginDrag('move')
 
 - [ ] **Step 2b: Only one window at a time on mobile**
 
-In `src/App.jsx`, when `compact`, opening a window closes the others. Add to the toggle handler:
+In `src/App.jsx`, use the same hook — `const compact = useMediaQuery(COMPACT)` — and close the others before opening, inside the `openWindow` handler defined in Task 13:
 
 ```jsx
 const openWindow = (id) => {
-  if (window.matchMedia('(max-width: 767px)').matches) {
+  const isOpen = windows[id].open && !windows[id].minimized
+  if (isOpen) {
+    dispatch({ type: 'CLOSE', id })
+    if (openIds(windows).filter(w => w !== id).length === 0) {
+      history.replaceState(null, '', window.location.pathname)
+    }
+    return
+  }
+  if (compact) {
     openIds(windows).filter(w => w !== id).forEach(w => dispatch({ type: 'CLOSE', id: w }))
   }
-  dispatch({ type: 'TOGGLE', id })
+  window.location.hash = buildHash(id, null)
 }
 ```
+
+This replaces the Task 13 version of `openWindow` rather than sitting beside it — there is exactly one such handler in the finished file.
 
 - [ ] **Step 3: Verify**
 
@@ -1984,7 +2140,7 @@ git commit -m "feat: adapt the desktop metaphor to mobile sheets"
 
 ---
 
-### Task 14: Direction contract, final sweep, and build
+### Task 15: Direction contract, final sweep, and build
 
 **Files:**
 - Modify: `index.html`
@@ -2045,7 +2201,7 @@ git commit -m "chore: record direction contract and remove dead styles"
 
 ## Post-plan: finish review
 
-After Task 14, the run is not complete. Per the impeccable skill's finish protocol:
+After Task 15, the run is not complete. Per the impeccable skill's finish protocol:
 
 1. Capture desktop and mobile screenshots in one batched round.
 2. Spawn `impeccable-finish-reviewer` fresh (no inherited context) with the request, the artifact paths, the screenshots, the direction contract above, and the craft-floor reference path.
@@ -2056,6 +2212,6 @@ After Task 14, the run is not complete. Per the impeccable skill's finish protoc
 
 None of these block the plan; all of them block shipping the site as finished. None may be invented:
 
-1. **Game:** title, key art, logline, year. Store URL when it exists. Until supplied, Task 9's honest unnamed state ships.
-2. **Bandcamp IDs** for Drift 4, Drift 3, Exalt, Drift 2, Drift, and Rebuild. Until supplied, those six show the Bandcamp link with no player.
+1. **Game:** title, key art, logline, year. Store URL when it exists. Until supplied, Task 10's honest unnamed state ships.
+2. **Bandcamp IDs** for Drift 3, Exalt, Drift 2, Drift, and Rebuild. Until supplied, those five show the Bandcamp link with no player.
 3. **Email endpoint** — fill `EMAIL_ENDPOINT` in `src/lib/config.js`. Until supplied, the form renders disabled with honest copy.

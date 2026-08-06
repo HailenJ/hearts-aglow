@@ -1,489 +1,33 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useReducer, useState, useEffect } from 'react'
 import { useSanityData } from './hooks/useSanityData'
-import Particles from './components/Particles'
+import { useHashRoute } from './hooks/useHashRoute'
+import { useMediaQuery, COMPACT } from './hooks/useMediaQuery'
+import { buildHash, resolveRoute, parseHash } from './lib/route'
+import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
-import SocialIcon from './components/SocialIcon'
-import * as fallbackData from './data/fallback'
+import Window from './components/Window'
+import TitleBar from './components/TitleBar'
+import Player from './components/Player'
+import Dock from './components/Dock'
+import Hero from './components/Hero'
+import Boot from './components/Boot'
+import About from './windows/About'
+import Works from './windows/Works'
+import Game from './windows/Game'
+import Connect from './windows/Connect'
+import { windowsReducer, initialWindows, focusedId, openIds, WINDOW_IDS } from './lib/windows'
 import './styles/globals.css'
-
-const releaseTypes = [
-  { key: 'drift', label: 'Drift Series' },
-  { key: 'album', label: 'Albums' },
-  { key: 'soundtrack', label: 'Soundtracks' },
-]
-
-const SOCIAL_ORDER = ['email', 'bandcamp', 'bluesky', 'instagram', 'twitter', 'x', 'tiktok']
-const socialRank = (name) => {
-  const key = (name || '').toLowerCase().replace(/[^a-z]/g, '')
-  const i = SOCIAL_ORDER.indexOf(key)
-  return i === -1 ? SOCIAL_ORDER.length : i
-}
-const isPrimary = (name) => /^email$/i.test((name || '').trim())
 
 // ============================================
 // COMPONENTS
 // ============================================
 
-function TitleBar() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date()
-      const formatted = now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).toLowerCase().replace(' ', ' ')
-      setTime(formatted)
-    }
-    updateTime()
-    const interval = setInterval(updateTime, 30_000)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <header className="titlebar">
-      <div className="titlebar__brand">
-        <span className="titlebar__dot" />
-        <span>heartsaglow</span>
-      </div>
-      <span className="titlebar__time">{time}</span>
-    </header>
-  )
-}
-
-function Dock({ openWindows, onToggleWindow }) {
-  const items = [
-    { id: 'about', label: 'About' },
-    { id: 'works', label: 'Works' },
-    { id: 'contact', label: 'Connect' },
-  ]
-
-  return (
-    <nav className="dock" aria-label="Primary">
-      {items.map(item => {
-        const open = openWindows.includes(item.id)
-        return (
-          <button
-            key={item.id}
-            className={`dock__item ${open ? 'dock__item--active' : ''}`}
-            onClick={() => onToggleWindow(item.id)}
-            aria-pressed={open}
-          >
-            <span>{item.label}</span>
-          </button>
-        )
-      })}
-    </nav>
-  )
-}
-
-function Window({ title, isOpen, isFocused, onClose, onFocus, defaultPosition, dragPosition, onDragEnd, children }) {
-  const windowRef = useRef(null)
-  const headerRef = useRef(null)
-  const dragState = useRef({ active: false, offsetX: 0, offsetY: 0 })
-
-  if (!isOpen) return null
-
-  const style = dragPosition
-    ? { left: `${dragPosition.x}px`, top: `${dragPosition.y}px`, width: defaultPosition.width, height: defaultPosition.height }
-    : { top: defaultPosition.top, left: defaultPosition.left, width: defaultPosition.width, height: defaultPosition.height }
-
-  const handlePointerDown = (e) => {
-    if (e.target.closest('.window__close')) return
-    const rect = windowRef.current.getBoundingClientRect()
-    dragState.current = {
-      active: true,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
-    }
-    headerRef.current.setPointerCapture(e.pointerId)
-    onFocus()
-  }
-
-  const handlePointerMove = (e) => {
-    if (!dragState.current.active) return
-    const rect = windowRef.current.getBoundingClientRect()
-    const minX = -(rect.width - 120)
-    const maxX = window.innerWidth - 120
-    const minY = 40
-    const maxY = window.innerHeight - 80
-    const x = Math.max(minX, Math.min(maxX, e.clientX - dragState.current.offsetX))
-    const y = Math.max(minY, Math.min(maxY, e.clientY - dragState.current.offsetY))
-    windowRef.current.style.left = `${x}px`
-    windowRef.current.style.top = `${y}px`
-  }
-
-  const handlePointerUp = () => {
-    if (!dragState.current.active) return
-    dragState.current.active = false
-    const rect = windowRef.current.getBoundingClientRect()
-    onDragEnd({ x: rect.left, y: rect.top })
-  }
-
-  return (
-    <div
-      ref={windowRef}
-      className={`window ${isFocused ? 'window--focused' : ''}`}
-      style={style}
-      onClick={onFocus}
-    >
-      <header
-        ref={headerRef}
-        className="window__header"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <span className="window__title">
-          <span className="window__dot" aria-hidden="true" />
-          {title}
-        </span>
-        <button
-          className="window__close"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          aria-label="Close window"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-            <path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </header>
-      <div className="window__content">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function AboutContent({ aboutParagraphs }) {
-  const lead = aboutParagraphs[0]
-  const body = aboutParagraphs.slice(1)
-
-  return (
-    <div className="about">
-      <p className="about__lead">{lead.text}</p>
-      <div className="about__text">
-        {body.map((p, i) => (
-          <p key={i}>
-            {p.linkText ? (
-              <>
-                {'Founded by '}
-                <a href={p.linkUrl} target="_blank" rel="noopener noreferrer">
-                  {p.linkText}
-                </a>
-                {', '}
-                {p.text}
-              </>
-            ) : (
-              p.text
-            )}
-          </p>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ArtworkPlaceholder({ title }) {
-  const seed = (title || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  const h = (seed * 17) % 360
-  const h2 = (h + 180) % 360
-  return (
-    <div
-      className="works__artwork works__artwork--placeholder"
-      style={{ '--placeholder-h': h, '--placeholder-h2': h2 }}
-    >
-      <span className="works__artwork-glyph">{(title || '·').trim()[0]}</span>
-    </div>
-  )
-}
-
-function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSelect, onBack }) {
-  if (items.length === 0) {
-    return (
-      <div className="works__section">
-        <div className="works__empty">
-          <div className="works__empty-icon">&loz;</div>
-          <h3>{emptyTitle}</h3>
-          <p>{emptyDescription}</p>
-          <span className="works__empty-status">Coming Soon</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (selectedItem) {
-    return (
-      <div className="works__detail">
-        <button className="works__back" onClick={onBack}>&larr; Back</button>
-        <div className="works__detail-header">
-          {selectedItem.image
-            ? (
-              <div className="works__detail-artwork">
-                <img src={selectedItem.image} alt={selectedItem.title} />
-              </div>
-            )
-            : (
-              <div className="works__detail-artwork">
-                <ArtworkPlaceholder title={selectedItem.title} />
-              </div>
-            )
-          }
-          <div className="works__detail-info">
-            <h2 className="works__detail-title">{selectedItem.title}</h2>
-            <span className="works__detail-meta">
-              {selectedItem.year}
-              {selectedItem.status === 'development' ? ' · In Development' : ''}
-            </span>
-            {selectedItem.url && (
-              <a
-                href={selectedItem.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="works__detail-link"
-              >
-                View Project &rarr;
-              </a>
-            )}
-          </div>
-        </div>
-        {selectedItem.description && (
-          <p className="works__detail-desc">{selectedItem.description}</p>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="works__section">
-      <div className="works__grid">
-        {items.map(item => (
-          <button
-            key={item.id}
-            className="works__item"
-            onClick={() => onSelect(item)}
-          >
-            {item.image
-              ? (
-                <div className="works__artwork">
-                  <img src={item.image} alt={item.title} loading="lazy" />
-                </div>
-              )
-              : <ArtworkPlaceholder title={item.title} />
-            }
-            <div className="works__info">
-              <h3 className="works__title">{item.title}</h3>
-              <span className="works__meta">{item.year}{item.status === 'development' ? ' · In Development' : ''}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function WorksContent({ musicReleases, games, software }) {
-  const [activeTab, setActiveTab] = useState('music')
-  const [selectedRelease, setSelectedRelease] = useState(null)
-  const tabs = ['music', 'games', 'software']
-
-  const handleReleaseClick = (release) => {
-    setSelectedRelease(release)
-  }
-
-  const handleBack = () => {
-    setSelectedRelease(null)
-  }
-
-  return (
-    <div className="works">
-      <nav className="works__tabs">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            className={`works__tab ${activeTab === tab ? 'works__tab--active' : ''}`}
-            onClick={() => { setActiveTab(tab); setSelectedRelease(null); }}
-          >
-            {tab}
-          </button>
-        ))}
-      </nav>
-
-      {activeTab === 'music' && (
-        <>
-          {selectedRelease ? (
-            <div className="works__detail">
-              <button className="works__back" onClick={handleBack}>&larr; Back</button>
-              <div className="works__detail-header">
-                <div className="works__detail-artwork">
-                  <img src={selectedRelease.image} alt={selectedRelease.title} />
-                </div>
-                <div className="works__detail-info">
-                  <h2 className="works__detail-title">{selectedRelease.title}</h2>
-                  <span className="works__detail-meta">{selectedRelease.year} &middot; {selectedRelease.artist}</span>
-                  <a
-                    href={selectedRelease.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="works__detail-link"
-                  >
-                    Listen on Bandcamp &rarr;
-                  </a>
-                </div>
-              </div>
-              {selectedRelease.description && (
-                <p className="works__detail-desc">{selectedRelease.description}</p>
-              )}
-              {selectedRelease.tracks && selectedRelease.tracks.length > 0 && (
-                <div className="works__detail-tracks">
-                  <h4>Tracks</h4>
-                  <ol>
-                    {selectedRelease.tracks.map((track, i) => (
-                      <li key={i}>{track}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              {releaseTypes.map(type => {
-                const releases = musicReleases.filter(r => r.type === type.key)
-                if (releases.length === 0) return null
-                const featuredEnabled = type.key === 'drift' && releases.length > 2
-                return (
-                  <div key={type.key} className="works__type-section">
-                    <h3 className="works__type-label">{type.label}</h3>
-                    <div className={`works__grid ${featuredEnabled ? 'works__grid--featured' : ''}`}>
-                      {releases.map((release, idx) => (
-                        <button
-                          key={release.id}
-                          className={`works__item ${featuredEnabled && idx === 0 ? 'works__item--featured' : ''}`}
-                          onClick={() => handleReleaseClick(release)}
-                        >
-                          {release.image
-                            ? (
-                              <div className="works__artwork">
-                                <img src={release.image} alt={release.title} loading="lazy" />
-                              </div>
-                            )
-                            : <ArtworkPlaceholder title={release.title} />
-                          }
-                          <div className="works__info">
-                            <h3 className="works__title">{release.title}</h3>
-                            <span className="works__meta">{release.year}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-              <footer className="works__footer">
-                <a
-                  href="https://hailenjackson.bandcamp.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="works__link"
-                >
-                  View full discography &rarr;
-                </a>
-              </footer>
-            </>
-          )}
-        </>
-      )}
-
-      {activeTab === 'games' && (
-        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
-      )}
-
-      {activeTab === 'software' && (
-        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
-      )}
-    </div>
-  )
-}
-
-function ContactContent({ socialLinks }) {
-  const seen = new Set(socialLinks.map(l => (l.name || '').toLowerCase().trim()))
-  const filledFromFallback = fallbackData.socialLinks.filter(
-    l => !seen.has((l.name || '').toLowerCase().trim())
-  )
-  const merged = [...socialLinks, ...filledFromFallback].sort(
-    (a, b) => socialRank(a.name) - socialRank(b.name)
-  )
-
-  const primary = merged.find(l => isPrimary(l.name))
-  const secondary = merged.filter(l => !isPrimary(l.name))
-
-  return (
-    <div className="contact">
-      {primary && (
-        <a
-          className="contact__primary"
-          href={primary.url}
-          target={primary.url.startsWith('mailto') ? undefined : '_blank'}
-          rel={primary.url.startsWith('mailto') ? undefined : 'noopener noreferrer'}
-        >
-          <span className="contact__primary-label">Inquiries &amp; collaboration</span>
-          <span className="contact__primary-value">
-            <SocialIcon name={primary.name} className="contact__icon" />
-            {primary.label}
-          </span>
-        </a>
-      )}
-      <ul className="contact__list">
-        {secondary.map((link, i) => (
-          <li key={`${link.name}-${i}`} className="contact__item">
-            <span className="contact__label">
-              <SocialIcon name={link.name} className="contact__icon" />
-              {link.name}
-            </span>
-            <a
-              href={link.url}
-              target={link.url.startsWith('mailto') ? undefined : '_blank'}
-              rel={link.url.startsWith('mailto') ? undefined : 'noopener noreferrer'}
-              className="contact__value"
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-function Hero({ hasOpenWindows, heroSubtitle }) {
-  if (hasOpenWindows) return null
-
-  return (
-    <div className="hero">
-      <img src="/logo.png" alt="Hearts Aglow" className="hero__logo" />
-      <p className="hero__tagline">{heroSubtitle}</p>
-    </div>
-  )
-}
-
 function DesktopBackground() {
   return (
     <div className="desktop__bg">
-      <div className="desktop__mesh" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
       <ErrorBoundary>
-        <Particles
-          particleCount={140}
-          particleSpread={12}
-          speed={0.022}
-          particleColors={['#2a2a2a', '#3a3a3a', '#1a1a1a', '#5a3a2e', '#3d2722', '#42332e']}
-          moveParticlesOnHover={true}
-          particleHoverFactor={0.5}
-          particleBaseSize={60}
-          sizeRandomness={1.2}
-          cameraDistance={22}
-        />
+        <LightField />
       </ErrorBoundary>
     </div>
   )
@@ -495,87 +39,168 @@ function DesktopBackground() {
 
 function App() {
   const { data } = useSanityData()
-  const [openWindows, setOpenWindows] = useState([])
-  const [focusedWindow, setFocusedWindow] = useState(null)
-  const [dragPositions, setDragPositions] = useState({})
+
+  // Seed state from the hash synchronously (lazy initializers, run once on
+  // mount) rather than starting closed and waiting for a post-mount effect
+  // to open things. Otherwise the state->hash sync effect below would see
+  // `focused: null` on the very first render — before the listener has had
+  // a chance to process a real deep link — and clear the address bar an
+  // instant before correcting it back.
+  const [windows, dispatch] = useReducer(windowsReducer, initialWindows, (blank) => {
+    const { windowToOpen } = resolveRoute(parseHash(window.location.hash), data)
+    return windowToOpen ? windowsReducer(blank, { type: 'OPEN', id: windowToOpen }) : blank
+  })
+  const focused = focusedId(windows)
+  const compact = useMediaQuery(COMPACT)
+  const [playing, setPlaying] = useState(null)
+  const [booted, setBooted] = useState(false)
+  // The raw detail segment from the hash, not a record resolved against
+  // `data` — at mount `data` is still the local fallback, and Sanity hasn't
+  // loaded yet, so resolving eagerly here would null out any slug that only
+  // exists in Sanity. Works re-resolves this string against current `data`
+  // at render time, so it naturally picks up the match once Sanity arrives.
+  const [worksSlug, setWorksSlug] = useState(() => {
+    const route = parseHash(window.location.hash)
+    return route && route.id === 'works' ? route.detail : null
+  })
+
+  // Window state is the single source of truth for what is open — the hash
+  // can only ever hold one route, but several windows can be open at once,
+  // so the hash is a PROJECTION of state (the focused window + its detail
+  // slug), not the other way around.
+  //
+  // This effect is that projection: it runs after every state change,
+  // however it happened (Dock, titlebar close, minimize, focusing a window),
+  // and keeps the hash accurate via replaceState — which never fires
+  // `hashchange`, so this can't loop back into the listener below.
+  useEffect(() => {
+    const next = focused ? buildHash(focused, focused === 'works' ? worksSlug : null) : ''
+    if (window.location.hash === next) return
+    history.replaceState(null, '', next || window.location.pathname)
+  }, [focused, worksSlug])
+
+  // The other direction: hash -> state, for pasted links and back/forward.
+  // A route that resolves to nothing (empty hash, unknown id, or a detail
+  // slug that matches no release) closes every window rather than being
+  // ignored — otherwise back-ing all the way out leaves a window open under
+  // a blank URL.
+  useHashRoute((route) => {
+    // windowToOpen depends only on the route's id/detail presence, not on
+    // whether the detail matches anything in `data` — so it's safe to read
+    // here even before Sanity has loaded. The detail string itself is
+    // stashed raw (see worksSlug above) rather than resolved.
+    const { windowToOpen } = resolveRoute(route, data)
+    if (!windowToOpen) {
+      openIds(windows).forEach(id => dispatch({ type: 'CLOSE', id }))
+      setWorksSlug(null)
+      return
+    }
+    // Below 768px only one window is ever visible. Closing the rest happens
+    // here, in the same dispatch pass that opens the new route, rather than
+    // in openWindow before the hash is even written — that would render an
+    // intermediate `focused: null` state and race the projection effect
+    // against this listener over what the hash should be.
+    if (compact) {
+      openIds(windows).filter(id => id !== windowToOpen).forEach(id => dispatch({ type: 'CLOSE', id }))
+    }
+    dispatch({ type: 'OPEN', id: windowToOpen })
+    // Only the works window carries a detail slug — opening any other
+    // window (e.g. About) must not clobber whatever Works detail was
+    // already selected underneath it.
+    if (windowToOpen === 'works') setWorksSlug(route.detail)
+  })
+
+  // User-initiated navigation: writes the hash directly (a real assignment,
+  // not replaceState) so opening a window or drilling into a release detail
+  // leaves a history entry for the back button to land on. Reconciling which
+  // windows end up open — including the mobile one-at-a-time rule — is the
+  // hashchange listener's job above; this just requests the route.
+  const openWindow = (id) => {
+    const isOpen = windows[id].open && !windows[id].minimized
+    if (isOpen && focused === id) {
+      dispatch({ type: 'CLOSE', id })
+      return
+    }
+    if (isOpen) {
+      dispatch({ type: 'FOCUS', id })
+      return
+    }
+    window.location.hash = buildHash(id, null)
+  }
+
+  const selectRelease = (slug) => {
+    window.location.hash = buildHash('works', slug)
+    if (!slug) setWorksSlug(null)
+  }
 
   const windowConfigs = {
     about: {
       title: 'About',
-      position: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
+      geom: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
     },
     works: {
       title: 'Works',
-      position: { top: '9%', left: '28%', width: '640px', height: '76%' }
+      geom: { top: '9%', left: '28%', width: '640px', height: '76%' }
     },
-    contact: {
+    game: {
+      title: 'Game',
+      geom: { top: '12%', left: '22%', width: '560px', height: 'min(620px, 78vh)' }
+    },
+    connect: {
       title: 'Connect',
-      position: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
+      geom: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
     }
   }
 
-  const toggleWindow = (id) => {
-    setOpenWindows(prev => {
-      const isOpen = prev.includes(id)
-      const next = isOpen ? prev.filter(w => w !== id) : [...prev, id]
-      setFocusedWindow(curr => {
-        if (isOpen) return curr === id ? (next[next.length - 1] ?? null) : curr
-        return id
-      })
-      return next
-    })
-  }
-
-  const closeWindow = (id) => {
-    setOpenWindows(prev => {
-      const next = prev.filter(w => w !== id)
-      setFocusedWindow(curr => (curr === id ? (next[next.length - 1] ?? null) : curr))
-      return next
-    })
-  }
-
-  const focusWindow = (id) => {
-    setFocusedWindow(id)
-  }
-
-  const handleDragEnd = useCallback((id, pos) => {
-    setDragPositions(prev => ({ ...prev, [id]: pos }))
-  }, [])
-
   const windowContent = {
-    about: <AboutContent aboutParagraphs={data.aboutParagraphs} />,
-    works: <WorksContent musicReleases={data.musicReleases} games={data.games} software={data.software} />,
-    contact: <ContactContent socialLinks={data.socialLinks} />
+    about: <About aboutParagraphs={data.aboutParagraphs} />,
+    works: <Works musicReleases={data.musicReleases} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
+    game: <Game game={data.game} />,
+    connect: <Connect socialLinks={data.socialLinks} />
   }
+
+  // Only ids with registered content actually mount a Window.
+  const renderableOpen = openIds(windows).filter(id => windowConfigs[id])
 
   return (
     <div className="desktop">
+      <Boot onDone={() => setBooted(true)} />
       <DesktopBackground />
-      <TitleBar />
+      <TitleBar nowPlaying={playing?.title ?? null} />
 
       <main className="desktop__content">
-        <Hero hasOpenWindows={openWindows.length > 0} heroSubtitle={data.heroSubtitle} />
+        <Hero
+          visible={booted && renderableOpen.length === 0}
+          heroSubtitle={data.heroSubtitle}
+          game={data.game}
+          onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}
+        />
 
-        {Object.entries(windowConfigs).map(([id, config]) => (
+        {WINDOW_IDS.filter(id => windowConfigs[id]).map(id => (
           <Window
             key={id}
-            title={config.title}
-            isOpen={openWindows.includes(id)}
-            isFocused={focusedWindow === id}
-            onClose={() => closeWindow(id)}
-            onFocus={() => focusWindow(id)}
-            defaultPosition={config.position}
-            dragPosition={dragPositions[id]}
-            onDragEnd={(pos) => handleDragEnd(id, pos)}
+            id={id}
+            title={windowConfigs[id].title}
+            state={windows[id]}
+            isFocused={focused === id}
+            defaultGeom={windowConfigs[id].geom}
+            onFocus={() => dispatch({ type: 'FOCUS', id })}
+            onClose={() => dispatch({ type: 'CLOSE', id })}
+            onMinimize={() => dispatch({ type: 'MINIMIZE', id })}
+            onMaximize={() => dispatch({ type: 'MAXIMIZE', id })}
+            onMove={(x, y) => dispatch({ type: 'MOVE', id, x, y })}
+            onResize={(w, h) => dispatch({ type: 'RESIZE', id, w, h })}
           >
             {windowContent[id]}
           </Window>
         ))}
       </main>
 
+      <Player release={playing} onClose={() => setPlaying(null)} />
+
       <Dock
-        openWindows={openWindows}
-        onToggleWindow={toggleWindow}
+        windows={windows}
+        onToggle={openWindow}
       />
     </div>
   )

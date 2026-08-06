@@ -35,8 +35,8 @@ Hearts Aglow is a one-person studio whose music is made from unusual physical so
 
 - **Stack (incumbent):** React 19 + Vite SPA. Content from Sanity (`projectId: lmi10j91`, dataset `production`) via `useSanityData`, with `src/data/fallback.js` as the offline default. Sanity stays — it is the editing surface.
 - **Static-only:** no server-side code. Anything requiring a backend (email capture) must use a hosted third-party endpoint.
-- **Music catalog:** 10 releases across three types — Drift series (ambient/sleep), albums, soundtracks. Bandcamp is the destination for all of them. Only 3 releases carry a `bandcampId`; the other 7 would need IDs before any embedded playback covers the catalog.
-- **Games catalog:** one title in development, teased publicly, not yet named in site data. No store URL yet; Steam is planned, itch.io possible sooner. Title, key art, and logline are **undecided/not yet supplied**.
+- **Music catalog:** 10 releases across three types — Drift series (ambient/sleep), albums, soundtracks. Bandcamp is the destination for all of them. Only 5 releases carry a `bandcampId`; the other 5 (Drift 3, Exalt, Drift 2, Drift, Rebuild) would need IDs before embedded playback covers the catalog.
+- **Games catalog:** one title, **YARG Venues** (2026, in development), described as "2 Audio reactive venues." Key art and a store URL are present. All of this lives in Sanity, not in `src/data/fallback.js` — the local fallback ships empty strings, so the game only appears when the Sanity fetch succeeds. Confirmed by rendering the built site.
 - **Software catalog:** empty. Status undecided.
 - **Conversion:** email capture for launch news is wanted now, with a store link slotting in beside it later without a redesign. No email provider chosen yet — **undecided**; requires a hosted form endpoint.
 
@@ -51,7 +51,8 @@ Hearts Aglow is a one-person studio whose music is made from unusual physical so
 
 - 10 real music releases with real cover art, track listings, descriptions, and Bandcamp URLs (`src/data/fallback.js`).
 - Real social presence: Bandcamp, Bluesky, Twitter, TikTok, and a real contact address.
-- **Absent — must not be fabricated:** game title, key art, screenshots, trailer, release date, store URLs, press quotes, review scores, player counts, sales figures, client list, or any named past scoring credit. The current about copy claims the music "has soundtracked games, films, and late-night radio across the world" — this is existing copy, not verified evidence, and should not be expanded into specific named claims.
+- Real game content in Sanity: title, key art, logline, year, and store URL for YARG Venues.
+- **Absent — must not be fabricated:** trailer, release date, press quotes, review scores, player counts, sales figures, client list, or any named past scoring credit. The current about copy claims the music "has soundtracked games, films, and late-night radio across the world" — this is existing copy, not verified evidence, and should not be expanded into specific named claims.
 
 ## Product Principles
 

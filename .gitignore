@@ -1,1 +1,5 @@
+node_modules/
+dist/
+assets/
 .superpowers/
+.DS_Store

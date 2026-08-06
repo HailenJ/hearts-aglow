@@ -2,49 +2,100 @@
    HEARTS AGLOW
    ======================================== */
 
-/* --- Design Tokens --- */
 :root {
-  --bg: #111111;
-  --surface: #191919;
-  --surface-raised: #1e1e1e;
+  /* Ground */
+  --void: #08070b;
 
-  --border: #333333;
-  --border-hover: #555555;
+  /* Bloom — the field's own colours, mirrored from the shader constants */
+  --bloom-warm: #c48aff;
 
-  --text: #e8e8e8;
-  --text-mid: #999999;
-  --text-dim: #555555;
+  /* Signal — focus, active state, live data. Nowhere else. */
+  --signal: #dff4ff;
 
-  --accent: #e8e8e8;
-  --accent-hover: #ffffff;
-  --warm: #e89578;
-  --warm-deep: #b86a4e;
+  /* Glow — bloom/signal colours at the alpha the box-shadows need. Same
+     source colours as above; kept as separate tokens so a shadow's alpha
+     doesn't have to be re-derived by eye at every call site. */
+  --glow-warm: rgba(196, 138, 255, 0.4);
+  --glow-warm-soft: rgba(196, 138, 255, 0.35);
+  --glow-signal: rgba(223, 244, 255, 0.4);
 
-  --font-sans: 'Outfit', -apple-system, Helvetica Neue, sans-serif;
-  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
-  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  /* Text — contrast checked against the field's true peak brightness behind
+     the hero (~rgb(90,64,103), see task-8-report.md fix-report for the
+     arithmetic). Hierarchy here is carried mainly by size/weight/letter-
+     spacing, not by these alpha steps — the steps stay small on purpose. */
+  --text: rgba(255, 255, 255, 0.95);
+  --text-dim: rgba(255, 255, 255, 0.80);
+  --text-faint: rgba(255, 255, 255, 0.66);
 
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4.5rem;
+  /* Chrome */
+  --hairline: rgba(255, 255, 255, 0.11);
+  --hairline-focus: rgba(223, 244, 255, 0.34);
+  --pane: rgba(255, 255, 255, 0.045);
+  --pane-blur: 20px;
 
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  /* Type */
+  --font-display: 'Anybody', system-ui, sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-data: 'Martian Mono', ui-monospace, monospace;
 
-  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --transition: 0.32s var(--ease-soft);
-  --transition-fast: 0.18s var(--ease-soft);
+  /* Spacing — one rhythm for the whole surface */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-mid: 240ms;
+  --dur-slow: 380ms;
 }
 
-/* --- Focus Rings (subtle but visible) --- */
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lightfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.lightfield canvas { display: block; width: 100%; height: 100%; }
+
+/* Film grain — anti-banding and the shoegaze texture, doing one job each. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+
+/* Focus is visible against the bloom, which a default outline is not. */
 :focus-visible {
-  outline: 1px solid rgba(232, 149, 120, 0.55);
+  outline: 1px solid var(--signal);
   outline-offset: 2px;
-  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* --- Reset & Base --- */
@@ -60,10 +111,10 @@ html, body, #root {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-weight: 300;
   font-size: 16px;
-  background: var(--bg);
+  background: var(--void);
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -71,7 +122,7 @@ body {
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-weight: 400;
   line-height: 1.2;
 }
@@ -82,8 +133,8 @@ p:last-child { margin-bottom: 0; }
 a {
   color: var(--text);
   text-decoration: none;
-  border-bottom: 1px solid var(--border);
-  transition: border-color var(--transition);
+  border-bottom: 1px solid var(--hairline);
+  transition: border-color var(--dur-mid) var(--ease-out);
 }
 
 a:hover {
@@ -96,12 +147,8 @@ a:hover {
 }
 
 /* --- Desktop Shell --- */
-.desktop {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: var(--bg);
-}
+.desktop { position: relative; height: 100%; z-index: 2; }
+.desktop__content { position: absolute; inset: 0; }
 
 /* --- Background --- */
 .desktop__bg {
@@ -110,330 +157,231 @@ a:hover {
   overflow: hidden;
 }
 
-.desktop__mesh {
-  position: absolute;
-  inset: -15%;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 60% 55% at 22% 32%, rgba(232, 149, 120, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 78% 70%, rgba(120, 100, 180, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 80% 50% at 50% 105%, rgba(232, 149, 120, 0.06) 0%, transparent 65%);
-  filter: blur(40px);
-  animation: mesh-drift 38s ease-in-out infinite alternate;
-  will-change: transform;
-}
-
-@keyframes mesh-drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  50%  { transform: translate3d(2%, -2%, 0) scale(1.04); }
-  100% { transform: translate3d(-2%, 2%, 0) scale(1.02); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .desktop__mesh { animation: none; }
-}
-
-/* --- Title Bar --- */
-.titlebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-lg);
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  z-index: 1000;
-}
-
-.titlebar__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--text-mid);
-}
-
-.titlebar__dot {
-  width: 6px;
-  height: 6px;
-  background: var(--warm);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.7);
-  animation: pulse-dot 4s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 0.7; box-shadow: 0 0 6px rgba(232, 149, 120, 0.5); }
-  50%      { opacity: 1;   box-shadow: 0 0 12px rgba(232, 149, 120, 0.85); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .titlebar__dot { animation: none; }
-}
-
-.titlebar__time {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-/* --- Desktop Content --- */
-.desktop__content {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
-  bottom: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- Hero --- */
-.hero {
-  text-align: center;
-  z-index: 1;
-  animation: fade-in 1s var(--ease-soft) forwards;
-  opacity: 0;
-  transform: translateY(-3vh);
-}
-
+/* Used by .works__detail — kept independent of the hero, which no longer animates. */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.hero__logo {
-  width: clamp(140px, 22vw, 240px);
-  height: auto;
-  opacity: 0.95;
-  filter: drop-shadow(0 0 40px rgba(232, 149, 120, 0.18));
+/* --- Title Bar --- */
+.titlebar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  height: 34px;
+  padding: 0 var(--s-5);
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
+.titlebar__brand { display: flex; align-items: center; gap: var(--s-2); }
+.titlebar__dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-faint);
+}
+/* Signal is reserved for live data — the dot only earns it while something is
+   actually playing, matching the shape's promise of a live indicator. */
+.titlebar__dot--live {
+  background: var(--signal);
+  box-shadow: 0 0 10px var(--signal);
+}
+.titlebar__np { color: var(--signal); }
 
-.hero__tagline {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  font-style: italic;
-  font-weight: 300;
-  color: var(--text-mid);
-  letter-spacing: 0.005em;
-  margin-top: var(--space-lg);
-  animation: fade-in 0.6s ease 0.1s forwards;
-  opacity: 0;
+/* --- Hero --- */
+.hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+  text-align: center;
+  padding: var(--s-6);
 }
+.hero__logo { width: min(340px, 62vw); height: auto; }
+.hero__tagline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: 200;
+  font-stretch: 125%;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+}
+.hero__rule {
+  width: 120px; height: 1px; margin: var(--s-5) 0 var(--s-2);
+  background: linear-gradient(90deg, transparent, var(--hairline-focus), transparent);
+}
+.hero__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-6);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
+}
+.hero__cta:hover {
+  border-color: var(--hairline-focus);
+  box-shadow: 0 0 40px -8px var(--glow-warm);
+}
+.hero__cta-name {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 300; font-stretch: 125%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.hero__cta-meta {
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.hero__cta-go { color: var(--signal); font-size: 12px; }
 
 /* --- Dock --- */
 .dock {
   position: fixed;
-  bottom: var(--space-lg);
+  bottom: var(--s-5);
   left: 50%;
   transform: translateX(-50%);
+  z-index: 40;
   display: flex;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  z-index: 1000;
-  background: rgba(17, 17, 17, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  gap: var(--s-2);
 }
-
 .dock__item {
-  position: relative;
-  padding: 11px 26px 13px;
-  background: transparent;
-  border: none;
-  border-right: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: var(--s-2) var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 300; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition: color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
 }
-
-.dock__item:last-child {
-  border-right: none;
-}
-
-.dock__item::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--warm);
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.7);
-  transition: transform var(--transition);
-}
-
-.dock__item:hover {
-  color: var(--text-mid);
-  background: rgba(255, 255, 255, 0.025);
-}
-
+.dock__item:hover { color: var(--text); border-color: var(--hairline-focus); }
 .dock__item--active {
-  color: var(--text);
-  background: rgba(232, 149, 120, 0.04);
+  color: var(--signal);
+  border-color: var(--hairline-focus);
+  box-shadow: 0 0 24px -6px var(--glow-signal);
 }
-
-.dock__item--active::after {
-  transform: translateX(-50%) scale(1);
-}
+.dock__item--min { color: var(--text-faint); border-style: dashed; }
 
 /* --- Windows --- */
 .window {
   position: absolute;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  animation: window-open 0.5s var(--ease-soft) forwards;
-  z-index: 100;
   display: flex;
   flex-direction: column;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+  background: var(--pane);
+  backdrop-filter: blur(var(--pane-blur));
+  -webkit-backdrop-filter: blur(var(--pane-blur));
+  border: 1px solid var(--hairline);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-mid) var(--ease-out);
+  animation: window-open var(--dur-mid) var(--ease-out);
+}
+
+/* Focus reads as more light — the world's own vocabulary, not a highlight ring. */
+.window--focused {
+  border-color: var(--hairline-focus);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55),
+              0 0 60px -12px var(--glow-warm-soft);
 }
 
 @keyframes window-open {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.985);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
 }
 
-.window--focused {
-  z-index: 200;
-  border-color: var(--border-hover);
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(232, 149, 120, 0.04),
-    0 0 60px rgba(232, 149, 120, 0.05);
-}
-
-/* Window header */
-.window__header {
-  flex-shrink: 0;
+.window__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 14px 11px 16px;
-  border-bottom: 1px solid var(--border);
+  gap: var(--s-4);
+  height: 34px;
+  padding: 0 var(--s-3) 0 var(--s-4);
+  border-bottom: 1px solid var(--hairline);
   cursor: grab;
-  user-select: none;
   touch-action: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent),
-              var(--surface);
+  flex: none;
 }
-
-.window__header:active {
-  cursor: grabbing;
-}
+.window__bar:active { cursor: grabbing; }
 
 .window__title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 400;
+  font-stretch: 125%;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--text-dim);
-  transition: color var(--transition);
 }
+.window--focused .window__title { color: var(--text); }
 
-.window__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  transition: background var(--transition), box-shadow var(--transition);
-}
+.window__btns { display: flex; gap: var(--s-1); }
 
-.window--focused .window__title {
-  color: var(--text-mid);
-}
-
-.window--focused .window__dot {
-  background: var(--warm);
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.6);
-}
-
-.window__close {
+.window__btn {
+  display: grid;
+  place-items: center;
   width: 22px;
   height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
   background: transparent;
-  border: none;
-  border-radius: 50%;
-  color: var(--text-dim);
+  color: var(--text-faint);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: color var(--dur-fast), background var(--dur-fast);
 }
+.window__btn:hover { color: var(--signal); background: rgba(255, 255, 255, 0.07); }
 
-.window__close:hover {
-  color: var(--bg);
-  background: var(--warm);
-}
-
-/* Window content */
-.window__content {
+.window__body {
   flex: 1;
   min-height: 0;
-  padding: var(--space-xl) var(--space-2xl);
   overflow-y: auto;
+  padding: var(--s-5);
+  overscroll-behavior: contain;
 }
 
-.window__content::-webkit-scrollbar {
-  width: 6px;
+.window__grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(135deg, transparent 50%, var(--hairline) 50%, var(--hairline) 62%, transparent 62%);
 }
 
-.window__content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.window__content::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-  border: 1px solid transparent;
-  background-clip: padding-box;
-}
-
-.window__content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-  background-clip: padding-box;
-}
-
-/* --- About --- */
+/* --- About ---
+   .about__lead is prose (a <p>, not a title/label/tab), so it takes the
+   body voice even though it reads as a stylized lead-in. */
 .about__lead {
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: 2rem;
   font-weight: 300;
   font-style: italic;
   color: var(--text);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--s-6);
   line-height: 1.25;
   letter-spacing: -0.005em;
   max-width: 22ch;
@@ -447,13 +395,13 @@ a:hover {
   top: -0.6em;
   width: 28px;
   height: 1px;
-  background: var(--warm);
+  background: var(--bloom-warm);
   opacity: 0.6;
 }
 
 .about__text {
   font-size: 0.92rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   max-width: 48ch;
   line-height: 1.7;
 }
@@ -464,38 +412,43 @@ a:hover {
 }
 
 .about__text a:hover {
-  color: var(--warm);
-  border-bottom-color: var(--warm);
+  color: var(--bloom-warm);
+  border-bottom-color: var(--bloom-warm);
 }
 
 /* --- Works --- */
 .works__tabs {
   display: flex;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-xl);
-  border-bottom: 1px solid var(--border);
+  gap: var(--s-5);
+  margin-bottom: var(--s-6);
+  border-bottom: 1px solid var(--hairline);
 }
 
+/* Tab label — display voice. Active state is signal, matching
+   .dock__item--active; the resting/hover steps mirror that same
+   dim -> text -> signal ladder. */
 .works__tab {
   position: relative;
-  padding: var(--space-sm) 0 var(--space-md);
+  padding: var(--s-2) 0 var(--s-4);
   background: transparent;
   border: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color var(--transition);
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .works__tab:hover {
-  color: var(--text-mid);
+  color: var(--text);
 }
 
 .works__tab--active {
-  color: var(--text);
+  color: var(--signal);
 }
 
 .works__tab--active::after {
@@ -505,45 +458,49 @@ a:hover {
   right: 0;
   bottom: -1px;
   height: 1px;
-  background: var(--warm);
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.5);
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--glow-signal);
 }
 
 .works__type-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--s-6);
 }
 
 .works__type-section:last-of-type {
   margin-bottom: 0;
 }
 
+/* Section label — display voice (release-type group heading). */
 .works__type-label {
   display: flex;
   align-items: baseline;
-  gap: var(--space-sm);
-  font-family: var(--font-serif);
-  font-size: 1rem;
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--text-mid);
-  margin-bottom: var(--space-md);
-  padding-bottom: var(--space-xs);
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: var(--s-6);
+  margin-bottom: var(--s-3);
+  padding-bottom: var(--s-1);
 }
 
 .works__type-label::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, var(--border), transparent);
+  background: linear-gradient(90deg, var(--hairline), transparent);
   align-self: center;
-  margin-left: var(--space-sm);
+  margin-left: var(--s-2);
 }
 
 .works__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-md);
+  gap: var(--s-4);
 }
 
 .works__grid--featured {
@@ -560,19 +517,19 @@ a:hover {
 .works__item--featured::after {
   content: 'Latest';
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
+  top: var(--s-2);
+  right: var(--s-2);
   padding: 4px 8px;
   background: rgba(17, 17, 17, 0.7);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.55rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
   border: 1px solid rgba(232, 149, 120, 0.25);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   pointer-events: none;
   z-index: 2;
 }
@@ -583,11 +540,11 @@ a:hover {
 
 .works__item {
   display: block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--pane);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
   overflow: hidden;
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  transition: transform var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -620,19 +577,23 @@ a:hover {
 }
 
 .works__info {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--s-2) var(--s-4);
 }
 
+/* Release title — display voice, not data. */
 .works__title {
-  font-family: var(--font-sans);
-  font-size: 0.88rem;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text);
   margin-bottom: 2px;
 }
 
 .works__meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.62rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -644,41 +605,45 @@ a:hover {
   animation: fade-in 0.2s ease;
 }
 
+/* Nav/action label — display voice, not data. Hover no longer widens the
+   gap (that forced layout); it nudges the whole label sideways instead. */
 .works__back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: transparent;
   border: none;
-  padding: 0 0 var(--space-xs);
-  font-family: var(--font-mono);
+  padding: 0 0 var(--s-1);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.62rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mid);
+  color: var(--text-dim);
   cursor: pointer;
-  margin-bottom: var(--space-lg);
-  transition: color var(--transition), gap var(--transition);
+  margin-bottom: var(--s-5);
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .works__back:hover {
-  color: var(--warm);
-  gap: 10px;
+  color: var(--bloom-warm);
+  transform: translateX(-3px);
 }
 
 .works__detail-header {
   display: flex;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
+  gap: var(--s-5);
+  margin-bottom: var(--s-5);
 }
 
 .works__detail-artwork {
   width: 140px;
   height: 140px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
 }
 
 .works__detail-artwork img {
@@ -691,74 +656,85 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-xs);
+  gap: var(--s-1);
 }
 
+/* Release title — display voice, not data. */
 .works__detail-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.95rem;
-  font-weight: 400;
+  font-weight: 300;
+  font-stretch: 118%;
   color: var(--text);
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .works__detail-meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
 
+/* CTA label — display voice, not data. */
 .works__detail-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: var(--space-sm);
-  padding: 9px var(--space-md) 10px;
-  font-family: var(--font-mono);
+  margin-top: var(--s-2);
+  padding: 9px var(--s-4) 10px;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 70%),
     transparent;
   border: 1px solid rgba(232, 149, 120, 0.35);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  border-radius: 2px;
+  transition: color var(--dur-mid) var(--ease-out), background var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
   text-decoration: none;
   width: fit-content;
 }
 
 .works__detail-link:hover {
-  color: var(--bg);
-  background: var(--warm);
-  border-color: var(--warm);
+  color: var(--void);
+  background: var(--bloom-warm);
+  border-color: var(--bloom-warm);
   box-shadow: 0 0 24px rgba(232, 149, 120, 0.3);
 }
 
 .works__detail-desc {
   font-size: 0.9rem;
   line-height: 1.7;
-  color: var(--text-mid);
-  margin-bottom: var(--space-lg);
+  color: var(--text-dim);
+  margin-bottom: var(--s-5);
   max-width: 54ch;
 }
 
 .works__detail-tracks {
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--border);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--hairline);
 }
 
+/* Section label — display voice. */
 .works__detail-tracks h4 {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 1rem;
-  color: var(--text-mid);
-  margin-bottom: var(--space-md);
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: 118%;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: var(--s-6);
+  margin-bottom: var(--s-3);
 }
 
 .works__detail-tracks ol {
@@ -766,7 +742,7 @@ a:hover {
   counter-reset: track;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  column-gap: var(--space-xl);
+  column-gap: var(--s-6);
   row-gap: 0;
 }
 
@@ -775,21 +751,22 @@ a:hover {
   display: grid;
   grid-template-columns: 22px 1fr;
   align-items: baseline;
-  gap: var(--space-sm);
+  gap: var(--s-2);
   padding: 7px 0;
   font-size: 0.88rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
-  transition: color var(--transition);
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .works__detail-tracks li:hover {
   color: var(--text);
 }
 
+/* Track number — data voice (explicitly the mono role). */
 .works__detail-tracks li::before {
   content: counter(track, decimal-leading-zero);
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   color: var(--text-dim);
@@ -807,34 +784,38 @@ a:hover {
 
 .works__empty {
   text-align: center;
-  padding: var(--space-2xl);
+  padding: var(--s-7);
 }
 
 .works__empty-icon {
   font-size: 1.5rem;
   color: var(--text-dim);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
 }
 
 .works__empty h3 {
   font-size: 1.1rem;
   font-weight: 400;
-  color: var(--text-mid);
-  margin-bottom: var(--space-sm);
+  color: var(--text-dim);
+  margin-top: var(--s-5);
+  margin-bottom: var(--s-2);
 }
 
 .works__empty p {
   font-size: 0.85rem;
   color: var(--text-dim);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
+  max-width: 68ch;
+  margin-inline: auto;
 }
 
+/* Status readout — data voice (explicitly named in the rule). */
 .works__empty-status {
   display: inline-block;
-  padding: var(--space-xs) var(--space-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  padding: var(--s-1) var(--s-4);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  font-family: var(--font-data);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -842,28 +823,31 @@ a:hover {
 }
 
 .works__footer {
-  margin-top: var(--space-xl);
+  margin-top: var(--s-6);
   text-align: center;
 }
 
+/* CTA label — display voice, not data. */
 .works__link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: var(--space-sm) var(--space-lg);
-  font-family: var(--font-mono);
+  padding: var(--s-2) var(--s-5);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mid);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  color: var(--text-dim);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), background var(--dur-mid) var(--ease-out);
 }
 
 .works__link:hover {
   border-color: rgba(232, 149, 120, 0.4);
-  color: var(--warm);
+  color: var(--bloom-warm);
   background: rgba(232, 149, 120, 0.04);
 }
 
@@ -872,38 +856,43 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: var(--space-md) var(--space-lg);
-  margin-bottom: var(--space-lg);
+  padding: var(--s-4) var(--s-5);
+  margin-bottom: var(--s-5);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 60%),
-    var(--surface-raised);
+    var(--pane);
   border: 1px solid rgba(232, 149, 120, 0.25);
-  border-radius: var(--radius-md);
+  border-radius: 3px;
   text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color var(--dur-slow) var(--ease-out), background var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
 }
 
 .contact__primary:hover {
   border-color: rgba(232, 149, 120, 0.5);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.18), transparent 60%),
-    var(--surface-raised);
+    var(--pane);
   transform: translateY(-1px);
 }
 
+/* Eyebrow label — display voice. */
 .contact__primary-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.58rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
+/* This is a contact value (an address/handle), not a release title, so it
+   takes the body voice like its sibling .contact__value below. */
 .contact__primary-value {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-serif);
+  gap: var(--s-2);
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 1.2rem;
   color: var(--text);
@@ -917,30 +906,34 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border);
-  transition: padding var(--transition);
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .contact__item:hover {
-  padding-left: 6px;
+  transform: translateX(4px);
 }
 
 .contact__item:hover .contact__icon {
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
 .contact__item:last-child {
   border-bottom: none;
 }
 
+/* Field label — display voice, not data. */
 .contact__label {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-mono);
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-stretch: 118%;
   font-size: 0.65rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -951,14 +944,14 @@ a:hover {
 }
 
 .contact__primary .contact__icon {
-  color: var(--warm);
+  color: var(--bloom-warm);
 }
 
 .contact__value {
   font-size: 0.9rem;
-  color: var(--text-mid);
+  color: var(--text-dim);
   border-bottom: 1px solid transparent;
-  transition: all var(--transition);
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out);
 }
 
 .contact__value:hover {
@@ -966,12 +959,17 @@ a:hover {
   border-bottom-color: var(--text-dim);
 }
 
-/* --- Artwork Placeholder --- */
+/* --- Artwork Placeholder ---
+   --placeholder-h/-h2 are set per-instance as an inline style by
+   Works.jsx; the declarations below are just the default hue so the
+   custom properties resolve even before JS sets them. */
 .works__artwork--placeholder {
+  --placeholder-h: 18;
+  --placeholder-h2: 260;
   aspect-ratio: 1;
   background:
-    radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h, 18), 60%, 55%, 0.22), transparent 60%),
-    radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2, 260), 45%, 50%, 0.14), transparent 65%),
+    radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h), 60%, 55%, 0.22), transparent 60%),
+    radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2), 45%, 50%, 0.14), transparent 65%),
     linear-gradient(135deg, #1a1a1a, #242420);
   display: grid;
   place-items: center;
@@ -987,7 +985,7 @@ a:hover {
 }
 
 .works__artwork-glyph {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 300;
   font-size: 2.6rem;
@@ -998,50 +996,180 @@ a:hover {
   text-transform: lowercase;
 }
 
-/* --- Responsive --- */
-@media (max-width: 768px) {
-  :root {
-    --space-lg: 1rem;
-    --space-xl: 1.5rem;
-    --space-2xl: 2rem;
-  }
+/* --- Game window --- */
+.game { display: flex; flex-direction: column; gap: var(--s-4); }
 
-  .titlebar {
-    padding: 0 var(--space-md);
-  }
+.game__art {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  /* The field shows through where the art will go — honest, not a grey box. */
+  background: transparent;
+}
+.game__art img { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+.game__art-empty {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-faint);
+}
 
+.game__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 300; font-stretch: 118%;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.game__meta {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.game__logline { margin: 0; max-width: 68ch; line-height: 1.7; color: var(--text-dim); }
+
+.game__form { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-3); }
+.game__label {
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 300; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.game__row { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+.game__input {
+  flex: 1 1 200px;
+  padding: var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.game__input::placeholder { color: var(--text-faint); }
+.game__input:disabled, .game__submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.game__submit, .works__play {
+  padding: var(--s-3) var(--s-5);
+  border: 1px solid var(--hairline-focus);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--signal);
+  font-family: var(--font-display);
+  font-size: 10px; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer;
+}
+.game__submit:hover:not(:disabled), .works__play:hover { box-shadow: 0 0 24px -6px var(--glow-signal); }
+.game__note {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.12em;
+  color: var(--text-faint);
+}
+.game__store {
+  align-self: flex-start;
+  color: var(--signal);
+  font-family: var(--font-display);
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  text-decoration: none;
+}
+
+.player {
+  position: fixed;
+  right: var(--s-5);
+  bottom: 84px;
+  z-index: 45;
+  width: 300px;
+  border: 1px solid var(--hairline-focus);
+  border-radius: 3px;
+  background: var(--pane);
+  backdrop-filter: blur(var(--pane-blur));
+  -webkit-backdrop-filter: blur(var(--pane-blur));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: window-open var(--dur-mid) var(--ease-out);
+}
+.player__bar {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 30px; padding: 0 var(--s-2) 0 var(--s-3);
+  border-bottom: 1px solid var(--hairline);
+}
+.player__title {
+  font-family: var(--font-display);
+  font-size: 10px; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--signal);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player__close {
+  display: grid; place-items: center;
+  width: 22px; height: 22px; padding: 0;
+  border: 0; background: transparent; color: var(--text-faint); cursor: pointer;
+}
+.player__close:hover { color: var(--signal); }
+.player__frame { display: block; width: 100%; height: 340px; border: 0; }
+
+/* --- Responsive ---
+   Single mobile breakpoint. Below 768px the desktop metaphor becomes
+   one-app-at-a-time: windows are full-bleed sheets, the dock is a fixed
+   bottom bar. Sheet entry animates only transform/opacity — never
+   width/height/inset — so it stays off the layout thread. */
+@media (max-width: 767px) {
   .titlebar__time {
     display: none;
   }
 
-  .dock {
-    bottom: var(--space-md);
-  }
-
-  .dock__item {
-    padding: 10px 16px;
-  }
-
-  .hero__logo {
-    width: clamp(100px, 30vw, 180px);
-  }
-
   .window {
-    left: 8px !important;
-    right: 8px !important;
+    position: fixed;
+    inset: 34px 0 62px 0 !important;
     width: auto !important;
-    max-width: none !important;
-    top: 50px !important;
-    max-height: calc(100vh - 130px) !important;
+    height: auto !important;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    animation: sheet-up var(--dur-mid) var(--ease-out);
+  }
+  @keyframes sheet-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
   }
 
-  .window__content {
-    padding: var(--space-lg);
+  .window__bar { cursor: default; }
+  .window__body { padding: var(--s-4); }
+
+  .dock {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    justify-content: space-around;
+    padding: var(--s-2) var(--s-2) calc(var(--s-2) + env(safe-area-inset-bottom));
+    background: rgba(8, 7, 11, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--hairline);
   }
+  .dock__item {
+    flex: 1;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-2) var(--s-1);
+    text-align: center;
+    border: 0;
+    background: transparent;
+  }
+  .dock__item--active { box-shadow: none; }
+
+  .player { left: var(--s-3); right: var(--s-3); bottom: 70px; width: auto; }
+  .hero__logo { width: 74vw; }
 
   .works__grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-sm);
+    gap: var(--s-2);
   }
 
   .works__grid--featured {
@@ -1061,4 +1189,46 @@ a:hover {
     width: 100px;
     height: 100px;
   }
+}
+
+/* ========================================
+   BOOT SEQUENCE
+   ======================================== */
+
+.boot {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center;
+  background: #000;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.boot--leaving { opacity: 0; pointer-events: none; }
+
+/* The aperture dilating — Turrell's opening, not a spinner. */
+.boot__aperture {
+  position: absolute;
+  width: 40vmax; height: 40vmax; border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,138,255,.5), transparent 62%);
+  filter: blur(40px);
+  animation: aperture 2600ms var(--ease-out) forwards;
+}
+@keyframes aperture {
+  from { transform: scale(0.02); opacity: 0; }
+  60%  { opacity: 1; }
+  to   { transform: scale(1.6); opacity: 0.65; }
+}
+
+.boot__log {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 11px; line-height: 2; letter-spacing: 0.1em;
+  color: var(--signal);
+  text-align: left;
+}
+.boot__skip {
+  position: absolute; bottom: var(--s-7);
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-faint);
 }
