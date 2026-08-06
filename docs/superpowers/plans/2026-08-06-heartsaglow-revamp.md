@@ -44,7 +44,7 @@ Create `src/components/LightField.jsx`:
 
 ```jsx
 import { useEffect, useRef } from 'react'
-import { Renderer, Camera, Geometry, Program, Mesh, Triangle } from 'ogl'
+import { Renderer, Program, Mesh, Triangle } from 'ogl'
 
 const vertex = /* glsl */ `
   attribute vec2 uv;
@@ -184,7 +184,7 @@ export default function LightField() {
 }
 ```
 
-Note: `Camera` and `Geometry` are imported by the old `Particles.jsx` but are not needed here — do not import them.
+Note: the old `Particles.jsx` imports `Camera` and `Geometry`; this component needs neither.
 
 - [ ] **Step 2: Swap it into the app**
 
@@ -1147,10 +1147,36 @@ if (next.software) next.software = withSlugs(next.software)
 setData(prev => ({ ...prev, ...next }))
 ```
 
+- [ ] **Step 3b: Fix the pre-existing lint error in this file**
+
+`src/hooks/useSanityData.js:38` has a pre-existing `react-hooks/set-state-in-effect` error: `setIsLoaded(true)` is called synchronously inside the effect's `catch` block. Since you are rewriting this effect anyway, fix it properly.
+
+`fetchAllContent()` is already `async`, so it cannot throw synchronously — the outer `try`/`catch` and the `console.log`/`console.error` debugging noise around it are all dead weight. Replace the whole effect body with:
+
+```js
+useEffect(() => {
+  let live = true
+  fetchAllContent()
+    .then(sanityData => {
+      if (!live || !Object.keys(sanityData).length) return
+      const next = { ...sanityData }
+      if (next.musicReleases) next.musicReleases = withSlugs(next.musicReleases)
+      if (next.games) { next.games = withSlugs(next.games); next.game = featured(next.games) }
+      if (next.software) next.software = withSlugs(next.software)
+      setData(prev => ({ ...prev, ...next }))
+    })
+    .catch(err => console.error('[Sanity] fetch failed:', err))
+    .finally(() => { if (live) setIsLoaded(true) })
+  return () => { live = false }
+}, [])
+```
+
+The `live` flag prevents a setState after unmount; every setState now happens in a callback rather than synchronously in the effect body, which is what the rule asks for.
+
 - [ ] **Step 4: Verify**
 
 Run: `npm test && npm run lint && npm run dev`
-Expected: clean; the site renders unchanged.
+Expected: all clean — including lint, which should now report **zero** problems repo-wide.
 
 Confirm slugs exist by adding a temporary `console.log(data.musicReleases[0].slug)` in `App`, checking it prints `drift-6`, then removing the log before committing.
 
