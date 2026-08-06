@@ -226,7 +226,7 @@ Non-negotiable, and load-bearing given a moving background:
 
 - All text clears WCAG AA against the field at its brightest phase — verified against the bloom peak, not the dark trough.
 - `prefers-reduced-motion` freezes the light field to a static frame and skips the boot sequence entirely.
-- Every window is keyboard-operable: focus trap while focused, `Escape` closes, dock items are real buttons in tab order.
+- Every window is keyboard-operable: opening one moves focus into it, `Escape` closes it, and dock items are real buttons in tab order. **No focus trap** — these windows are non-modal, and trapping focus inside one would strand keyboard users where a real desktop lets them tab away.
 - Focus indicators are visible against the field — signal cyan, not a default outline lost in the bloom.
 - The field is `aria-hidden`; it carries no information.
 - Reduced transparency is respected where the platform reports it.
