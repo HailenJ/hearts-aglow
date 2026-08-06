@@ -1,5 +1,7 @@
 import { useReducer, useState } from 'react'
 import { useSanityData } from './hooks/useSanityData'
+import { useHashRoute } from './hooks/useHashRoute'
+import { buildHash } from './lib/route'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
@@ -40,6 +42,33 @@ function App() {
   const focused = focusedId(windows)
   const [playing, setPlaying] = useState(null)
   const [booted, setBooted] = useState(false)
+  const [worksSlug, setWorksSlug] = useState(null)
+
+  // The URL is the source of truth for what is open. Handlers below write the
+  // hash; this listener is the only thing that reads it back into state, so a
+  // pasted link and a click take exactly the same path.
+  useHashRoute((route) => {
+    if (!route) return
+    dispatch({ type: 'OPEN', id: route.id })
+    setWorksSlug(route.id === 'works' ? route.detail : null)
+  })
+
+  const openWindow = (id) => {
+    const isOpen = windows[id].open && !windows[id].minimized
+    if (isOpen) {
+      dispatch({ type: 'CLOSE', id })
+      if (openIds(windows).filter(w => w !== id).length === 0) {
+        history.replaceState(null, '', window.location.pathname)
+      }
+    } else {
+      window.location.hash = buildHash(id, null)
+    }
+  }
+
+  const selectRelease = (slug) => {
+    window.location.hash = buildHash('works', slug)
+    if (!slug) setWorksSlug(null)
+  }
 
   const windowConfigs = {
     about: {
@@ -62,7 +91,7 @@ function App() {
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} />,
+    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
     game: <Game game={data.game} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
@@ -108,7 +137,7 @@ function App() {
 
       <Dock
         windows={windows}
-        onToggle={(id) => dispatch({ type: 'TOGGLE', id })}
+        onToggle={openWindow}
       />
     </div>
   )

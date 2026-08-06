@@ -104,18 +104,13 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   )
 }
 
-function Works({ musicReleases, games, software, onPlay }) {
+function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect }) {
   const [activeTab, setActiveTab] = useState('music')
-  const [selectedRelease, setSelectedRelease] = useState(null)
   const tabs = ['music', 'games', 'software']
 
-  const handleReleaseClick = (release) => {
-    setSelectedRelease(release)
-  }
-
-  const handleBack = () => {
-    setSelectedRelease(null)
-  }
+  const selectedRelease = selectedSlug
+    ? [...musicReleases, ...software].find(r => r.slug === selectedSlug) ?? null
+    : null
 
   return (
     <div className="works">
@@ -124,7 +119,7 @@ function Works({ musicReleases, games, software, onPlay }) {
           <button
             key={tab}
             className={`works__tab ${activeTab === tab ? 'works__tab--active' : ''}`}
-            onClick={() => { setActiveTab(tab); setSelectedRelease(null); }}
+            onClick={() => { setActiveTab(tab); onSelect(null); }}
           >
             {tab}
           </button>
@@ -135,7 +130,7 @@ function Works({ musicReleases, games, software, onPlay }) {
         <>
           {selectedRelease ? (
             <div className="works__detail">
-              <button className="works__back" onClick={handleBack}>&larr; Back</button>
+              <button className="works__back" onClick={() => onSelect(null)}>&larr; Back</button>
               <div className="works__detail-header">
                 <div className="works__detail-artwork">
                   <img src={selectedRelease.image} alt={selectedRelease.title} />
@@ -184,7 +179,7 @@ function Works({ musicReleases, games, software, onPlay }) {
                         <button
                           key={release.id}
                           className={`works__item ${featuredEnabled && idx === 0 ? 'works__item--featured' : ''}`}
-                          onClick={() => handleReleaseClick(release)}
+                          onClick={() => onSelect(release.slug)}
                         >
                           {release.image
                             ? (
@@ -220,11 +215,11 @@ function Works({ musicReleases, games, software, onPlay }) {
       )}
 
       {activeTab === 'games' && (
-        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
+        <ProjectGrid items={games} emptyTitle="Games" emptyDescription="Interactive experiences in development." selectedItem={selectedRelease} onSelect={(item) => onSelect(item.slug)} onBack={() => onSelect(null)} />
       )}
 
       {activeTab === 'software' && (
-        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." selectedItem={selectedRelease} onSelect={handleReleaseClick} onBack={handleBack} />
+        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." selectedItem={selectedRelease} onSelect={(item) => onSelect(item.slug)} onBack={() => onSelect(null)} />
       )}
     </div>
   )
