@@ -1,7 +1,7 @@
-import { useReducer, useState } from 'react'
+import { useReducer, useState, useEffect } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import { useHashRoute } from './hooks/useHashRoute'
-import { buildHash } from './lib/route'
+import { buildHash, resolveRoute } from './lib/route'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
@@ -44,22 +44,44 @@ function App() {
   const [booted, setBooted] = useState(false)
   const [worksSlug, setWorksSlug] = useState(null)
 
-  // The URL is the source of truth for what is open. Handlers below write the
-  // hash; this listener is the only thing that reads it back into state, so a
-  // pasted link and a click take exactly the same path.
+  // Window state is the single source of truth for what is open — the hash
+  // can only ever hold one route, but several windows can be open at once,
+  // so the hash is a PROJECTION of state (the focused window + its detail
+  // slug), not the other way around.
+  //
+  // This effect is that projection: it runs after every state change,
+  // however it happened (Dock, titlebar close, minimize, focusing a window),
+  // and keeps the hash accurate via replaceState — which never fires
+  // `hashchange`, so this can't loop back into the listener below.
+  useEffect(() => {
+    const next = focused ? buildHash(focused, focused === 'works' ? worksSlug : null) : ''
+    if (window.location.hash === next) return
+    history.replaceState(null, '', next || window.location.pathname)
+  }, [focused, worksSlug])
+
+  // The other direction: hash -> state, for pasted links and back/forward.
+  // A route that resolves to nothing (empty hash, unknown id, or a detail
+  // slug that matches no release) closes every window rather than being
+  // ignored — otherwise back-ing all the way out leaves a window open under
+  // a blank URL.
   useHashRoute((route) => {
-    if (!route) return
-    dispatch({ type: 'OPEN', id: route.id })
-    setWorksSlug(route.id === 'works' ? route.detail : null)
+    const { windowToOpen, slug } = resolveRoute(route, data)
+    if (!windowToOpen) {
+      openIds(windows).forEach(id => dispatch({ type: 'CLOSE', id }))
+      setWorksSlug(null)
+      return
+    }
+    dispatch({ type: 'OPEN', id: windowToOpen })
+    setWorksSlug(slug)
   })
 
+  // User-initiated navigation: writes the hash directly (a real assignment,
+  // not replaceState) so opening a window or drilling into a release detail
+  // leaves a history entry for the back button to land on.
   const openWindow = (id) => {
     const isOpen = windows[id].open && !windows[id].minimized
     if (isOpen) {
       dispatch({ type: 'CLOSE', id })
-      if (openIds(windows).filter(w => w !== id).length === 0) {
-        history.replaceState(null, '', window.location.pathname)
-      }
     } else {
       window.location.hash = buildHash(id, null)
     }

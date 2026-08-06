@@ -22,3 +22,23 @@ export function parseHash(hash) {
 export function buildHash(id, detail) {
   return detail ? `#/${id}/${detail}` : `#/${id}`
 }
+
+// Pure decision layer between a parsed route and what should be visible:
+// which window opens, which release slug (if any) is selected, and which
+// Works tab that slug belongs to. A null route (empty or unknown hash)
+// means nothing should be open. A detail slug that doesn't exist in any
+// collection degrades to the bare release grid rather than a dangling
+// selection. Kept collection-agnostic about *which* window carries detail
+// slugs today (only 'works' does) so this stays a plain lookup, not a
+// hardcoded branch.
+export function resolveRoute(route, { musicReleases = [], games = [], software = [] } = {}) {
+  if (!route) return { windowToOpen: null, slug: null, activeTab: null }
+  if (route.id !== 'works' || !route.detail) {
+    return { windowToOpen: route.id, slug: null, activeTab: null }
+  }
+  const byTab = { music: musicReleases, games, software }
+  const activeTab = Object.keys(byTab).find(tab => byTab[tab].some(item => item.slug === route.detail)) ?? null
+  return activeTab
+    ? { windowToOpen: 'works', slug: route.detail, activeTab }
+    : { windowToOpen: 'works', slug: null, activeTab: null }
+}

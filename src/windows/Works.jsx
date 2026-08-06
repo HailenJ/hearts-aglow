@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { resolveRoute } from '../lib/route'
 
 const releaseTypes = [
   { key: 'drift', label: 'Drift Series' },
@@ -105,11 +106,21 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
 }
 
 function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect }) {
-  const [activeTab, setActiveTab] = useState('music')
+  const [manualTab, setManualTab] = useState('music')
   const tabs = ['music', 'games', 'software']
 
-  const selectedRelease = selectedSlug
-    ? [...musicReleases, ...software].find(r => r.slug === selectedSlug) ?? null
+  // The tab follows a deep-linked slug (so a software link doesn't land on
+  // the music tab rendering music-only fields); with no slug selected, the
+  // user's own tab click wins. resolveRoute is the same lookup App uses to
+  // turn a hash into a window + slug, reused here to turn a slug into a tab.
+  const resolved = resolveRoute(
+    selectedSlug ? { id: 'works', detail: selectedSlug } : null,
+    { musicReleases, games, software }
+  )
+  const activeTab = resolved.activeTab ?? manualTab
+  const collectionsByTab = { music: musicReleases, games, software }
+  const selectedRelease = resolved.slug
+    ? collectionsByTab[resolved.activeTab].find(r => r.slug === resolved.slug) ?? null
     : null
 
   return (
@@ -119,7 +130,7 @@ function Works({ musicReleases, games, software, onPlay, selectedSlug, onSelect 
           <button
             key={tab}
             className={`works__tab ${activeTab === tab ? 'works__tab--active' : ''}`}
-            onClick={() => { setActiveTab(tab); onSelect(null); }}
+            onClick={() => { setManualTab(tab); onSelect(null); }}
           >
             {tab}
           </button>

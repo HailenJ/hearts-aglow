@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { slugify, parseHash, buildHash } from '../src/lib/route.js'
+import { slugify, parseHash, buildHash, resolveRoute } from '../src/lib/route.js'
+
+const collections = {
+  musicReleases: [{ slug: 'drift-6' }, { slug: 'coda' }],
+  games: [{ slug: 'orbit' }],
+  software: [{ slug: 'lantern' }],
+}
 
 test('slugify lowercases and hyphenates', () => {
   assert.equal(slugify('Drift 6'), 'drift-6')
@@ -58,4 +64,43 @@ test('slugify returns empty string for empty input', () => {
 
 test('buildHash treats empty detail as falsy, degrading to bare route', () => {
   assert.equal(buildHash('works', ''), '#/works')
+})
+
+test('resolveRoute closes everything for a null route', () => {
+  assert.deepEqual(resolveRoute(null, collections), { windowToOpen: null, slug: null, activeTab: null })
+})
+
+test('resolveRoute opens a bare window with no slug or tab', () => {
+  assert.deepEqual(
+    resolveRoute({ id: 'about', detail: null }, collections),
+    { windowToOpen: 'about', slug: null, activeTab: null }
+  )
+})
+
+test('resolveRoute resolves a music detail route to the music tab', () => {
+  assert.deepEqual(
+    resolveRoute({ id: 'works', detail: 'drift-6' }, collections),
+    { windowToOpen: 'works', slug: 'drift-6', activeTab: 'music' }
+  )
+})
+
+test('resolveRoute resolves a software detail route to the software tab, not music', () => {
+  assert.deepEqual(
+    resolveRoute({ id: 'works', detail: 'lantern' }, collections),
+    { windowToOpen: 'works', slug: 'lantern', activeTab: 'software' }
+  )
+})
+
+test('resolveRoute resolves a games detail route to the games tab', () => {
+  assert.deepEqual(
+    resolveRoute({ id: 'works', detail: 'orbit' }, collections),
+    { windowToOpen: 'works', slug: 'orbit', activeTab: 'games' }
+  )
+})
+
+test('resolveRoute falls back to the bare grid when the detail slug matches nothing', () => {
+  assert.deepEqual(
+    resolveRoute({ id: 'works', detail: 'does-not-exist' }, collections),
+    { windowToOpen: 'works', slug: null, activeTab: null }
+  )
 })
