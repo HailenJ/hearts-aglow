@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function TitleBar() {
+function TitleBar({ nowPlaying }) {
   const [time, setTime] = useState('')
 
   useEffect(() => {
@@ -24,6 +24,7 @@ function TitleBar() {
         <span className="titlebar__dot" />
         <span>heartsaglow</span>
       </div>
+      {nowPlaying && <span className="titlebar__np">♪ {nowPlaying}</span>}
       <span className="titlebar__time">{time}</span>
     </header>
   )

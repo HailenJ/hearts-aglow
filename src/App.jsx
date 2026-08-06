@@ -63,7 +63,12 @@ function App() {
       <TitleBar />
 
       <main className="desktop__content">
-        <Hero hasOpenWindows={openIds(windows).length > 0} heroSubtitle={data.heroSubtitle} />
+        <Hero
+          visible={openIds(windows).length === 0}
+          heroSubtitle={data.heroSubtitle}
+          game={data.game}
+          onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}
+        />
 
         {WINDOW_IDS.filter(id => windowConfigs[id]).map(id => (
           <Window
@@ -87,7 +92,7 @@ function App() {
 
       <Dock
         windows={windows}
-        onToggleWindow={(id) => dispatch({ type: 'TOGGLE', id })}
+        onToggle={(id) => dispatch({ type: 'TOGGLE', id })}
       />
     </div>
   )

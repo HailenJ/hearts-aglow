@@ -1,30 +1,25 @@
-function Dock({ windows, onToggleWindow }) {
-  const items = [
-    { id: 'about', label: 'About' },
-    { id: 'works', label: 'Works' },
-    { id: 'connect', label: 'Connect' },
-  ]
+import { WINDOW_IDS } from '../lib/windows'
 
+const LABELS = { about: 'About', works: 'Works', game: 'Game', connect: 'Say hi' }
+
+export default function Dock({ windows, onToggle }) {
   return (
     <nav className="dock" aria-label="Primary">
-      {items.map(item => {
-        const w = windows[item.id]
-        const visible = w.open && !w.minimized
-        const minimized = w.open && w.minimized
+      {WINDOW_IDS.map(id => {
+        const w = windows[id]
+        const active = w.open && !w.minimized
         return (
           <button
-            key={item.id}
-            className={`dock__item ${visible ? 'dock__item--active' : ''} ${minimized ? 'dock__item--minimized' : ''}`}
-            onClick={() => onToggleWindow(item.id)}
+            key={id}
+            className={`dock__item ${active ? 'dock__item--active' : ''} ${w.minimized ? 'dock__item--min' : ''}`}
+            onClick={() => onToggle(id)}
             aria-pressed={w.open}
-            aria-label={minimized ? `${item.label} (minimized)` : item.label}
+            aria-label={w.minimized ? `${LABELS[id]} (minimized)` : LABELS[id]}
           >
-            <span>{item.label}</span>
+            {LABELS[id]}
           </button>
         )
       })}
     </nav>
   )
 }
-
-export default Dock

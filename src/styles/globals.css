@@ -16,7 +16,9 @@
 
   /* Text */
   --text: rgba(255, 255, 255, 0.92);
-  --text-dim: rgba(255, 255, 255, 0.62);
+  /* 0.62 measured ~3.2:1 against the bloom's brightest phase behind
+     .hero__tagline; raised to clear 4.5:1 there (see task-8-report.md). */
+  --text-dim: rgba(255, 255, 255, 0.88);
   --text-faint: rgba(255, 255, 255, 0.42);
 
   /* Chrome */
@@ -140,12 +142,8 @@ a:hover {
 }
 
 /* --- Desktop Shell --- */
-.desktop {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: var(--bg);
-}
+.desktop { position: relative; height: 100%; z-index: 2; }
+.desktop__content { position: absolute; inset: 0; }
 
 /* --- Background --- */
 .desktop__bg {
@@ -154,102 +152,92 @@ a:hover {
   overflow: hidden;
 }
 
-
-/* --- Title Bar --- */
-.titlebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--s-5);
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  z-index: 1000;
-}
-
-.titlebar__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--text-mid);
-}
-
-.titlebar__dot {
-  width: 6px;
-  height: 6px;
-  background: var(--warm);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.7);
-  animation: pulse-dot 4s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 0.7; box-shadow: 0 0 6px rgba(232, 149, 120, 0.5); }
-  50%      { opacity: 1;   box-shadow: 0 0 12px rgba(232, 149, 120, 0.85); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .titlebar__dot { animation: none; }
-}
-
-.titlebar__time {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-/* --- Desktop Content --- */
-.desktop__content {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
-  bottom: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- Hero --- */
-.hero {
-  text-align: center;
-  z-index: 1;
-  animation: fade-in 1s var(--ease-soft) forwards;
-  opacity: 0;
-  transform: translateY(-3vh);
-}
-
+/* Used by .works__detail — kept independent of the hero, which no longer animates. */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.hero__logo {
-  width: clamp(140px, 22vw, 240px);
-  height: auto;
-  opacity: 0.95;
-  filter: drop-shadow(0 0 40px rgba(232, 149, 120, 0.18));
+/* --- Title Bar --- */
+.titlebar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  height: 34px;
+  padding: 0 var(--s-5);
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
+.titlebar__brand { display: flex; align-items: center; gap: var(--s-2); }
+.titlebar__dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 10px var(--signal);
+}
+.titlebar__np { color: var(--signal); }
 
-.hero__tagline {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  font-style: italic;
-  font-weight: 300;
-  color: var(--text-mid);
-  letter-spacing: 0.005em;
-  margin-top: var(--s-5);
-  animation: fade-in 0.6s ease 0.1s forwards;
-  opacity: 0;
+/* --- Hero --- */
+.hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+  text-align: center;
+  padding: var(--s-6);
 }
+.hero__logo { width: min(340px, 62vw); height: auto; }
+.hero__tagline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: 200;
+  font-stretch: 125%;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+}
+.hero__rule {
+  width: 120px; height: 1px; margin: var(--s-5) 0 var(--s-2);
+  background: linear-gradient(90deg, transparent, var(--hairline-focus), transparent);
+}
+.hero__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-6);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
+}
+.hero__cta:hover {
+  border-color: var(--hairline-focus);
+  box-shadow: 0 0 40px -8px rgba(196, 138, 255, 0.4);
+}
+.hero__cta-name {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 300; font-stretch: 125%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.hero__cta-meta {
+  font-family: var(--font-data);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.hero__cta-go { color: var(--signal); font-size: 12px; }
 
 /* --- Dock --- */
 .dock {
@@ -257,75 +245,31 @@ a:hover {
   bottom: var(--s-5);
   left: 50%;
   transform: translateX(-50%);
+  z-index: 40;
   display: flex;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  z-index: 1000;
-  background: rgba(17, 17, 17, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  gap: var(--s-2);
 }
-
 .dock__item {
-  position: relative;
-  padding: 11px 26px 13px;
-  background: transparent;
-  border: none;
-  border-right: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: var(--s-2) var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 300; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition: color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
 }
-
-.dock__item:last-child {
-  border-right: none;
-}
-
-.dock__item::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--warm);
-  box-shadow: 0 0 8px rgba(232, 149, 120, 0.7);
-  transition: transform var(--transition);
-}
-
-.dock__item:hover {
-  color: var(--text-mid);
-  background: rgba(255, 255, 255, 0.025);
-}
-
+.dock__item:hover { color: var(--text); border-color: var(--hairline-focus); }
 .dock__item--active {
-  color: var(--text);
-  background: rgba(232, 149, 120, 0.04);
+  color: var(--signal);
+  border-color: var(--hairline-focus);
+  box-shadow: 0 0 24px -6px rgba(223, 244, 255, 0.4);
 }
-
-.dock__item--active::after {
-  transform: translateX(-50%) scale(1);
-}
-
-/* Minimized reads as a hollow dot — present, just not visible. */
-.dock__item--minimized {
-  color: var(--text-dim);
-}
-
-.dock__item--minimized::after {
-  transform: translateX(-50%) scale(1);
-  background: transparent;
-  border: 1px solid var(--text-faint);
-  box-shadow: none;
-}
+.dock__item--min { color: var(--text-faint); border-style: dashed; }
 
 /* --- Windows --- */
 .window {
@@ -993,24 +937,16 @@ a:hover {
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
-  .titlebar {
-    padding: 0 var(--space-md);
-  }
-
   .titlebar__time {
     display: none;
   }
 
   .dock {
-    bottom: var(--space-md);
+    bottom: var(--s-4);
   }
 
   .dock__item {
-    padding: 10px 16px;
-  }
-
-  .hero__logo {
-    width: clamp(100px, 30vw, 180px);
+    padding: var(--s-2) var(--s-4);
   }
 
   .window {
