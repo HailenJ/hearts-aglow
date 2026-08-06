@@ -2213,5 +2213,5 @@ After Task 15, the run is not complete. Per the impeccable skill's finish protoc
 None of these block the plan; all of them block shipping the site as finished. None may be invented:
 
 1. **Game:** title, key art, logline, year. Store URL when it exists. Until supplied, Task 10's honest unnamed state ships.
-2. **Bandcamp IDs** for Drift 3, Exalt, Drift 2, Drift, and Rebuild. Until supplied, those six show the Bandcamp link with no player.
+2. **Bandcamp IDs** for Drift 3, Exalt, Drift 2, Drift, and Rebuild. Until supplied, those five show the Bandcamp link with no player.
 3. **Email endpoint** — fill `EMAIL_ENDPOINT` in `src/lib/config.js`. Until supplied, the form renders disabled with honest copy.
