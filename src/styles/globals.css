@@ -165,7 +165,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-lg);
+  padding: 0 var(--s-5);
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   z-index: 1000;
@@ -246,7 +246,7 @@ a:hover {
   font-weight: 300;
   color: var(--text-mid);
   letter-spacing: 0.005em;
-  margin-top: var(--space-lg);
+  margin-top: var(--s-5);
   animation: fade-in 0.6s ease 0.1s forwards;
   opacity: 0;
 }
@@ -254,7 +254,7 @@ a:hover {
 /* --- Dock --- */
 .dock {
   position: fixed;
-  bottom: var(--space-lg);
+  bottom: var(--s-5);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -424,7 +424,7 @@ a:hover {
 .window__content {
   flex: 1;
   min-height: 0;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--s-6) var(--s-7);
   overflow-y: auto;
 }
 
@@ -455,7 +455,7 @@ a:hover {
   font-weight: 300;
   font-style: italic;
   color: var(--text);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--s-6);
   line-height: 1.25;
   letter-spacing: -0.005em;
   max-width: 22ch;
@@ -493,8 +493,8 @@ a:hover {
 /* --- Works --- */
 .works__tabs {
   display: flex;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-xl);
+  gap: var(--s-5);
+  margin-bottom: var(--s-6);
   border-bottom: 1px solid var(--border);
 }
 
@@ -532,7 +532,7 @@ a:hover {
 }
 
 .works__type-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--s-6);
 }
 
 .works__type-section:last-of-type {
@@ -679,7 +679,7 @@ a:hover {
   text-transform: uppercase;
   color: var(--text-mid);
   cursor: pointer;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
   transition: color var(--transition), gap var(--transition);
 }
 
@@ -690,8 +690,8 @@ a:hover {
 
 .works__detail-header {
   display: flex;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
+  gap: var(--s-5);
+  margin-bottom: var(--s-5);
 }
 
 .works__detail-artwork {
@@ -765,7 +765,7 @@ a:hover {
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--text-mid);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
   max-width: 54ch;
 }
 
@@ -788,7 +788,7 @@ a:hover {
   counter-reset: track;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  column-gap: var(--space-xl);
+  column-gap: var(--s-6);
   row-gap: 0;
 }
 
@@ -829,13 +829,13 @@ a:hover {
 
 .works__empty {
   text-align: center;
-  padding: var(--space-2xl);
+  padding: var(--s-7);
 }
 
 .works__empty-icon {
   font-size: 1.5rem;
   color: var(--text-dim);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
 }
 
 .works__empty h3 {
@@ -848,7 +848,7 @@ a:hover {
 .works__empty p {
   font-size: 0.85rem;
   color: var(--text-dim);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--s-5);
 }
 
 .works__empty-status {
@@ -864,7 +864,7 @@ a:hover {
 }
 
 .works__footer {
-  margin-top: var(--space-xl);
+  margin-top: var(--s-6);
   text-align: center;
 }
 
@@ -872,7 +872,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) var(--s-5);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.12em;
@@ -894,8 +894,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: var(--space-md) var(--space-lg);
-  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--s-5);
+  margin-bottom: var(--s-5);
   background:
     radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 60%),
     var(--surface-raised);
@@ -1022,12 +1022,6 @@ a:hover {
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
-  :root {
-    --space-lg: 1rem;
-    --space-xl: 1.5rem;
-    --space-2xl: 2rem;
-  }
-
   .titlebar {
     padding: 0 var(--space-md);
   }
@@ -1058,7 +1052,7 @@ a:hover {
   }
 
   .window__content {
-    padding: var(--space-lg);
+    padding: var(--s-5);
   }
 
   .works__grid {
