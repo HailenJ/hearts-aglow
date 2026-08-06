@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useReducer } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import SocialIcon from './components/SocialIcon'
+import Window from './components/Window'
+import { windowsReducer, initialWindows, focusedId, openIds, WINDOW_IDS } from './lib/windows'
 import * as fallbackData from './data/fallback'
 import './styles/globals.css'
 
@@ -53,107 +55,32 @@ function TitleBar() {
   )
 }
 
-function Dock({ openWindows, onToggleWindow }) {
+function Dock({ windows, onToggleWindow }) {
   const items = [
     { id: 'about', label: 'About' },
     { id: 'works', label: 'Works' },
-    { id: 'contact', label: 'Connect' },
+    { id: 'connect', label: 'Connect' },
   ]
 
   return (
     <nav className="dock" aria-label="Primary">
       {items.map(item => {
-        const open = openWindows.includes(item.id)
+        const w = windows[item.id]
+        const visible = w.open && !w.minimized
+        const minimized = w.open && w.minimized
         return (
           <button
             key={item.id}
-            className={`dock__item ${open ? 'dock__item--active' : ''}`}
+            className={`dock__item ${visible ? 'dock__item--active' : ''} ${minimized ? 'dock__item--minimized' : ''}`}
             onClick={() => onToggleWindow(item.id)}
-            aria-pressed={open}
+            aria-pressed={w.open}
+            aria-label={minimized ? `${item.label} (minimized)` : item.label}
           >
             <span>{item.label}</span>
           </button>
         )
       })}
     </nav>
-  )
-}
-
-function Window({ title, isOpen, isFocused, onClose, onFocus, defaultPosition, dragPosition, onDragEnd, children }) {
-  const windowRef = useRef(null)
-  const headerRef = useRef(null)
-  const dragState = useRef({ active: false, offsetX: 0, offsetY: 0 })
-
-  if (!isOpen) return null
-
-  const style = dragPosition
-    ? { left: `${dragPosition.x}px`, top: `${dragPosition.y}px`, width: defaultPosition.width, height: defaultPosition.height }
-    : { top: defaultPosition.top, left: defaultPosition.left, width: defaultPosition.width, height: defaultPosition.height }
-
-  const handlePointerDown = (e) => {
-    if (e.target.closest('.window__close')) return
-    const rect = windowRef.current.getBoundingClientRect()
-    dragState.current = {
-      active: true,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
-    }
-    headerRef.current.setPointerCapture(e.pointerId)
-    onFocus()
-  }
-
-  const handlePointerMove = (e) => {
-    if (!dragState.current.active) return
-    const rect = windowRef.current.getBoundingClientRect()
-    const minX = -(rect.width - 120)
-    const maxX = window.innerWidth - 120
-    const minY = 40
-    const maxY = window.innerHeight - 80
-    const x = Math.max(minX, Math.min(maxX, e.clientX - dragState.current.offsetX))
-    const y = Math.max(minY, Math.min(maxY, e.clientY - dragState.current.offsetY))
-    windowRef.current.style.left = `${x}px`
-    windowRef.current.style.top = `${y}px`
-  }
-
-  const handlePointerUp = () => {
-    if (!dragState.current.active) return
-    dragState.current.active = false
-    const rect = windowRef.current.getBoundingClientRect()
-    onDragEnd({ x: rect.left, y: rect.top })
-  }
-
-  return (
-    <div
-      ref={windowRef}
-      className={`window ${isFocused ? 'window--focused' : ''}`}
-      style={style}
-      onClick={onFocus}
-    >
-      <header
-        ref={headerRef}
-        className="window__header"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <span className="window__title">
-          <span className="window__dot" aria-hidden="true" />
-          {title}
-        </span>
-        <button
-          className="window__close"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          aria-label="Close window"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-            <path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </header>
-      <div className="window__content">
-        {children}
-      </div>
-    </div>
   )
 }
 
@@ -485,57 +412,28 @@ function DesktopBackground() {
 
 function App() {
   const { data } = useSanityData()
-  const [openWindows, setOpenWindows] = useState([])
-  const [focusedWindow, setFocusedWindow] = useState(null)
-  const [dragPositions, setDragPositions] = useState({})
+  const [windows, dispatch] = useReducer(windowsReducer, initialWindows)
+  const focused = focusedId(windows)
 
   const windowConfigs = {
     about: {
       title: 'About',
-      position: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
+      geom: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
     },
     works: {
       title: 'Works',
-      position: { top: '9%', left: '28%', width: '640px', height: '76%' }
+      geom: { top: '9%', left: '28%', width: '640px', height: '76%' }
     },
-    contact: {
+    connect: {
       title: 'Connect',
-      position: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
+      geom: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
     }
   }
-
-  const toggleWindow = (id) => {
-    setOpenWindows(prev => {
-      const isOpen = prev.includes(id)
-      const next = isOpen ? prev.filter(w => w !== id) : [...prev, id]
-      setFocusedWindow(curr => {
-        if (isOpen) return curr === id ? (next[next.length - 1] ?? null) : curr
-        return id
-      })
-      return next
-    })
-  }
-
-  const closeWindow = (id) => {
-    setOpenWindows(prev => {
-      const next = prev.filter(w => w !== id)
-      setFocusedWindow(curr => (curr === id ? (next[next.length - 1] ?? null) : curr))
-      return next
-    })
-  }
-
-  const focusWindow = (id) => {
-    setFocusedWindow(id)
-  }
-
-  const handleDragEnd = useCallback((id, pos) => {
-    setDragPositions(prev => ({ ...prev, [id]: pos }))
-  }, [])
 
   const windowContent = {
     about: <AboutContent aboutParagraphs={data.aboutParagraphs} />,
     works: <WorksContent musicReleases={data.musicReleases} games={data.games} software={data.software} />,
-    contact: <ContactContent socialLinks={data.socialLinks} />
+    connect: <ContactContent socialLinks={data.socialLinks} />
   }
 
   return (
@@ -544,19 +442,22 @@ function App() {
       <TitleBar />
 
       <main className="desktop__content">
-        <Hero hasOpenWindows={openWindows.length > 0} heroSubtitle={data.heroSubtitle} />
+        <Hero hasOpenWindows={openIds(windows).length > 0} heroSubtitle={data.heroSubtitle} />
 
-        {Object.entries(windowConfigs).map(([id, config]) => (
+        {WINDOW_IDS.filter(id => windowConfigs[id]).map(id => (
           <Window
             key={id}
-            title={config.title}
-            isOpen={openWindows.includes(id)}
-            isFocused={focusedWindow === id}
-            onClose={() => closeWindow(id)}
-            onFocus={() => focusWindow(id)}
-            defaultPosition={config.position}
-            dragPosition={dragPositions[id]}
-            onDragEnd={(pos) => handleDragEnd(id, pos)}
+            id={id}
+            title={windowConfigs[id].title}
+            state={windows[id]}
+            isFocused={focused === id}
+            defaultGeom={windowConfigs[id].geom}
+            onFocus={() => dispatch({ type: 'FOCUS', id })}
+            onClose={() => dispatch({ type: 'CLOSE', id })}
+            onMinimize={() => dispatch({ type: 'MINIMIZE', id })}
+            onMaximize={() => dispatch({ type: 'MAXIMIZE', id })}
+            onMove={(x, y) => dispatch({ type: 'MOVE', id, x, y })}
+            onResize={(w, h) => dispatch({ type: 'RESIZE', id, w, h })}
           >
             {windowContent[id]}
           </Window>
@@ -564,8 +465,8 @@ function App() {
       </main>
 
       <Dock
-        openWindows={openWindows}
-        onToggleWindow={toggleWindow}
+        windows={windows}
+        onToggleWindow={(id) => dispatch({ type: 'TOGGLE', id })}
       />
     </div>
   )
