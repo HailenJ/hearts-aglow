@@ -16,6 +16,10 @@ export function windowsReducer(state, action) {
 
   switch (type) {
     case 'OPEN':
+      // Avoid unnecessary state updates when already open, not minimized, and topmost
+      if (state[id].open && !state[id].minimized && state[id].z === topZ(state)) {
+        return state
+      }
       return raise(patch(state, id, { open: true, minimized: false }), id)
 
     case 'TOGGLE':
@@ -32,18 +36,24 @@ export function windowsReducer(state, action) {
 
     case 'FOCUS':
       if (!state[id].open || state[id].minimized) return state
+      // Avoid unnecessary state updates when already topmost
+      if (state[id].z === topZ(state)) return state
       return raise(state, id)
 
     case 'MINIMIZE':
+      if (!state[id].open) return state
       return patch(state, id, { minimized: true })
 
     case 'MAXIMIZE':
+      if (!state[id].open) return state
       return patch(state, id, { maximized: !state[id].maximized })
 
     case 'MOVE':
+      if (!state[id].open) return state
       return patch(state, id, { x: action.x, y: action.y, maximized: false })
 
     case 'RESIZE':
+      if (!state[id].open) return state
       return patch(state, id, { w: action.w, h: action.h, maximized: false })
 
     default:

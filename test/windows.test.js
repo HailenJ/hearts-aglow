@@ -96,6 +96,44 @@ test('MOVE and RESIZE record geometry', () => {
   assert.equal(s.connect.h, 400)
 })
 
+test('FOCUS on the already-topmost window returns the identical state object', () => {
+  const s1 = run([{ type: 'OPEN', id: 'about' }])
+  const s2 = windowsReducer(s1, { type: 'FOCUS', id: 'about' })
+  assert.equal(s2, s1)
+})
+
+test('OPEN on an already-open, already-topmost window returns the identical state object', () => {
+  const s1 = run([{ type: 'OPEN', id: 'works' }])
+  const s2 = windowsReducer(s1, { type: 'OPEN', id: 'works' })
+  assert.equal(s2, s1)
+})
+
+test('MINIMIZE on a never-opened window leaves state unchanged', () => {
+  const s = windowsReducer(initialWindows, { type: 'MINIMIZE', id: 'game' })
+  assert.equal(s, initialWindows)
+})
+
+test('MAXIMIZE on a closed window leaves state unchanged', () => {
+  const s = windowsReducer(initialWindows, { type: 'MAXIMIZE', id: 'connect' })
+  assert.equal(s, initialWindows)
+})
+
+test('MAXIMIZE on a closed window does not affect reopening', () => {
+  const s1 = windowsReducer(initialWindows, { type: 'MAXIMIZE', id: 'about' })
+  const s2 = windowsReducer(s1, { type: 'OPEN', id: 'about' })
+  assert.equal(s2.about.maximized, false)
+})
+
+test('MOVE on a closed window leaves state unchanged', () => {
+  const s = windowsReducer(initialWindows, { type: 'MOVE', id: 'works', x: 100, y: 100 })
+  assert.equal(s, initialWindows)
+})
+
+test('RESIZE on a closed window leaves state unchanged', () => {
+  const s = windowsReducer(initialWindows, { type: 'RESIZE', id: 'connect', w: 500, h: 400 })
+  assert.equal(s, initialWindows)
+})
+
 test('an unknown id is ignored rather than throwing', () => {
   const s = windowsReducer(initialWindows, { type: 'OPEN', id: 'nope' })
   assert.equal(s, initialWindows)
