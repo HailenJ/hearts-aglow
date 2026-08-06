@@ -8,8 +8,6 @@
 
   /* Bloom — the field's own colours, mirrored from the shader constants */
   --bloom-warm: #c48aff;
-  --bloom-warm-2: #ffa878;
-  --bloom-deep: #483478;
 
   /* Signal — focus, active state, live data. Nowhere else. */
   --signal: #dff4ff;
@@ -48,7 +46,6 @@
   --s-5: 24px;
   --s-6: 32px;
   --s-7: 48px;
-  --s-8: 72px;
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
