@@ -1,7 +1,7 @@
 import { useReducer, useState, useEffect } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import { useHashRoute } from './hooks/useHashRoute'
-import { buildHash, resolveRoute } from './lib/route'
+import { buildHash, resolveRoute, parseHash } from './lib/route'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
@@ -38,11 +38,23 @@ function DesktopBackground() {
 
 function App() {
   const { data } = useSanityData()
-  const [windows, dispatch] = useReducer(windowsReducer, initialWindows)
+
+  // Seed state from the hash synchronously (lazy initializers, run once on
+  // mount) rather than starting closed and waiting for a post-mount effect
+  // to open things. Otherwise the state->hash sync effect below would see
+  // `focused: null` on the very first render — before the listener has had
+  // a chance to process a real deep link — and clear the address bar an
+  // instant before correcting it back.
+  const [windows, dispatch] = useReducer(windowsReducer, initialWindows, (blank) => {
+    const { windowToOpen } = resolveRoute(parseHash(window.location.hash), data)
+    return windowToOpen ? windowsReducer(blank, { type: 'OPEN', id: windowToOpen }) : blank
+  })
   const focused = focusedId(windows)
   const [playing, setPlaying] = useState(null)
   const [booted, setBooted] = useState(false)
-  const [worksSlug, setWorksSlug] = useState(null)
+  const [worksSlug, setWorksSlug] = useState(
+    () => resolveRoute(parseHash(window.location.hash), data).slug
+  )
 
   // Window state is the single source of truth for what is open — the hash
   // can only ever hold one route, but several windows can be open at once,
