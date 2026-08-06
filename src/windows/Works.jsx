@@ -104,7 +104,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   )
 }
 
-function Works({ musicReleases, games, software }) {
+function Works({ musicReleases, games, software, onPlay }) {
   const [activeTab, setActiveTab] = useState('music')
   const [selectedRelease, setSelectedRelease] = useState(null)
   const tabs = ['music', 'games', 'software']
@@ -151,6 +151,9 @@ function Works({ musicReleases, games, software }) {
                   >
                     Listen on Bandcamp &rarr;
                   </a>
+                  {selectedRelease.bandcampId
+                    ? <button className="works__play" onClick={() => onPlay(selectedRelease)}>▶ Play here</button>
+                    : null}
                 </div>
               </div>
               {selectedRelease.description && (

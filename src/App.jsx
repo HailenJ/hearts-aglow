@@ -1,9 +1,10 @@
-import { useReducer } from 'react'
+import { useReducer, useState } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
 import TitleBar from './components/TitleBar'
+import Player from './components/Player'
 import Dock from './components/Dock'
 import Hero from './components/Hero'
 import About from './windows/About'
@@ -36,6 +37,7 @@ function App() {
   const { data } = useSanityData()
   const [windows, dispatch] = useReducer(windowsReducer, initialWindows)
   const focused = focusedId(windows)
+  const [playing, setPlaying] = useState(null)
 
   const windowConfigs = {
     about: {
@@ -58,7 +60,7 @@ function App() {
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} />,
+    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} />,
     game: <Game game={data.game} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
@@ -69,7 +71,7 @@ function App() {
   return (
     <div className="desktop">
       <DesktopBackground />
-      <TitleBar />
+      <TitleBar nowPlaying={playing?.title ?? null} />
 
       <main className="desktop__content">
         <Hero
@@ -98,6 +100,8 @@ function App() {
           </Window>
         ))}
       </main>
+
+      <Player release={playing} onClose={() => setPlaying(null)} />
 
       <Dock
         windows={windows}
