@@ -1107,7 +1107,10 @@ import { slugify } from '../lib/route.js'
 and wrap each exported array so every entry carries a slug. Replace `export const musicReleases = [` with `const rawMusicReleases = [`, then after the array's closing bracket add:
 
 ```js
-export const musicReleases = rawMusicReleases.map(r => ({ ...r, slug: slugify(r.title) }))
+// `slugify` returns '' for a title made entirely of punctuation, and an empty
+// slug silently degrades a deep link to the bare window route. `id` is always
+// present and unique, so it is the fallback that keeps every release linkable.
+export const musicReleases = rawMusicReleases.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
 ```
 
 Do the same for `games` and `software` (both currently empty arrays — the map is a no-op today and correct tomorrow).
@@ -1119,7 +1122,7 @@ Do the same for `games` and `software` (both currently empty arrays — the map 
 In `src/hooks/useSanityData.js`, import `slugify` from `../lib/route`, add `game: fallback.game` to `initialData`, and add these two helpers above the hook:
 
 ```js
-const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug ?? slugify(item.title) }))
+const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug || slugify(item.title) || String(item.id) }))
 
 // The featured game is simply the newest one. Sanity's `game` type already
 // carries every field the Game window needs, so there is nothing to add there.
