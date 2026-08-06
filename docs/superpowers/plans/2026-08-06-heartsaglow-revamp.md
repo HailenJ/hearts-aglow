@@ -584,7 +584,7 @@ In `eslint.config.js`, add this object to the array returned by `defineConfig`, 
 In `package.json`, add to `"scripts"`:
 
 ```json
-    "test": "node --test test/",
+    "test": "node --test 'test/**/*.js'",
 ```
 
 Run: `npm test`
