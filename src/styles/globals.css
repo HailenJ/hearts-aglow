@@ -487,7 +487,8 @@ a:hover {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: var(--s-4);
+  margin-top: var(--s-6);
+  margin-bottom: var(--s-3);
   padding-bottom: var(--s-1);
 }
 
@@ -736,7 +737,8 @@ a:hover {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: var(--s-4);
+  margin-top: var(--s-6);
+  margin-bottom: var(--s-3);
 }
 
 .works__detail-tracks ol {
@@ -799,6 +801,7 @@ a:hover {
   font-size: 1.1rem;
   font-weight: 400;
   color: var(--text-dim);
+  margin-top: var(--s-5);
   margin-bottom: var(--s-2);
 }
 
