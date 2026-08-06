@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSanityData } from './hooks/useSanityData'
-import Particles from './components/Particles'
+import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import SocialIcon from './components/SocialIcon'
 import * as fallbackData from './data/fallback'
@@ -473,17 +473,7 @@ function DesktopBackground() {
     <div className="desktop__bg">
       <div className="desktop__mesh" aria-hidden="true" />
       <ErrorBoundary>
-        <Particles
-          particleCount={140}
-          particleSpread={12}
-          speed={0.022}
-          particleColors={['#2a2a2a', '#3a3a3a', '#1a1a1a', '#5a3a2e', '#3d2722', '#42332e']}
-          moveParticlesOnHover={true}
-          particleHoverFactor={0.5}
-          particleBaseSize={60}
-          sizeRandomness={1.2}
-          cameraDistance={22}
-        />
+        <LightField />
       </ErrorBoundary>
     </div>
   )
