@@ -47,3 +47,15 @@ test('buildHash round-trips through parseHash', () => {
   assert.equal(buildHash('about', null), '#/about')
   assert.deepEqual(parseHash(buildHash('works', 'coda')), { id: 'works', detail: 'coda' })
 })
+
+test('slugify returns empty string for punctuation-only input', () => {
+  assert.equal(slugify('!!!'), '')
+})
+
+test('slugify returns empty string for empty input', () => {
+  assert.equal(slugify(''), '')
+})
+
+test('buildHash treats empty detail as falsy, degrading to bare route', () => {
+  assert.equal(buildHash('works', ''), '#/works')
+})
