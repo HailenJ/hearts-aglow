@@ -8,6 +8,7 @@ import Dock from './components/Dock'
 import Hero from './components/Hero'
 import About from './windows/About'
 import Works from './windows/Works'
+import Game from './windows/Game'
 import Connect from './windows/Connect'
 import { windowsReducer, initialWindows, focusedId, openIds, WINDOW_IDS } from './lib/windows'
 import './styles/globals.css'
@@ -45,6 +46,10 @@ function App() {
       title: 'Works',
       geom: { top: '9%', left: '28%', width: '640px', height: '76%' }
     },
+    game: {
+      title: 'Game',
+      geom: { top: '12%', left: '22%', width: '560px', height: 'min(620px, 78vh)' }
+    },
     connect: {
       title: 'Connect',
       geom: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
@@ -54,11 +59,11 @@ function App() {
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
     works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} />,
+    game: <Game game={data.game} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
-  // Only ids with registered content actually mount a Window — `game` doesn't
-  // yet, so it must not count toward "something is covering the hero."
+  // Only ids with registered content actually mount a Window.
   const renderableOpen = openIds(windows).filter(id => windowConfigs[id])
 
   return (
