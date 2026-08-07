@@ -1553,25 +1553,48 @@ a.game__submit { text-decoration: none; }
   counter-reset: ptrack;
   margin: 0;
   padding: 0 var(--s-3) var(--s-3);
-  max-height: 190px;
+  max-height: 230px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.player__tracks li {
-  counter-increment: ptrack;
+.player__tracks li { counter-increment: ptrack; }
+
+/* Rows are controls: clicking one swaps the embed to that track. */
+.player__track {
   display: grid;
   grid-template-columns: 20px 1fr auto;
   align-items: baseline;
   gap: var(--s-2);
-  padding: 5px 0;
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  width: 100%;
+  padding: 5px var(--s-1);
+  border: 0;
   border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color var(--dur-fast), background var(--dur-fast);
 }
-.player__tracks li::before {
+.player__track::before {
   content: counter(ptrack, decimal-leading-zero);
   font-family: var(--font-data);
   font-size: 0.55rem;
+  color: var(--text-faint);
+}
+.player__track:hover:not(:disabled) { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.player__track:disabled { cursor: default; opacity: 0.6; }
+.player__track--active { color: var(--signal); }
+.player__track--active::before { color: var(--signal); }
+
+.player__hint {
+  margin: 0;
+  padding: 0 var(--s-3) var(--s-3);
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.1em;
   color: var(--text-faint);
 }
 .player__track-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

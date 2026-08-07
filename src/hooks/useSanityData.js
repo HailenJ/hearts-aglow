@@ -20,13 +20,13 @@ const initialData = {
 const withDurations = (list) => (list ?? []).map(r => {
   const local = fallback.musicReleases.find(x => x.slug === r.slug)
   if (!local || !Array.isArray(r.tracks)) return r
-  const byTitle = new Map(local.tracks.map(t => [t.title, t.duration]))
+  const byTitle = new Map(local.tracks.map(t => [t.title, t]))
   return {
     ...r,
     tracks: r.tracks.map((t, i) => {
       if (t && typeof t === 'object') return t
-      const duration = byTitle.get(t) ?? local.tracks[i]?.duration ?? 0
-      return { title: t, duration }
+      const src = byTitle.get(t) ?? local.tracks[i] ?? {}
+      return { title: t, duration: src.duration ?? 0, trackId: src.trackId ?? '' }
     }),
   }
 })

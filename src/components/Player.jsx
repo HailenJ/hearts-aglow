@@ -9,15 +9,21 @@ const fmt = (secs) => {
 }
 const trackTitle = (t) => (typeof t === 'string' ? t : t?.title ?? '')
 const trackDuration = (t) => (typeof t === 'string' ? 0 : t?.duration ?? 0)
+const trackId = (t) => (typeof t === 'string' ? '' : t?.trackId ?? '')
 
 export default function Player({ release, onClose }) {
-  const [showTracks, setShowTracks] = useState(false)
+  // Selecting a track swaps the embed to that track's own Bandcamp player.
+  // The album-level `t=` parameter is silently ignored by the small embed
+  // (verified by rendering t=1 and t=4 — both showed track one), so per-track
+  // embeds are the only route that actually changes what is loaded.
+  const [picked, setPicked] = useState(null)
   if (!release) return null
 
   // Bandcamp's slim variant. We cannot style inside the iframe, so it borrows
   // as little space as possible and our own chrome carries the identity.
-  const src = `https://bandcamp.com/EmbeddedPlayer/album=${release.bandcampId}`
-    + '/size=small/bgcol=0a0810/linkcol=dff4ff/transparent=true/'
+  const src = picked
+    ? `https://bandcamp.com/EmbeddedPlayer/track=${picked}/size=small/bgcol=0a0810/linkcol=dff4ff/transparent=true/`
+    : `https://bandcamp.com/EmbeddedPlayer/album=${release.bandcampId}/size=small/bgcol=0a0810/linkcol=dff4ff/transparent=true/`
 
   const tracks = release.tracks ?? []
   const total = tracks.reduce((a, t) => a + trackDuration(t), 0)
@@ -54,28 +60,31 @@ export default function Player({ release, onClose }) {
       />
 
       {tracks.length > 0 && (
-        <>
-          <button
-            className="player__tracks-toggle"
-            onClick={() => setShowTracks(v => !v)}
-            aria-expanded={showTracks}
-            aria-controls="player-tracks"
-          >
-            {showTracks ? 'Hide tracks' : `${tracks.length} tracks`}
-            <span className={`player__chev ${showTracks ? 'player__chev--up' : ''}`} aria-hidden="true">▾</span>
-          </button>
-          {showTracks && (
-            <ol className="player__tracks" id="player-tracks">
-              {tracks.map((t, i) => (
-                <li key={i}>
+        <ol className="player__tracks" id="player-tracks">
+          {tracks.map((t, i) => {
+            const id = trackId(t)
+            const active = picked ? picked === id : i === 0
+            return (
+              <li key={i}>
+                <button
+                  className={`player__track ${active ? 'player__track--active' : ''}`}
+                  onClick={() => id && setPicked(id)}
+                  disabled={!id}
+                  aria-current={active ? 'true' : undefined}
+                >
                   <span className="player__track-title">{trackTitle(t)}</span>
                   <span className="player__track-time">{fmt(trackDuration(t))}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
       )}
+
+      {picked && (
+        <p className="player__hint">Press play — browsers block autoplay across sites.</p>
+      )}
+
     </aside>
   )
 }
