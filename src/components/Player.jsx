@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Visualizer from './Visualizer'
+import { VIZ_MODES } from '../lib/vizModes'
 
 const fmt = (secs) => {
   if (!secs) return ''
@@ -17,6 +18,15 @@ export default function Player({ release, onClose }) {
   // (verified by rendering t=1 and t=4 — both showed track one), so per-track
   // embeds are the only route that actually changes what is loaded.
   const [picked, setPicked] = useState(null)
+  // Remembered across sessions: which visual someone prefers is a taste
+  // setting, not state worth re-asking for on every visit.
+  const [viz, setViz] = useState(() => {
+    try { return localStorage.getItem('aglow.viz') || 'ribbons' } catch { return 'ribbons' }
+  })
+  const chooseViz = (id) => {
+    setViz(id)
+    try { localStorage.setItem('aglow.viz', id) } catch { /* private mode */ }
+  }
   if (!release) return null
 
   // Bandcamp's slim variant. We cannot style inside the iframe, so it borrows
@@ -31,7 +41,19 @@ export default function Player({ release, onClose }) {
   return (
     <aside className="player" aria-label={`Player — ${release.title}`}>
       <div className="player__viz-wrap">
-        <Visualizer release={release} />
+        <Visualizer release={release} mode={viz} />
+        <div className="player__viz-modes" role="group" aria-label="Visual style">
+          {VIZ_MODES.map(m => (
+            <button
+              key={m.id}
+              className={`player__viz-mode ${viz === m.id ? 'player__viz-mode--on' : ''}`}
+              onClick={() => chooseViz(m.id)}
+              aria-pressed={viz === m.id}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
         <div className="player__meta">
           {release.image
             ? <img className="player__art" src={release.image} alt="" aria-hidden="true" />

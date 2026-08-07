@@ -1515,7 +1515,7 @@ a.game__submit { text-decoration: none; }
 .player__viz {
   display: block;
   width: 100%;
-  height: 92px;
+  height: 108px;
   background: linear-gradient(180deg, rgba(var(--void-rgb), 0.55), transparent);
 }
 
@@ -1604,3 +1604,36 @@ a.game__submit { text-decoration: none; }
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* Visual-style picker. Sits over the canvas, quiet until hovered — the
+   visual is the point, not the control that changes it. */
+.player__viz-modes {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.player:hover .player__viz-modes,
+.player__viz-modes:focus-within { opacity: 1; }
+
+.player__viz-mode {
+  padding: 3px 7px;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: rgba(var(--void-rgb), 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-stretch: 118%;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.player__viz-mode:hover { color: var(--text); }
+.player__viz-mode--on { color: var(--signal); border-color: var(--hairline-focus); }
