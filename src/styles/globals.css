@@ -1507,23 +1507,38 @@ a.game__submit { text-decoration: none; }
 .works__track-time { flex: none; font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
 /* --- Player visualizer & tracklist ---
-   The ribbons are a generated portrait of the record, seeded from its id and
+   The visual is a generated portrait of the record, seeded from its id and
    track durations — NOT an audio analyser, which is impossible through a
-   cross-origin iframe whose stream ships without CORS. See Visualizer.jsx. */
-.player__viz-wrap { position: relative; }
+   cross-origin iframe whose stream ships without CORS. See Visualizer.jsx.
 
+   It fills the whole panel and the chrome sits on top, because the figures are
+   centric and the old 108px strip was a letterbox. The canvas is premultiplied
+   and mostly transparent, so it adds light to the pane rather than covering
+   it. */
 .player__viz {
-  display: block;
-  width: 100%;
-  height: 108px;
-  background: linear-gradient(180deg, rgba(var(--void-rgb), 0.55), transparent);
-}
-
-.player__viz-wrap .player__meta {
   position: absolute;
-  inset: auto 0 0 0;
-  border-bottom: 0;
-  background: linear-gradient(180deg, transparent, rgba(var(--void-rgb), 0.72));
+  inset: 0;
+  z-index: 0;
+}
+.player__viz canvas { display: block; width: 100%; height: 100%; }
+
+/* The region the chrome leaves clear, so the figure has somewhere to be whole.
+   One height at every width: the tallest the panel gets is ~469px (the
+   tracklist caps at 230px), which still clears a short phone. Visualizer.jsx
+   centres the figure 78px down, so this must stay comfortably above that. */
+.player__stage { height: 148px; }
+
+/* Everything below the stage rides on a scrim. The visual keeps moving behind
+   the tracklist, so the text needs its own ground to stay readable against. */
+.player__body {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--void-rgb), 0) 0,
+    rgba(var(--void-rgb), 0.82) 28px,
+    rgba(var(--void-rgb), 0.92) 100%
+  );
 }
 
 .player__tracks-toggle {
@@ -1609,6 +1624,7 @@ a.game__submit { text-decoration: none; }
    visual is the point, not the control that changes it. */
 .player__viz-modes {
   position: absolute;
+  z-index: 2;
   top: var(--s-2);
   right: var(--s-2);
   display: flex;

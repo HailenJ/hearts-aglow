@@ -40,20 +40,28 @@ export default function Player({ release, onClose }) {
 
   return (
     <aside className="player" aria-label={`Player — ${release.title}`}>
-      <div className="player__viz-wrap">
-        <Visualizer release={release} mode={viz} />
-        <div className="player__viz-modes" role="group" aria-label="Visual style">
-          {VIZ_MODES.map(m => (
-            <button
-              key={m.id}
-              className={`player__viz-mode ${viz === m.id ? 'player__viz-mode--on' : ''}`}
-              onClick={() => chooseViz(m.id)}
-              aria-pressed={viz === m.id}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+      {/* The visual is the panel's background, not a strip above it: Belson's
+          mandala and Minter's kaleidoscope are centric forms and a 108px
+          letterbox gave them nowhere to be centric. The chrome sits on top of
+          it, and `player__stage` reserves the one region it keeps clear. */}
+      <Visualizer release={release} mode={viz} />
+
+      <div className="player__viz-modes" role="group" aria-label="Visual style">
+        {VIZ_MODES.map(m => (
+          <button
+            key={m.id}
+            className={`player__viz-mode ${viz === m.id ? 'player__viz-mode--on' : ''}`}
+            onClick={() => chooseViz(m.id)}
+            aria-pressed={viz === m.id}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="player__stage" aria-hidden="true" />
+
+      <div className="player__body">
         <div className="player__meta">
           {release.image
             ? <img className="player__art" src={release.image} alt="" aria-hidden="true" />
@@ -72,41 +80,40 @@ export default function Player({ release, onClose }) {
             </svg>
           </button>
         </div>
+
+        <iframe
+          className="player__frame"
+          title={`${release.title} — Bandcamp player`}
+          src={src}
+          seamless
+        />
+
+        {tracks.length > 0 && (
+          <ol className="player__tracks" id="player-tracks">
+            {tracks.map((t, i) => {
+              const id = trackId(t)
+              const active = picked ? picked === id : i === 0
+              return (
+                <li key={i}>
+                  <button
+                    className={`player__track ${active ? 'player__track--active' : ''}`}
+                    onClick={() => id && setPicked(id)}
+                    disabled={!id}
+                    aria-current={active ? 'true' : undefined}
+                  >
+                    <span className="player__track-title">{trackTitle(t)}</span>
+                    <span className="player__track-time">{fmt(trackDuration(t))}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        )}
+
+        {picked && (
+          <p className="player__hint">Press play — browsers block autoplay across sites.</p>
+        )}
       </div>
-
-      <iframe
-        className="player__frame"
-        title={`${release.title} — Bandcamp player`}
-        src={src}
-        seamless
-      />
-
-      {tracks.length > 0 && (
-        <ol className="player__tracks" id="player-tracks">
-          {tracks.map((t, i) => {
-            const id = trackId(t)
-            const active = picked ? picked === id : i === 0
-            return (
-              <li key={i}>
-                <button
-                  className={`player__track ${active ? 'player__track--active' : ''}`}
-                  onClick={() => id && setPicked(id)}
-                  disabled={!id}
-                  aria-current={active ? 'true' : undefined}
-                >
-                  <span className="player__track-title">{trackTitle(t)}</span>
-                  <span className="player__track-time">{fmt(trackDuration(t))}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ol>
-      )}
-
-      {picked && (
-        <p className="player__hint">Press play — browsers block autoplay across sites.</p>
-      )}
-
     </aside>
   )
 }

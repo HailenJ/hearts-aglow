@@ -60,31 +60,45 @@ Note: the local `src/data/fallback.js` `game` export is intentionally all empty 
 
 ---
 
-## Next session: rebuild the visualizers
+## Visualizers — rebuilt in WebGL, 2026-08-07
 
-The three player visualizers (Drift / Belson / Minter, `src/components/Visualizer.jsx`) work
-and are honest, but they look rough. The owner's verdict on 2026-08-07 was "really bad and
-rough and not beautiful," and that is correct. The diagnosis, so it does not have to be
-rediscovered:
+Done. The three modes are now one fragment shader (`src/components/Visualizer.jsx`) speaking
+the same vocabulary as `LightField.jsx`: every figure is a sum of gaussians, each a tight core
+plus a wide halo, dithered, with no hard edge anywhere. No new dependencies — `ogl` was already
+there. Seeding moved to `src/lib/vizSeed.js`, which is pure and now has 7 tests.
 
-1. **Wrong medium.** The light field is a WebGL fragment shader built on gaussian falloff and
-   per-pixel dither — deliberately edgeless. The visualizers are Canvas 2D hairline strokes
-   with `shadowBlur` standing in for glow. That is a cruder visual language inside a refined
-   one; they read as wireframes taped onto a light field. Tuning alpha and line width does not
-   fix a materials mismatch.
-2. **Wrong canvas shape.** 108px tall by ~340px wide is a letterbox. Belson's mandala and
-   Minter's kaleidoscope both want square-ish space to read as centric forms.
-3. **`shadowBlur` is not bloom.** Real bloom wants additive passes or a blur kernel.
+All three diagnosed causes are addressed:
 
-Recommended approach: rebuild in WebGL reusing the same vocabulary as `LightField.jsx` —
-gaussian primitives, dither, no hard edges — rather than porting the canvas maths. `ogl` is
-already a dependency and `LightField.jsx` is a working reference for renderer setup, the
-reduced-motion path and teardown. Consider giving the player a taller visual area, or making
-the visual a full-panel background the chrome sits on rather than a strip above it.
+1. **Medium** — gaussian primitives instead of Canvas 2D hairlines. The halo term is what
+   `shadowBlur` was imitating, done properly and additively.
+2. **Shape** — the visual is the whole panel's background (340×469, portrait) rather than a
+   108px letterbox strip. `.player__stage` reserves the top 148px as the region the chrome
+   leaves clear; the figure continues behind the meta bar, the embed and the tracklist.
+3. **Bloom** — real additive accumulation.
 
-Keep: the deterministic per-record seeding (it makes each release its own figure), the
-mode picker with localStorage persistence, the reduced-motion freeze, and the honest comment
-at the top of the file explaining why an audio analyser is impossible here.
+Two things the browser caught that the code did not:
+
+- Centring the figures on the *panel* buried every focal point under the chrome — Minter's core
+  and Belson's aperture both landed behind the Bandcamp iframe. Figures now centre on `uFocus`,
+  78px down from the top edge, computed per-resize because the panel's height rides on the
+  tracklist while the chrome below it is a fixed pixel count.
+- Additive accumulation pegged Minter's origin at pure white, exactly the trap the old Canvas
+  file warned about. Spokes are held off the centre by a `smoothstep` and the core is drawn
+  once, deliberately, rather than summed seven times.
+
+Kept, as intended: deterministic per-record seeding, the mode picker with `localStorage`
+persistence, the reduced-motion freeze, and the honest note about why an audio analyser is
+impossible through a cross-origin iframe.
+
+**Verified in Chrome**, not asserted: shaders compile with no ogl warnings, context is live,
+all three modes draw, reduced motion freezes without blanking, and mobile at 390px has no
+horizontal overflow and no off-screen panel. Screenshots were looked at, one mode at a time,
+and two rounds of intensity fixes came out of that.
+
+One shortcut is marked in the file: Minter's trail is analytic — each spoke re-evaluated at
+five past instants — not a feedback buffer. Ceiling: a very fast spin reads as a dotted arc
+rather than a smear. Upgrade path is a ping-pong `RenderTarget`, which costs two framebuffers
+and a second program for a 340px panel.
 
 ## Known deferred items
 

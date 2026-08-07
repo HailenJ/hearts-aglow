@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { Renderer, Program, Mesh, Triangle } from 'ogl'
+import { vizSeed, WAVES, RINGS, SPOKES, TRAIL } from '../lib/vizSeed'
 
 // HONEST NOTE, because this is easy to misread later:
 // None of these are audio analysers. They cannot be. The Bandcamp player is a
@@ -6,207 +8,278 @@ import { useEffect, useRef } from 'react'
 // browser silences any Web Audio graph connected to it. Verified by request,
 // not assumed.
 //
-// Instead each mode draws a deterministic portrait of the RECORD: every
-// frequency, phase, angle and hue derives from the release's own id and the
-// shape of its tracklist. Drift 6 looks unlike Coda, and each looks identical
-// every time you open it. A signature, not a measurement — which suits a
-// catalogue whose music is itself generated from biological signals.
+// Instead each mode draws a deterministic portrait of the RECORD — see
+// lib/vizSeed.js. A signature, not a measurement, which suits a catalogue
+// whose music is itself generated from biological signals.
+//
+// WHY WEBGL: the first version was Canvas 2D hairline strokes with shadowBlur
+// standing in for glow, and it read as wireframes taped onto a light field.
+// That was a materials mismatch, not a tuning problem — the rest of the site
+// is a gaussian, dithered, edgeless shader. So these now speak the same
+// vocabulary as LightField.jsx: every figure is a sum of gaussians, each one a
+// tight core plus a wide halo, which is what shadowBlur was imitating.
 
+const MODE = { ribbons: 0, belson: 1, minter: 2 }
 
-const hash = (str) => {
-  let h = 2166136261
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i)
-    h = Math.imul(h, 16777619)
+// Where each figure centres, in CSS pixels down from the panel's top edge.
+// Must stay inside `.player__stage`, which is 148px at every width.
+const FOCUS_PX = 78
+
+const vertex = /* glsl */ `
+  attribute vec2 uv;
+  attribute vec2 position;
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position, 0.0, 1.0);
   }
-  return h >>> 0
-}
+`
 
-const rng = (seed) => () => {
-  seed = (seed * 1664525 + 1013904223) >>> 0
-  return seed / 4294967296
-}
+const fragment = /* glsl */ `
+  precision highp float;
+
+  uniform float uTime;
+  uniform float uMotion;
+  uniform float uMode;
+  uniform float uAspect;
+  uniform float uFocus;
+  uniform float uArms;
+
+  uniform vec4  uWaves[${WAVES}];
+  uniform float uWaveHue[${WAVES}];
+  uniform vec4  uRings[${RINGS}];
+  uniform float uRingOn[${RINGS}];
+  uniform vec4  uSpokes[${SPOKES}];
+
+  varying vec2 vUv;
+
+  const float PI  = 3.14159265359;
+  const float TAU = 6.28318530718;
+
+  const vec3 VIOLET = vec3(0.769, 0.541, 1.000);
+  const vec3 CYAN   = vec3(0.875, 0.957, 1.000);
+  const vec3 AMBER  = vec3(1.000, 0.659, 0.471);
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+  }
+
+  // The one primitive everything is built from. Gaussian falloff never reaches
+  // zero, so nothing drawn here has an edge — same requirement as the field.
+  float g(float d, float r) {
+    return exp(-(d * d) / (r * r));
+  }
+
+  vec3 cool(float u) { return mix(VIOLET, CYAN, u); }
+
+  // Minter earns the saturation the quiet modes do not: amber through violet
+  // into the signal cyan.
+  vec3 hot(float u) {
+    return u < 0.5 ? mix(AMBER, VIOLET, u * 2.0) : mix(VIOLET, CYAN, (u - 0.5) * 2.0);
+  }
+
+  float segDist(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0);
+    return length(pa - ba * h);
+  }
+
+  // Drift — travelling waves pinned at both ends. Distance to the curve is
+  // measured perpendicular, not vertically, or the ribbons would pinch wherever
+  // they run steep. The slope is known analytically, so the correction is free.
+  vec3 drift(float t) {
+    vec3 col = vec3(0.0);
+    float u = vUv.x;
+    float y0 = vUv.y - uFocus;
+    float env = sin(u * PI);
+    float denv = PI * cos(u * PI);
+    for (int i = 0; i < ${WAVES}; i++) {
+      vec4 w = uWaves[i];
+      float k = u * TAU * w.x + w.y + t * w.z;
+      float amp = 0.28 * w.w;
+      float y = sin(k) * amp * env;
+      float slope = amp * (cos(k) * TAU * w.x * env + sin(k) * denv) / uAspect;
+      float d = abs(y0 - y) / sqrt(1.0 + slope * slope);
+      // Kept under the clip point: six ribbons crossing at 0.55 each summed to
+      // white and threw the colour away exactly where the weave is busiest.
+      col += cool(uWaveHue[i]) * (g(d, 0.009) * 0.40 + g(d, 0.055) * 0.10);
+    }
+    return col;
+  }
+
+  // Belson — concentric rings drifting off-centre around a breathing aperture.
+  // Allures and Samadhi are centric forms; this needs the panel, not a strip.
+  vec3 belson(vec2 p, float t) {
+    vec3 col = vec3(0.0);
+    col += VIOLET * g(length(p), 0.17 + 0.014 * sin(t * 0.27)) * 0.30;
+    for (int i = 0; i < ${RINGS}; i++) {
+      vec4 r = uRings[i];
+      vec2 c = vec2(sin(t * r.z + r.y), cos(t * r.z * 0.7 + r.y)) * 0.03;
+      float rad = r.x * (1.0 + 0.07 * sin(t * r.z * 2.0 + r.y));
+      float d = abs(length(p - c) - rad);
+      col += cool(r.w) * (g(d, 0.005) * 0.40 + g(d, 0.03) * 0.07) * uRingOn[i];
+    }
+    return col;
+  }
+
+  // Minter — the Llamasoft light-synth lineage, where the trail IS the image.
+  // ponytail: the trail is analytic, not a feedback buffer — each spoke is
+  // re-evaluated at ${TRAIL} past instants with decaying weight. Ceiling: it can only
+  // trail as far back as the loop is long, so a very fast spin shows a dotted
+  // arc rather than a smear. Upgrade path is a ping-pong RenderTarget, which
+  // costs two framebuffers and a second program for a panel this size.
+  vec3 minter(vec2 p, float t) {
+    vec3 col = vec3(0.0);
+    float sector = TAU / uArms;
+    float rr = length(p);
+    // Fold the pixel into one sector and mirror it: the kaleidoscope is the
+    // coordinate system, so nothing has to be drawn more than once.
+    float pa = abs(mod(atan(p.y, p.x), sector) - sector * 0.5);
+    vec2 q = vec2(cos(pa), sin(pa)) * rr;
+
+    // Every spoke converges on the origin, so without this the additive sum
+    // pegs at white there and the figure becomes a headlight — the same trap
+    // the Canvas version fell into. The spokes are held off the centre and the
+    // core is drawn once, deliberately, instead of accumulating.
+    float keepOff = smoothstep(0.03, 0.17, rr);
+    col += mix(AMBER, VIOLET, 0.5) * g(rr, 0.045) * 0.50;
+
+    for (int i = 0; i < ${SPOKES}; i++) {
+      vec4 s = uSpokes[i];
+      for (int k = 0; k < ${TRAIL}; k++) {
+        float tk = t - float(k) * 0.06;
+        float sa = abs(mod(s.x + tk * s.y, sector) - sector * 0.5);
+        float len = s.z * 0.42 * (0.55 + 0.45 * sin(tk * 0.9 + s.x * 3.0));
+        vec2 e = vec2(cos(sa), sin(sa)) * len;
+        float d = segDist(q, e * 0.34, e);
+        col += hot(fract(s.w + t * 0.03)) * (g(d, 0.006) * 0.26 + g(d, 0.032) * 0.055)
+             * exp(-float(k) * 0.6) * keepOff;
+      }
+    }
+    return col;
+  }
+
+  void main() {
+    float t = uTime * uMotion;
+    // The figures centre on uFocus, not on the panel, because the panel's
+    // middle is where the meta bar and the Bandcamp iframe sit — centring
+    // there buried the aperture and the starburst's core under the chrome.
+    vec2 p = (vUv - vec2(0.5, uFocus)) * vec2(uAspect, 1.0);
+
+    vec3 col;
+    if (uMode < 0.5)      col = drift(t);
+    else if (uMode < 1.5) col = belson(p, t);
+    else                  col = minter(p, t);
+
+    // Per-pixel dither, for the same reason the field has it.
+    col = max(col + (hash(gl_FragCoord.xy) - 0.5) / 255.0 * 1.6, 0.0);
+
+    // Premultiplied, so the canvas adds light to the pane beneath it rather
+    // than replacing it: where the figure is dark the panel's glass shows.
+    float a = clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0);
+    gl_FragColor = vec4(min(col, vec3(a)), a);
+  }
+`
 
 export default function Visualizer({ release, mode = 'ribbons' }) {
-  const canvasRef = useRef(null)
+  const hostRef = useRef(null)
+  const liveRef = useRef(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas || !release) return
-    const ctx = canvas.getContext('2d')
+    const host = hostRef.current
+    if (!host || !release) return
+
+    const seed = vizSeed(release)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-    const durations = (release.tracks ?? []).map(t => (typeof t === 'object' ? t.duration : 0) || 0)
-    const seedStr = `${release.bandcampId || release.slug || release.title}:${durations.join(',')}`
-    const rand = rng(hash(seedStr))
+    const renderer = new Renderer({
+      depth: false,
+      alpha: true,
+      premultipliedAlpha: true,
+      dpr: Math.min(window.devicePixelRatio, 2),
+    })
+    const gl = renderer.gl
+    host.appendChild(gl.canvas)
 
-    // Longer records move slower. A 35-minute ambient piece should not
-    // shimmer like a two-minute one.
-    const mean = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 240
-    const languor = Math.min(1, mean / 900)
-    const tempo = 1 - languor * 0.6
-
-    const waves = Array.from({ length: 6 }, () => ({
-      freq: 0.6 + rand() * 2.4 * tempo,
-      phase: rand() * Math.PI * 2,
-      speed: (0.06 + rand() * 0.22) * tempo,
-      amp: 0.18 + rand() * 0.5,
-      hue: rand(),
-    }))
-
-    // Belson: concentric rings, one per track, drifting off-centre and
-    // breathing — the centric mandala of Allures and Samadhi.
-    const rings = Array.from({ length: Math.max(5, Math.min(durations.length, 12)) }, (_, i) => ({
-      r: 0.12 + i * 0.075,
-      wobble: 0.4 + rand() * 0.9,
-      speed: (0.05 + rand() * 0.13) * tempo,
-      hue: rand(),
-    }))
-
-    // Minter: mirrored vector spokes with feedback trails — the Llamasoft
-    // light-synth lineage, where the trail IS the image.
-    const arms = 5 + Math.floor(rand() * 4)
-    const spokes = Array.from({ length: 7 }, () => ({
-      a: rand() * Math.PI * 2,
-      spin: (rand() - 0.5) * 1.1 * tempo,
-      len: 0.35 + rand() * 0.6,
-      hue: rand(),
-    }))
-
-    let raf = 0, w = 0, h = 0
+    const program = new Program(gl, {
+      vertex,
+      fragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uMotion: { value: reduced.matches ? 0 : 1 },
+        uMode: { value: 0 },
+        uAspect: { value: 1 },
+        uFocus: { value: 0.5 },
+        uArms: { value: seed.arms },
+        uWaves: { value: seed.waves },
+        uWaveHue: { value: seed.waveHue },
+        uRings: { value: seed.rings },
+        uRingOn: { value: seed.ringOn },
+        uSpokes: { value: seed.spokes },
+      },
+    })
+    const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })
+    const paint = () => renderer.render({ scene: mesh })
+    liveRef.current = { program, paint }
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2)
-      w = canvas.clientWidth
-      h = canvas.clientHeight
-      canvas.width = w * dpr
-      canvas.height = h * dpr
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const w = host.clientWidth, h = host.clientHeight
+      if (!w || !h) return
+      renderer.setSize(w, h)
+      program.uniforms.uAspect.value = w / h
+      // Measured down from the top edge rather than as a fraction, because the
+      // chrome below is a fixed number of pixels while the panel's height rides
+      // on how many tracks the record has.
+      program.uniforms.uFocus.value = 1 - FOCUS_PX / h
     }
-
-    // Palette: bloom-violet through signal-cyan for the quiet modes, and the
-    // field's warm amber added for Minter, which earns the saturation.
-    const cool = (u, a) => `rgba(${Math.round(196 + u * 27)}, ${Math.round(138 + u * 106)}, 255, ${a})`
-    const hot = (u, a) => (u < 0.5
-      ? `rgba(255, ${Math.round(120 + u * 200)}, ${Math.round(200 - u * 120)}, ${a})`
-      : `rgba(${Math.round(150 + u * 105)}, ${Math.round(230 - u * 60)}, 255, ${a})`)
-
-    const drawRibbons = (t) => {
-      ctx.clearRect(0, 0, w, h)
-      ctx.globalCompositeOperation = 'lighter'
-      for (const v of waves) {
-        ctx.beginPath()
-        for (let x = 0; x <= w; x += 2) {
-          const u = x / w
-          const y = h / 2
-            + Math.sin(u * Math.PI * 2 * v.freq + v.phase + t * v.speed) * (h / 2) * v.amp
-            * Math.sin(u * Math.PI)
-          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
-        }
-        ctx.strokeStyle = cool(v.hue, 0.52)
-        ctx.lineWidth = 1.2
-        ctx.shadowColor = cool(v.hue, 0.6)
-        ctx.shadowBlur = 6
-        ctx.stroke()
-      }
-      ctx.shadowBlur = 0
-      ctx.globalCompositeOperation = 'source-over'
-    }
-
-    const drawBelson = (t) => {
-      ctx.clearRect(0, 0, w, h)
-      ctx.globalCompositeOperation = 'lighter'
-      const cx = w / 2, cy = h / 2
-      const base = Math.min(w, h * 2.2)
-
-      // The aperture at the centre, breathing.
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 0.42)
-      const pulse = 0.5 + 0.5 * Math.sin(t * 0.22 * tempo)
-      glow.addColorStop(0, `rgba(214, 176, 255, ${0.16 + pulse * 0.12})`)
-      glow.addColorStop(1, 'rgba(214, 176, 255, 0)')
-      ctx.fillStyle = glow
-      ctx.fillRect(0, 0, w, h)
-
-      for (const r of rings) {
-        const rad = base * r.r * (1 + 0.08 * Math.sin(t * r.speed * 2 + r.wobble))
-        const ox = Math.sin(t * r.speed + r.wobble) * w * 0.03
-        const oy = Math.cos(t * r.speed * 0.7 + r.wobble) * h * 0.06
-        ctx.beginPath()
-        ctx.ellipse(cx + ox, cy + oy, rad, rad * 0.42, 0, 0, Math.PI * 2)
-        ctx.strokeStyle = cool(r.hue, 0.3)
-        ctx.lineWidth = 1
-        ctx.shadowColor = cool(r.hue, 0.5)
-        ctx.shadowBlur = 8
-        ctx.stroke()
-      }
-      ctx.shadowBlur = 0
-      ctx.globalCompositeOperation = 'source-over'
-    }
-
-    const drawMinter = (t) => {
-      // Feedback rather than clearing: the trail is the image. Erase alpha
-      // instead of painting black — filling with a dark colour accumulates to
-      // an opaque slab and destroys the player's glass.
-      ctx.globalCompositeOperation = 'destination-out'
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.30)'
-      ctx.fillRect(0, 0, w, h)
-
-      // Additive blending accumulates fast across a feedback trail: at any
-      // meaningful alpha every spoke converges on white and swamps the panel.
-      // Low per-stroke alpha keeps the colour and lets the trail do the work.
-      ctx.globalCompositeOperation = 'lighter'
-      const cx = w / 2, cy = h / 2
-      const reach = Math.min(w / 2, h * 1.15) * 0.72
-
-      for (const s of spokes) {
-        const ang = s.a + t * s.spin
-        for (let k = 0; k < arms; k++) {
-          // Kaleidoscopic mirror: every spoke repeated around the centre.
-          const a = ang + (k / arms) * Math.PI * 2
-          const len = reach * s.len * (0.55 + 0.45 * Math.sin(t * 0.9 + s.a * 3))
-          const inner = len * 0.22
-          ctx.beginPath()
-          ctx.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner * 0.42)
-          ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len * 0.42)
-          ctx.strokeStyle = hot((s.hue + t * 0.03) % 1, 0.14)
-          ctx.lineWidth = 1
-          ctx.stroke()
-        }
-      }
-      ctx.globalCompositeOperation = 'source-over'
-    }
-
-    const draw = (t) => {
-      if (mode === 'belson') drawBelson(t)
-      else if (mode === 'minter') drawMinter(t)
-      else drawRibbons(t)
-    }
-
     resize()
     window.addEventListener('resize', resize)
 
+    let raf = 0
     const start = performance.now()
     const loop = () => {
       raf = requestAnimationFrame(loop)
-      draw((performance.now() - start) / 1000)
+      program.uniforms.uTime.value = (performance.now() - start) / 1000
+      paint()
     }
 
-    const onMotion = () => {
-      cancelAnimationFrame(raf)
-      raf = 0
-      ctx.clearRect(0, 0, w, h)
-      if (reduced.matches) draw(0)
-      else loop()
+    const onMotionChange = () => {
+      const reduce = reduced.matches
+      program.uniforms.uMotion.value = reduce ? 0 : 1
+      if (reduce) {
+        cancelAnimationFrame(raf)
+        raf = 0
+        paint()
+      } else if (!raf) {
+        loop()
+      }
     }
-    onMotion()
-    reduced.addEventListener('change', onMotion)
+    reduced.addEventListener('change', onMotionChange)
+
+    if (reduced.matches) paint()
+    else loop()
 
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
-      reduced.removeEventListener('change', onMotion)
+      reduced.removeEventListener('change', onMotionChange)
+      liveRef.current = null
+      if (gl.canvas.parentNode === host) host.removeChild(gl.canvas)
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
     }
+  }, [release])
+
+  // The mode is only a branch in the shader, so switching it must not rebuild
+  // the WebGL context — three buttons would churn three contexts per visit.
+  // `release` is a dependency because the effect above rebuilds the program
+  // when it changes, and the fresh program starts on mode zero.
+  useEffect(() => {
+    const live = liveRef.current
+    if (!live) return
+    live.program.uniforms.uMode.value = MODE[mode] ?? 0
+    // Frozen under reduced motion, so the switch has to paint the new mode itself.
+    if (live.program.uniforms.uMotion.value === 0) live.paint()
   }, [release, mode])
 
-  return <canvas ref={canvasRef} className="player__viz" aria-hidden="true" />
+  return <div ref={hostRef} className="player__viz" aria-hidden="true" />
 }
