@@ -11,6 +11,15 @@ colors:
   hairline: "rgba(255, 255, 255, 0.11)"
   hairline-focus: "rgba(223, 244, 255, 0.34)"
   pane: "rgba(255, 255, 255, 0.045)"
+  # Shadow steps. Deliberately untinted — a shadow is the absence of the
+  # field's light, and a violet one would make windows read as lit from below.
+  shadow-30: "rgba(0, 0, 0, 0.3)"
+  shadow-40: "rgba(0, 0, 0, 0.4)"
+  shadow-50: "rgba(0, 0, 0, 0.5)"
+  shadow-55: "rgba(0, 0, 0, 0.55)"
+  shadow-60: "rgba(0, 0, 0, 0.6)"
+  # The boot sequence opens from true black by design (index.html contract).
+  boot-ground: "#000000"
 typography:
   display:
     fontFamily: "'Anybody', system-ui, sans-serif"
@@ -91,6 +100,20 @@ The palette is almost monochrome by design — a near-black void, a narrow warm 
 - **Hairline** (`rgba(255,255,255,0.11)`, `--hairline`, `globals.css:31`): the default border color for every glass edge — windows, dock items, the CTA button, input fields.
 - **Hairline Focus** (`rgba(223,244,255,0.34)`, `--hairline-focus`, `globals.css:32`): the focused/hovered border state, derived from signal's hue at higher alpha rather than from `--signal` directly.
 - **Pane** (`rgba(255,255,255,0.045)`, `--pane`, `globals.css:33`): the glass fill for windows, dock items, and the player — always this faint, never opaque.
+
+### Shadow & scrim (declared, deliberately untinted)
+
+These are part of the palette. They are listed here so they read as system rather than drift, and they are deliberately NOT tinted toward the field's violet — a shadow is the absence of the field's light, and a violet shadow would make windows read as lit from underneath.
+
+- **Structural shadow**, five declared steps, used for elevation only and always with an offset plus a soft blur — never a zero-offset halo:
+  `rgba(0, 0, 0, 0.3)` (`globals.css:1090`), `rgba(0, 0, 0, 0.4)` (`globals.css:669`), `rgba(0, 0, 0, 0.5)` (`globals.css:337`), `rgba(0, 0, 0, 0.55)` (`globals.css:1204`), `rgba(0, 0, 0, 0.6)` (`globals.css:356`, `globals.css:1406`).
+- **Boot ground** (`#000`, `globals.css:1337`): the boot sequence opens from true black by design, named in the `index.html` direction contract. `--void` would be wrong — the aperture's effect depends on starting from nothing.
+- **Void scrim** (`--void-rgb`, `globals.css:11`): the channel form of `--void`, for translucent surfaces that DO belong to the world — the "Latest" badge, the grid play affordance, the game takeover's scrim. Use this, not a bare black, whenever the thing is a surface rather than a shadow.
+
+### Settled decisions (do not re-litigate)
+
+- **Design specificity.** A critique on 2026-08-07 judged the visual language category-interchangeable and recommended leading with the bio-MIDI provenance in the hero. The owner considered it and declined: **the mood is the point.** The site is meant to feel like the music rather than explain it. This is a deliberate authorial choice, not an oversight; do not re-raise it.
+- **The game is not a window.** It renders as a full-field takeover (`src/components/Takeover.jsx`) rather than a fourth floating pane, so the site's commercial priority never competes for z-order with three other windows. Opening any window dismisses it; the dock stays above it so a visitor is never trapped.
 
 ### Named Rules
 

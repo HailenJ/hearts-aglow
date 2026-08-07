@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
 import TitleBar from './components/TitleBar'
 import Player from './components/Player'
+import Takeover from './components/Takeover'
 import Dock from './components/Dock'
 import Hero from './components/Hero'
 import Boot from './components/Boot'
@@ -103,6 +104,9 @@ function App() {
     if (compact) {
       openIds(windows).filter(id => id !== windowToOpen).forEach(id => dispatch({ type: 'CLOSE', id }))
     }
+    // The game takeover is exclusive: opening anything else dismisses it,
+    // so the two can never be stacked on screen at the same time.
+    if (windowToOpen !== 'game' && windows.game.open) dispatch({ type: 'CLOSE', id: 'game' })
     dispatch({ type: 'OPEN', id: windowToOpen })
     // Only the works window carries a detail slug — opening any other
     // window (e.g. About) must not clobber whatever Works detail was
@@ -140,26 +144,21 @@ function App() {
   const windowConfigs = {
     about: {
       title: 'About',
-      geom: { top: '12%', left: '4%', width: 'clamp(340px, 26vw, 430px)', height: 'min(540px, 72vh)' }
+      geom: { top: '11%', left: '3%', width: 'clamp(320px, 24vw, 400px)', height: 'min(520px, 70vh)' }
     },
     works: {
       title: 'Works',
-      geom: { top: '8%', left: '31%', width: 'clamp(460px, 40vw, 660px)', height: '74%' }
-    },
-    game: {
-      title: 'Game',
-      geom: { top: '22%', left: '38%', width: 'clamp(420px, 34vw, 560px)', height: 'min(580px, 70vh)' }
+      geom: { top: '8%', left: '30%', width: 'clamp(430px, 38vw, 620px)', height: '74%' }
     },
     connect: {
       title: 'Connect',
-      geom: { top: '10%', left: '73%', width: 'clamp(300px, 23vw, 380px)', height: 'min(460px, 58vh)' }
+      geom: { top: '11%', left: '74%', width: 'clamp(290px, 22vw, 360px)', height: 'min(470px, 60vh)' }
     }
   }
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
     works: <Works musicReleases={data.musicReleases} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
-    game: <Game game={data.game} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
@@ -174,7 +173,7 @@ function App() {
 
       <main className="desktop__content">
         <Hero
-          visible={booted && renderableOpen.length === 0}
+          visible={booted && renderableOpen.length === 0 && !windows.game.open}
           heroSubtitle={data.heroSubtitle}
           game={data.game}
           onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}
@@ -199,6 +198,14 @@ function App() {
           </Window>
         ))}
       </main>
+
+      <Takeover
+        open={windows.game.open && !windows.game.minimized}
+        title={data.game?.title || 'The game'}
+        onClose={() => dispatch({ type: 'CLOSE', id: 'game' })}
+      >
+        <Game game={data.game} />
+      </Takeover>
 
       <Player release={playing} onClose={() => setPlaying(null)} />
 
