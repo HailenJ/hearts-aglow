@@ -414,12 +414,31 @@ a:hover {
 .window__btn:hover { color: var(--signal); background: rgba(255, 255, 255, 0.07); }
 
 .window__body {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: var(--s-5);
   overscroll-behavior: contain;
 }
+
+/* Overflow cue. The body scrolls, but macOS hides scrollbars until used, so
+   without this seven of ten releases sat below the fold with no signal at all.
+   A soft darkening at the lower edge, present only while there is more to
+   reach, and gone the moment you hit the bottom. */
+.window__body::after {
+  content: '';
+  position: sticky;
+  bottom: calc(var(--s-5) * -1);
+  display: block;
+  height: 42px;
+  margin: 0 calc(var(--s-5) * -1) calc(var(--s-5) * -1);
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to top, rgba(var(--void-rgb), 0.85), transparent);
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+.window__body--more::after { opacity: 1; }
 
 .window__grip {
   position: absolute;

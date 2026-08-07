@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMediaQuery, COMPACT } from '../hooks/useMediaQuery'
 
 const MIN_W = 320
@@ -10,7 +10,9 @@ export default function Window({
 }) {
   const compact = useMediaQuery(COMPACT)
   const winRef = useRef(null)
+  const bodyRef = useRef(null)
   const drag = useRef(null)
+  const [moreBelow, setMoreBelow] = useState(false)
 
   const opened = state.open && !state.minimized
   const wasOpened = useRef(false)
@@ -29,15 +31,34 @@ export default function Window({
     }
   }, [opened, id])
 
+  // Overflow cue. macOS hides scrollbars until you scroll, so without this a
+  // visitor cannot tell the Works grid continues past the fold.
+  useEffect(() => {
+    const el = bodyRef.current
+    if (!el) return
+    const check = () => setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+    check()
+    el.addEventListener('scroll', check, { passive: true })
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => { el.removeEventListener('scroll', check); ro.disconnect() }
+  }, [opened, children])
+
   if (!state.open || state.minimized) return null
 
+  // Height follows content up to a cap, rather than being fixed. A fixed
+  // height produced both symptoms at once: About wasted a third of its pane
+  // on empty glass, while Works clipped its grid. Once the user resizes, their
+  // explicit height wins and the cap steps aside.
   const style = state.maximized
-    ? { inset: '4%', width: 'auto', height: 'auto' }
+    ? { inset: '4%', width: 'auto', height: 'auto', maxHeight: 'none' }
     : {
         top: state.y != null ? `${state.y}px` : defaultGeom.top,
         left: state.x != null ? `${state.x}px` : defaultGeom.left,
         width: state.w != null ? `${state.w}px` : defaultGeom.width,
-        height: state.h != null ? `${state.h}px` : defaultGeom.height,
+        ...(state.h != null
+          ? { height: `${state.h}px` }
+          : { height: 'auto', maxHeight: defaultGeom.maxHeight }),
       }
 
   const beginDrag = (mode) => (e) => {
@@ -108,7 +129,9 @@ export default function Window({
         </div>
       </header>
 
-      <div className="window__body" id={`window-${id}`}>{children}</div>
+      <div className={`window__body ${moreBelow ? 'window__body--more' : ''}`} ref={bodyRef} id={`window-${id}`}>
+        {children}
+      </div>
 
       {!compact && !state.maximized && (
         <div

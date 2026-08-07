@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 // z-order with three other panes. It takes the field: everything else recedes
 // and it gets the visitor's undivided attention. This is the one surface where
 // the OS metaphor deliberately steps aside for the thing being sold.
-export default function Takeover({ open, title, onClose, children }) {
+export default function Takeover({ open, title, label, onClose, children }) {
   const ref = useRef(null)
   // Synced in a layout effect, not during render — same pattern as
   // useHashRoute. Keeps Escape bound to the current handler without
@@ -23,7 +23,7 @@ export default function Takeover({ open, title, onClose, children }) {
   if (!open) return null
 
   return (
-    <div className="takeover" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="takeover" role="dialog" aria-modal="true" aria-label={label || title}>
       <div className="takeover__scrim" onClick={onClose} aria-hidden="true" />
       <section className="takeover__panel" ref={ref} tabIndex={-1}>
         <header className="takeover__bar">

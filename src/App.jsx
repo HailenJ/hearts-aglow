@@ -144,15 +144,15 @@ function App() {
   const windowConfigs = {
     about: {
       title: 'About',
-      geom: { top: '11%', left: '3%', width: 'clamp(320px, 24vw, 400px)', height: 'min(520px, 70vh)' }
+      geom: { top: '10%', left: '3%', width: 'clamp(320px, 24vw, 400px)', maxHeight: 'min(560px, 74vh)' }
     },
     works: {
       title: 'Works',
-      geom: { top: '8%', left: '30%', width: 'clamp(430px, 38vw, 620px)', height: '74%' }
+      geom: { top: '10%', left: '30%', width: 'clamp(430px, 38vw, 620px)', maxHeight: 'min(700px, 76vh)' }
     },
     connect: {
       title: 'Connect',
-      geom: { top: '11%', left: '74%', width: 'clamp(290px, 22vw, 360px)', height: 'min(470px, 60vh)' }
+      geom: { top: '10%', left: '74%', width: 'clamp(290px, 22vw, 360px)', maxHeight: 'min(560px, 74vh)' }
     }
   }
 
@@ -201,7 +201,8 @@ function App() {
 
       <Takeover
         open={windows.game.open && !windows.game.minimized}
-        title={data.game?.title || 'The game'}
+        title="Game"
+        label={data.game?.title ? `${data.game.title} — the game` : 'The game'}
         onClose={() => dispatch({ type: 'CLOSE', id: 'game' })}
       >
         <Game game={data.game} />
