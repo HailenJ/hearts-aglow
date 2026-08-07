@@ -232,22 +232,30 @@ a:hover {
   width: 120px; height: 1px; margin: var(--s-5) 0 var(--s-2);
   background: linear-gradient(90deg, transparent, var(--hairline-focus), transparent);
 }
+/* The site's primary action. It previously had `background: transparent` and
+   the same hairline as `.dock__item`, which also carries a fill and a 12px
+   blur — so the primary action had strictly less presence than the secondary
+   navigation beneath it. Restored by giving it a surface, not a louder colour:
+   the field must still read through. */
 .hero__cta {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s-1);
-  padding: var(--s-3) var(--s-6);
-  border: 1px solid var(--hairline);
+  padding: var(--s-4) var(--s-6) var(--s-3);
+  border: 1px solid var(--hairline-focus);
   border-radius: 2px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 50px -14px var(--glow-warm-soft);
   color: var(--text);
   cursor: pointer;
   transition: border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
 }
 .hero__cta:hover {
-  border-color: var(--hairline-focus);
-  box-shadow: 0 0 40px -8px var(--glow-warm);
+  border-color: var(--text-dim);
+  box-shadow: 0 0 64px -8px var(--glow-warm);
 }
 .hero__cta-name {
   font-family: var(--font-display);
@@ -259,7 +267,15 @@ a:hover {
   font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--text-faint);
 }
-.hero__cta-go { color: var(--signal); font-size: 12px; }
+/* A bare arrow named no action, so nothing on the front door said what
+   clicking would do. The verb carries it; the arrow is now only direction. */
+.hero__cta-go {
+  margin-top: var(--s-1);
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 300; font-stretch: 118%;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--signal);
+}
 
 /* --- Dock --- */
 .dock {

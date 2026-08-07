@@ -1,4 +1,4 @@
-import { sanityClient } from './sanityClient'
+import { sanityFetch } from './sanityClient'
 
 const ALL_CONTENT_QUERY = `{
   "musicReleases": *[_type == "musicRelease"] | order(order asc) {
@@ -44,7 +44,7 @@ const ALL_CONTENT_QUERY = `{
 }`
 
 export async function fetchAllContent() {
-  const result = await sanityClient.fetch(ALL_CONTENT_QUERY)
+  const result = await sanityFetch(ALL_CONTENT_QUERY)
 
   const data = {}
 

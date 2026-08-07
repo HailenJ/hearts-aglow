@@ -1,6 +1,6 @@
 # Revamp handoff — "Signal in the Bloom"
 
-**Branch merged:** `revamp/signal-in-the-bloom` → `main` (local, **not pushed yet** — see Deploy below)
+**Branch merged:** `revamp/signal-in-the-bloom` → `main`, pushed and live at heartsaglow.io.
 **Design spec:** `docs/superpowers/specs/2026-08-06-heartsaglow-revamp-design.md`
 **Plan:** `docs/superpowers/plans/2026-08-06-heartsaglow-revamp.md`
 **Design system as built:** `DESIGN.md`
@@ -35,8 +35,8 @@ the workflow survives. The `gh-pages` branch, the `predeploy`/`deploy` scripts, 
 
 | Item | Where | Effect until supplied |
 |---|---|---|
-| **Real key art** | Sanity | The takeover currently shows a near-white card reading "OTO" — the brightest object on a site whose whole subject is a dark light field. It reads as a placeholder because it is one. This is the single biggest visual weakness. |
-| **A store URL** | Sanity, game `url` | Empty on the current record, so the "Get it →" button does not render. With the newsletter still disabled, the game has no live action at all. |
+| **Real key art** | Sanity | Re-checked 2026-08-07 and still a placeholder: a grey wordmark on cream. In the takeover it is a ~700×395 near-white slab taking roughly 45% of the viewport, the brightest object on a site whose whole subject is dark light — and it is the one surface meant to sell something. Still the single biggest visual weakness. |
+| **A store URL** | Sanity, game `url` | Still `null` on the record as of 2026-08-07, so the "Get it →" button does not render. The beehiiv signup is live, so the game is not actionless — but there is nowhere to send anyone who wants it. |
 
 **Bandcamp IDs are done** — all 10 releases now have one. The five that were missing (Drift 3, Exalt, Drift 2, Drift, Rebuild) were extracted from the public album pages, so every release has an inline player and the affordance is finally consistent.
 
@@ -135,13 +135,11 @@ and a second program for a 340px panel.
 None block use. Listed so they are not rediscovered as surprises.
 
 - `.about__text` (48ch) and `.works__detail-desc` (54ch) are narrower than the 68ch guideline. Narrow is safe; too wide is the failure mode.
-- `--glow-warm-soft` is a single-use token.
 - `.titlebar__time` inherits its font and colour from `.titlebar` rather than declaring them.
 - `TOGGLE` in `src/lib/windows.js` and `isLoaded` in `useSanityData` are currently unused by the app but retained — both have tests and plausible near-term use.
 - `parseHash` folds a query string into the detail segment (`#/works/drift-6?x=1`). Harmless, since nothing generates such links.
-- `@sanity/client` is roughly a third of the 360 kB bundle for one read-only GROQ query. A plain `fetch()` to the Sanity query URL would drop ~30 kB gzip and two chunks. Worth doing if bundle size ever matters.
+- `queries.js` sends the whole GROQ query in a GET query string. It is ~1.2 kB encoded, well inside every practical URL limit, but a much larger query would need a POST.
 - `queries.js` fetches music, games, software, and social only — `aboutParagraphs` and `heroSubtitle` are permanently fallback-only despite the "content comes from Sanity" story. Extend the query if you want to edit them in Sanity.
-- `package.json` `homepage` still reads `yourusername`.
 
 ---
 

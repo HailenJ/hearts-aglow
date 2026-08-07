@@ -10,14 +10,19 @@ export default function Hero({ visible, heroSubtitle, game, onOpenGame }) {
 
       <div className="hero__rule" aria-hidden="true" />
 
-      {/* The surface's single call to action. Quiet by design — a shout
-          would break the field, and the dock carries the game everywhere. */}
+      {/* The surface's single call to action. Quiet by design — a shout would
+          break the field, and the dock carries the game everywhere. But quiet
+          is not the same as unreadable as a button: this used to be a title, a
+          date and a bare arrow, which named no action and carried less surface
+          than the dock items below it. The verb is the fix, not volume. */}
       <button className="hero__cta" onClick={onOpenGame}>
         <span className="hero__cta-name">{named ? game.title : 'A game'}</span>
         <span className="hero__cta-meta">
           {game?.year ? `${game.year} · ` : ''}{game?.status || 'in development'}
         </span>
-        <span className="hero__cta-go" aria-hidden="true">→</span>
+        <span className="hero__cta-go">
+          Look inside <span aria-hidden="true">→</span>
+        </span>
       </button>
     </div>
   )
