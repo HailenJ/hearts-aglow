@@ -14,13 +14,14 @@ const ALL_CONTENT_QUERY = `{
     tracks,
     order
   },
-  "games": *[_type == "game"] | order(year desc) {
+  "games": *[_type == "game"] | order(featured desc, year desc, _createdAt desc) {
     "id": _id,
     title,
     year,
     description,
     status,
     url,
+    featured,
     "image": artwork.asset->url
   },
   "software": *[_type == "software"] | order(year desc) {

@@ -71,7 +71,7 @@ const rawMusicReleases = [
     artist: 'Hailen Jackson',
     tracks: ['Drift Fifteen', 'Drift Sixteen', 'Drift Seventeen', 'Drift Eighteen', 'Drift Nineteen', 'Drift Twenty-one'],
     description: `Third release in the Drift series, created for sleep and relaxation. Made using an Octatrack sampler.`,
-    bandcampId: ''
+    bandcampId: '994216100'
   },
   {
     id: 7,
@@ -83,7 +83,7 @@ const rawMusicReleases = [
     artist: 'Hailen Jackson',
     tracks: ['julytwentyfirst', 'decelerate', 'en_passant', 'five_am', 'fare', 'exalt', 'meander', 'rmbr'],
     description: `Beat-driven electronic album exploring hip-hop and downtempo territories.`,
-    bandcampId: ''
+    bandcampId: '847710945'
   },
   {
     id: 8,
@@ -95,7 +95,7 @@ const rawMusicReleases = [
     artist: 'Hailen Jackson',
     tracks: ['Drift Eight', 'Drift Nine', 'Drift Ten', 'Drift Eleven', 'Drift Twelve', 'Drift Thirteen', 'Drift Fourteen'],
     description: `Second release in the Drift series, created for sleep and relaxation. Made using an OP-1 synth.`,
-    bandcampId: ''
+    bandcampId: '1153137225'
   },
   {
     id: 9,
@@ -107,7 +107,7 @@ const rawMusicReleases = [
     artist: 'Hailen Jackson',
     tracks: ['Drift One', 'Drift Two', 'Drift Three', 'Drift Four', 'Drift Five', 'Drift Six', 'Drift Seven'],
     description: `The first Drift album, started during quarantine. Inspired by Brian Eno's Music For Airports. Created for sleep and relaxation using a Deluge sequencer.`,
-    bandcampId: ''
+    bandcampId: '1795009574'
   },
   {
     id: 10,
@@ -119,7 +119,7 @@ const rawMusicReleases = [
     artist: 'Hailen Jackson',
     tracks: ['Walk', 'Campfire', 'Ponder', 'Steps', 'You Were Here', 'Build', 'Home', 'Waiting', 'Limb', 'Still'],
     description: `Atmospheric electronic album blending ambient textures with introspective beats.`,
-    bandcampId: ''
+    bandcampId: '695879238'
   },
 ]
 

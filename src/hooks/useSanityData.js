@@ -15,10 +15,12 @@ const initialData = {
 
 const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug || slugify(item.title) || String(item.id) }))
 
-// The featured game is simply the newest one. Sanity's `game` type already
-// carries every field the Game window needs, so there is nothing to add there.
+// Which game the hero CTA points at is the site's single primary action, so it
+// must not depend on Sanity's sort order. Set `featured: true` on exactly one
+// game document to pin it. With none set, this falls back to newest-by-year —
+// which is arbitrary between two games of the same year, so pin one.
 const featured = (games) => {
-  const g = games?.[0]
+  const g = games?.find(x => x.featured) ?? games?.[0]
   if (!g) return fallback.game
   return {
     title: g.title ?? '',

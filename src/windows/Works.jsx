@@ -152,6 +152,16 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
                 <div className="works__detail-info">
                   <h2 className="works__detail-title">{selectedRelease.title}</h2>
                   <span className="works__detail-meta">{selectedRelease.year} &middot; {selectedRelease.artist}</span>
+                  {/* Play is the primary action — this site is for drifting,
+                      and every release now carries a player. Bandcamp drops to
+                      a quiet secondary link for buying and credits, so the two
+                      no longer compete for the same emphasis. */}
+                  {selectedRelease.bandcampId && (
+                    <button className="works__play" onClick={() => onPlay(selectedRelease)}>
+                      <span className="works__play-icon" aria-hidden="true">&#9654;</span>
+                      Play
+                    </button>
+                  )}
                   {selectedRelease.url && (
                     <a
                       href={selectedRelease.url}
@@ -159,12 +169,9 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
                       rel="noopener noreferrer"
                       className="works__detail-link"
                     >
-                      Listen on Bandcamp &rarr;
+                      On Bandcamp &#8599;
                     </a>
                   )}
-                  {selectedRelease.bandcampId
-                    ? <button className="works__play" onClick={() => onPlay(selectedRelease)}>▶ Play here</button>
-                    : null}
                 </div>
               </div>
               {selectedRelease.description && (
@@ -192,24 +199,39 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
                     <h3 className="works__type-label">{type.label}</h3>
                     <div className={`works__grid ${featuredEnabled ? 'works__grid--featured' : ''}`}>
                       {releases.map((release, idx) => (
-                        <button
+                        // A card is a div, not a button, because it now holds
+                        // its own play control and buttons cannot nest.
+                        <div
                           key={release.id}
                           className={`works__item ${featuredEnabled && idx === 0 ? 'works__item--featured' : ''}`}
-                          onClick={() => onSelect(release.slug)}
                         >
-                          {release.image
-                            ? (
-                              <div className="works__artwork">
-                                <img src={release.image} alt={release.title} loading="lazy" />
-                              </div>
-                            )
-                            : <ArtworkPlaceholder title={release.title} />
-                          }
-                          <div className="works__info">
-                            <h3 className="works__title">{release.title}</h3>
-                            <span className="works__meta">{release.year}</span>
-                          </div>
-                        </button>
+                          <button
+                            className="works__item-open"
+                            onClick={() => onSelect(release.slug)}
+                          >
+                            {release.image
+                              ? (
+                                <div className="works__artwork">
+                                  <img src={release.image} alt={release.title} loading="lazy" />
+                                </div>
+                              )
+                              : <ArtworkPlaceholder title={release.title} />
+                            }
+                            <div className="works__info">
+                              <h3 className="works__title">{release.title}</h3>
+                              <span className="works__meta">{release.year}</span>
+                            </div>
+                          </button>
+                          {release.bandcampId && (
+                            <button
+                              className="works__item-play"
+                              onClick={() => onPlay(release)}
+                              aria-label={`Play ${release.title}`}
+                            >
+                              <span aria-hidden="true">&#9654;</span>
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

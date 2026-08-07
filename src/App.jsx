@@ -133,22 +133,26 @@ function App() {
     if (!slug) setWorksSlug(null)
   }
 
+  // Tuned so all four can be open at once without burying each other. The
+  // earlier values were set when there were three windows and Game was added
+  // later, which piled Connect under Game and pushed About off the left edge.
+  // Widths use clamp() so the set still fits a 1280px laptop.
   const windowConfigs = {
     about: {
       title: 'About',
-      geom: { top: '14%', left: '8%', width: '440px', height: 'min(560px, 78vh)' }
+      geom: { top: '12%', left: '4%', width: 'clamp(340px, 26vw, 430px)', height: 'min(540px, 72vh)' }
     },
     works: {
       title: 'Works',
-      geom: { top: '9%', left: '28%', width: '640px', height: '76%' }
+      geom: { top: '8%', left: '31%', width: 'clamp(460px, 40vw, 660px)', height: '74%' }
     },
     game: {
       title: 'Game',
-      geom: { top: '12%', left: '22%', width: '560px', height: 'min(620px, 78vh)' }
+      geom: { top: '22%', left: '38%', width: 'clamp(420px, 34vw, 560px)', height: 'min(580px, 70vh)' }
     },
     connect: {
       title: 'Connect',
-      geom: { top: '18%', left: '58%', width: '400px', height: 'min(560px, 78vh)' }
+      geom: { top: '10%', left: '73%', width: 'clamp(300px, 23vw, 380px)', height: 'min(460px, 58vh)' }
     }
   }
 
@@ -200,6 +204,7 @@ function App() {
 
       <Dock
         windows={windows}
+        focused={focused}
         onToggle={openWindow}
       />
     </div>

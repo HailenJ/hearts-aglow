@@ -8,6 +8,16 @@
 
   /* Bloom — the field's own colours, mirrored from the shader constants */
   --bloom-warm: #c48aff;
+  /* Mirror LightField.jsx AMBER/DEEP shader constants; not applied to any
+     selector, kept here only so the palette can be read in one place.
+     Keep in sync with src/components/LightField.jsx. */
+  --bloom-warm-2: #ffa878;
+  --bloom-deep: #483478;
+
+  /* Warm peach accent inherited from the pre-revamp palette, distinct from
+     --bloom-warm (#c48aff, violet). Used for borders, glows, and gradient
+     washes in the Works and Connect sections. */
+  --accent-warm-rgb: 232, 149, 120;
 
   /* Signal — focus, active state, live data. Nowhere else. */
   --signal: #dff4ff;
@@ -142,7 +152,7 @@ a:hover {
 }
 
 ::selection {
-  background: rgba(232, 149, 120, 0.32);
+  background: rgba(var(--accent-warm-rgb), 0.32);
   color: var(--text);
 }
 
@@ -260,7 +270,10 @@ a:hover {
   gap: var(--s-2);
 }
 .dock__item {
-  padding: var(--s-2) var(--s-5);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-5) var(--s-2) var(--s-4);
   border: 1px solid var(--hairline);
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.03);
@@ -273,13 +286,41 @@ a:hover {
   cursor: pointer;
   transition: color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
 }
+
+/* The marker is what distinguishes the four states; colour alone could not,
+   because with every window open every item would read the same. */
+.dock__marker {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
 .dock__item:hover { color: var(--text); border-color: var(--hairline-focus); }
-.dock__item--active {
+/* closed: no marker at all. */
+.dock__item--closed .dock__marker { background: transparent; border-color: transparent; }
+
+/* open but behind something: a hollow ring, no accent spent. */
+.dock__item--open { color: var(--text); border-color: rgba(255, 255, 255, 0.18); }
+.dock__item--open .dock__marker { border-color: var(--text-dim); }
+
+/* focused: the one window in front. This is the only dock item that earns
+   the signal accent — spending it on all four would say nothing. */
+.dock__item--focused {
   color: var(--signal);
   border-color: var(--hairline-focus);
   box-shadow: 0 0 24px -6px var(--glow-signal);
 }
-.dock__item--min { color: var(--text-faint); border-style: dashed; }
+.dock__item--focused .dock__marker {
+  background: var(--signal);
+  border-color: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+}
+
+/* minimized: open, but parked. Dashed edge reads as "put away". */
+.dock__item--minimized { color: var(--text-faint); border-style: dashed; }
+.dock__item--minimized .dock__marker { border-color: var(--text-faint); }
 
 /* --- Windows --- */
 .window {
@@ -299,10 +340,27 @@ a:hover {
 }
 
 /* Focus reads as more light — the world's own vocabulary, not a highlight ring. */
+/* Focus was previously conveyed only by brightening the focused window, which
+   was below the perceptual threshold with several translucent panes over a lit
+   field. The legible version does the opposite too: unfocused windows recede.
+   Contrast, not brightness, is what makes "which one is in front" readable. */
+.window:not(.window--focused) {
+  opacity: 0.82;
+  filter: saturate(0.85);
+}
+
 .window--focused {
   border-color: var(--hairline-focus);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55),
-              0 0 60px -12px var(--glow-warm-soft);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6),
+              0 0 60px -12px var(--glow-warm-soft),
+              inset 0 1px 0 rgba(223, 244, 255, 0.14);
+}
+
+/* A hairline of signal along the focused window's title bar — the one place
+   the accent reads instantly at a glance across overlapping panes. */
+.window--focused .window__bar {
+  border-bottom-color: var(--hairline-focus);
+  background: linear-gradient(180deg, rgba(223, 244, 255, 0.05), transparent);
 }
 
 @keyframes window-open {
@@ -384,7 +442,8 @@ a:hover {
   margin-bottom: var(--s-6);
   line-height: 1.25;
   letter-spacing: -0.005em;
-  max-width: 22ch;
+  max-width: 26ch;
+  text-wrap: balance;
   position: relative;
 }
 
@@ -408,7 +467,7 @@ a:hover {
 
 .about__text a {
   color: var(--text);
-  border-bottom: 1px solid rgba(232, 149, 120, 0.4);
+  border-bottom: 1px solid rgba(var(--accent-warm-rgb), 0.4);
 }
 
 .about__text a:hover {
@@ -425,7 +484,7 @@ a:hover {
 }
 
 /* Tab label — display voice. Active state is signal, matching
-   .dock__item--active; the resting/hover steps mirror that same
+   .dock__item--focused; the resting/hover steps mirror that same
    dim -> text -> signal ladder. */
 .works__tab {
   position: relative;
@@ -514,6 +573,14 @@ a:hover {
   position: relative;
 }
 
+/* The featured card is two rows tall, so its artwork must grow to fill the
+   extra height — a locked 1:1 ratio leaves dead space under the metadata. */
+.works__item--featured .works__artwork {
+  aspect-ratio: auto;
+  flex: 1;
+  min-height: 0;
+}
+
 .works__item--featured::after {
   content: 'Latest';
   position: absolute;
@@ -528,7 +595,7 @@ a:hover {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--bloom-warm);
-  border: 1px solid rgba(232, 149, 120, 0.25);
+  border: 1px solid rgba(var(--accent-warm-rgb), 0.25);
   border-radius: 2px;
   pointer-events: none;
   z-index: 2;
@@ -539,29 +606,69 @@ a:hover {
 }
 
 .works__item {
-  display: block;
+  position: relative;
+  display: flex;
   background: var(--pane);
   border: 1px solid var(--hairline);
   border-radius: 2px;
   overflow: hidden;
   transition: transform var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  padding: 0;
-  font: inherit;
 }
 
+/* The card body. A separate control from play, so the two actions are
+   genuinely distinct targets rather than one guessing at intent. */
+.works__item-open {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Play sits on the artwork, revealed on hover or keyboard focus. Always
+   present for screen readers; only visually quiet until wanted. */
+.works__item-play {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--hairline-focus);
+  border-radius: 50%;
+  background: rgba(10, 8, 16, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--signal);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.works__item:hover .works__item-play,
+.works__item-play:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+.works__item-play:hover { box-shadow: 0 0 20px -4px var(--glow-signal); }
+
 .works__item:hover {
-  border-color: rgba(232, 149, 120, 0.4);
+  border-color: rgba(var(--accent-warm-rgb), 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 24px rgba(232, 149, 120, 0.04);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 24px rgba(var(--accent-warm-rgb), 0.04);
 }
 
 .works__item:focus-visible {
-  border-color: rgba(232, 149, 120, 0.6);
+  border-color: rgba(var(--accent-warm-rgb), 0.6);
 }
 
 .works__artwork {
@@ -656,7 +763,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--s-1);
+  align-items: flex-start;
+  gap: var(--s-2);
 }
 
 /* Release title — display voice, not data. */
@@ -680,34 +788,31 @@ a:hover {
 }
 
 /* CTA label — display voice, not data. */
+/* Secondary by design: play is the primary action, this is the "go deeper"
+   path for buying and credits. It reads as a link, not a second button. */
 .works__detail-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: var(--s-2);
-  padding: 9px var(--s-4) 10px;
+  gap: 6px;
+  margin-top: var(--s-1);
   font-family: var(--font-display);
   font-weight: 300;
   font-stretch: 118%;
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--bloom-warm);
-  background:
-    radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 70%),
-    transparent;
-  border: 1px solid rgba(232, 149, 120, 0.35);
-  border-radius: 2px;
-  transition: color var(--dur-mid) var(--ease-out), background var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
+  color: var(--text-dim);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(var(--accent-warm-rgb), 0.35);
+  padding: 0 0 2px;
   text-decoration: none;
   width: fit-content;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
-
 .works__detail-link:hover {
-  color: var(--void);
-  background: var(--bloom-warm);
-  border-color: var(--bloom-warm);
-  box-shadow: 0 0 24px rgba(232, 149, 120, 0.3);
+  color: var(--text);
+  border-bottom-color: rgba(var(--accent-warm-rgb), 0.9);
 }
 
 .works__detail-desc {
@@ -846,9 +951,9 @@ a:hover {
 }
 
 .works__link:hover {
-  border-color: rgba(232, 149, 120, 0.4);
+  border-color: rgba(var(--accent-warm-rgb), 0.4);
   color: var(--bloom-warm);
-  background: rgba(232, 149, 120, 0.04);
+  background: rgba(var(--accent-warm-rgb), 0.04);
 }
 
 /* --- Contact --- */
@@ -859,18 +964,18 @@ a:hover {
   padding: var(--s-4) var(--s-5);
   margin-bottom: var(--s-5);
   background:
-    radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.12), transparent 60%),
+    radial-gradient(ellipse at top left, rgba(var(--accent-warm-rgb), 0.12), transparent 60%),
     var(--pane);
-  border: 1px solid rgba(232, 149, 120, 0.25);
+  border: 1px solid rgba(var(--accent-warm-rgb), 0.25);
   border-radius: 3px;
   text-decoration: none;
   transition: border-color var(--dur-slow) var(--ease-out), background var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
 }
 
 .contact__primary:hover {
-  border-color: rgba(232, 149, 120, 0.5);
+  border-color: rgba(var(--accent-warm-rgb), 0.5);
   background:
-    radial-gradient(ellipse at top left, rgba(232, 149, 120, 0.18), transparent 60%),
+    radial-gradient(ellipse at top left, rgba(var(--accent-warm-rgb), 0.18), transparent 60%),
     var(--pane);
   transform: translateY(-1px);
 }
@@ -893,7 +998,6 @@ a:hover {
   align-items: center;
   gap: var(--s-2);
   font-family: var(--font-body);
-  font-style: italic;
   font-size: 1.2rem;
   color: var(--text);
 }
@@ -1051,17 +1155,25 @@ a:hover {
 .game__input::placeholder { color: var(--text-faint); }
 .game__input:disabled, .game__submit:disabled { opacity: 0.45; cursor: not-allowed; }
 .game__submit, .works__play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
   padding: var(--s-3) var(--s-5);
   border: 1px solid var(--hairline-focus);
   border-radius: 2px;
-  background: transparent;
+  background: rgba(223, 244, 255, 0.06);
   color: var(--signal);
   font-family: var(--font-display);
   font-size: 10px; font-stretch: 118%;
   letter-spacing: 0.2em; text-transform: uppercase;
   cursor: pointer;
 }
-.game__submit:hover:not(:disabled), .works__play:hover { box-shadow: 0 0 24px -6px var(--glow-signal); }
+.works__play { align-self: flex-start; }
+.works__play-icon { font-size: 9px; }
+.game__submit:hover:not(:disabled), .works__play:hover {
+  background: rgba(223, 244, 255, 0.1);
+  box-shadow: 0 0 24px -6px var(--glow-signal);
+}
 .game__note {
   margin: 0;
   font-family: var(--font-data);
@@ -1091,25 +1203,47 @@ a:hover {
   overflow: hidden;
   animation: window-open var(--dur-mid) var(--ease-out);
 }
-.player__bar {
-  display: flex; align-items: center; justify-content: space-between;
-  height: 30px; padding: 0 var(--s-2) 0 var(--s-3);
+.player__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
   border-bottom: 1px solid var(--hairline);
+}
+.player__art {
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  object-fit: cover;
+  flex: none;
+}
+.player__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
 }
 .player__title {
   font-family: var(--font-display);
   font-size: 10px; font-stretch: 118%;
-  letter-spacing: 0.2em; text-transform: uppercase;
+  letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--signal);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.player__year {
+  font-family: var(--font-data);
+  font-size: 8px; letter-spacing: 0.12em;
+  color: var(--text-faint);
+}
 .player__close {
   display: grid; place-items: center;
-  width: 22px; height: 22px; padding: 0;
+  width: 22px; height: 22px; padding: 0; flex: none;
   border: 0; background: transparent; color: var(--text-faint); cursor: pointer;
 }
 .player__close:hover { color: var(--signal); }
-.player__frame { display: block; width: 100%; height: 340px; border: 0; }
+
+/* 42px is Bandcamp's slim embed height. Their widget, our frame. */
+.player__frame { display: block; width: 100%; height: 42px; border: 0; }
 
 /* --- Responsive ---
    Single mobile breakpoint. Below 768px the desktop metaphor becomes
@@ -1162,7 +1296,7 @@ a:hover {
     border: 0;
     background: transparent;
   }
-  .dock__item--active { box-shadow: none; }
+  .dock__item--focused { box-shadow: none; }
 
   .player { left: var(--s-3); right: var(--s-3); bottom: 70px; width: auto; }
   .hero__logo { width: 74vw; }
