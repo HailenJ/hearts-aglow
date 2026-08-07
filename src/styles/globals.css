@@ -5,6 +5,8 @@
 :root {
   /* Ground */
   --void: #08070b;
+  /* Channel form of --void, for translucent scrims and overlays. */
+  --void-rgb: 8, 7, 11;
 
   /* Bloom — the field's own colours, mirrored from the shader constants */
   --bloom-warm: #c48aff;
@@ -587,7 +589,7 @@ a:hover {
   top: var(--s-2);
   right: var(--s-2);
   padding: 4px 8px;
-  background: rgba(17, 17, 17, 0.7);
+  background: rgba(var(--void-rgb), 0.72);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   font-family: var(--font-data);
@@ -644,7 +646,7 @@ a:hover {
   padding: 0;
   border: 1px solid var(--hairline-focus);
   border-radius: 50%;
-  background: rgba(10, 8, 16, 0.72);
+  background: rgba(var(--void-rgb), 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--signal);
@@ -1074,7 +1076,7 @@ a:hover {
   background:
     radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h), 60%, 55%, 0.22), transparent 60%),
     radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2), 45%, 50%, 0.14), transparent 65%),
-    linear-gradient(135deg, #1a1a1a, #242420);
+    linear-gradient(135deg, var(--void), rgba(72, 52, 120, 0.35));
   display: grid;
   place-items: center;
   position: relative;
