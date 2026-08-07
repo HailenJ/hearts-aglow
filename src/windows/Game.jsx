@@ -1,8 +1,8 @@
-import { EMAIL_ENDPOINT } from '../lib/config'
+import { NEWSLETTER_URL } from '../lib/config'
 
 export default function Game({ game }) {
   const named = Boolean(game?.title)
-  const canSubscribe = Boolean(EMAIL_ENDPOINT)
+  const canSubscribe = Boolean(NEWSLETTER_URL)
 
   return (
     <div className="game">
@@ -19,11 +19,16 @@ export default function Game({ game }) {
 
       {game?.logline && <p className="game__logline">{game.logline}</p>}
 
+      {/* GET, not POST: beehiiv's hosted subscribe page takes the address as a
+          query parameter, so this hands off with the field already filled in
+          rather than embedding an unstylable widget. Opens in a new tab so a
+          visitor mid-browse does not lose the site. */}
       <form
         className="game__form"
-        action={EMAIL_ENDPOINT || undefined}
-        method="post"
+        action={NEWSLETTER_URL || undefined}
+        method="get"
         target="_blank"
+        rel="noopener noreferrer"
       >
         <label className="game__label" htmlFor="game-email">
           Hear when it ships
@@ -35,16 +40,20 @@ export default function Game({ game }) {
             type="email"
             name="email"
             placeholder="you@somewhere"
+            autoComplete="email"
             required
             disabled={!canSubscribe}
+            aria-describedby="game-signup-note"
           />
           <button className="game__submit" type="submit" disabled={!canSubscribe}>
             Notify me
           </button>
         </div>
-        {!canSubscribe && (
-          <p className="game__note">Signup opens shortly — the list is not live yet.</p>
-        )}
+        <p className="game__note" id="game-signup-note">
+          {canSubscribe
+            ? 'Opens beehiiv in a new tab to confirm.'
+            : 'Signup opens shortly — the list is not live yet.'}
+        </p>
       </form>
 
       {game?.storeUrl && (

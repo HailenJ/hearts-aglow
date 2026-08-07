@@ -12,9 +12,23 @@ export const CONTACT_EMAIL = 'hailen@heartsaglow.io'
 
 export const BANDCAMP_URL = 'https://hailenjackson.bandcamp.com'
 
-// Hosted form endpoint for launch-news signup. Static hosting means no
-// server of our own. Buttondown's embed URL looks like:
-//   https://buttondown.email/api/emails/embed-subscribe/<username>
-// Empty until the account exists; the form renders disabled rather than
-// silently posting nowhere.
-export const EMAIL_ENDPOINT = ''
+// Newsletter signup, via beehiiv.
+//
+// Beehiiv offers three routes and only one fits a static site with a committed
+// visual world:
+//   - Their API needs a secret key, which cannot live in client-side code.
+//   - Their iframe embed works but is an unstylable widget; dropping a white
+//     beehiiv box into a Ganzfeld would undo the design it sits in.
+//   - Their hosted subscribe page accepts the address as a query parameter, so
+//     our own form can stay our own form and simply hand off.
+//
+// The third is what runs here: the visitor types into a field we designed, and
+// submitting opens beehiiv's page with the address already filled in for them
+// to confirm. One extra step, in exchange for the takeover keeping its
+// integrity.
+//
+// Set this to the publication's subscribe page, e.g.
+//   'https://yourname.beehiiv.com/subscribe'
+// While it is empty the form renders disabled with honest copy rather than
+// pretending to work.
+export const NEWSLETTER_URL = ''

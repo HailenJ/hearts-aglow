@@ -32,7 +32,7 @@ After the flip, deploying is `npm run deploy` and nothing else. `dist/`, `assets
 
 | Item | Where | Effect until supplied |
 |---|---|---|
-| **Email endpoint** | `src/lib/config.js` → `EMAIL_ENDPOINT` | The signup form on the Game window renders **disabled** with honest copy. Buttondown's embed URL (`https://buttondown.email/api/emails/embed-subscribe/<user>`) is a plain form POST — no JS, no dependency. |
+| **Newsletter URL** | `src/lib/config.js` → `NEWSLETTER_URL` | The signup form renders **disabled** with honest copy until set. Set it to your beehiiv subscribe page, e.g. `https://yourname.beehiiv.com/subscribe`. The form GETs there with the address prefilled, so our styled field stays ours instead of embedding beehiiv's unstylable widget. |
 | **5 missing Bandcamp IDs** | `src/data/fallback.js` | Drift 3, Exalt, Drift 2, Drift, and Rebuild show "Listen on Bandcamp →" with no inline player. The other five (Drift 6, Drift 5, Coda, The Secrets We Keep, Drift 4) have players. |
 | **Confirm the game record** | Sanity | The hero CTA and Game window read "YARG VENUES · 2026 · 2 Audio reactive venues." straight from your Sanity `game` document, with key art and a live store link. Confirm that is real and current, not test data. |
 
