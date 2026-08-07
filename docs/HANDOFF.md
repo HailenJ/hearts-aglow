@@ -59,6 +59,32 @@ Note: the local `src/data/fallback.js` `game` export is intentionally all empty 
 
 ---
 
+## Next session: rebuild the visualizers
+
+The three player visualizers (Drift / Belson / Minter, `src/components/Visualizer.jsx`) work
+and are honest, but they look rough. The owner's verdict on 2026-08-07 was "really bad and
+rough and not beautiful," and that is correct. The diagnosis, so it does not have to be
+rediscovered:
+
+1. **Wrong medium.** The light field is a WebGL fragment shader built on gaussian falloff and
+   per-pixel dither — deliberately edgeless. The visualizers are Canvas 2D hairline strokes
+   with `shadowBlur` standing in for glow. That is a cruder visual language inside a refined
+   one; they read as wireframes taped onto a light field. Tuning alpha and line width does not
+   fix a materials mismatch.
+2. **Wrong canvas shape.** 108px tall by ~340px wide is a letterbox. Belson's mandala and
+   Minter's kaleidoscope both want square-ish space to read as centric forms.
+3. **`shadowBlur` is not bloom.** Real bloom wants additive passes or a blur kernel.
+
+Recommended approach: rebuild in WebGL reusing the same vocabulary as `LightField.jsx` —
+gaussian primitives, dither, no hard edges — rather than porting the canvas maths. `ogl` is
+already a dependency and `LightField.jsx` is a working reference for renderer setup, the
+reduced-motion path and teardown. Consider giving the player a taller visual area, or making
+the visual a full-panel background the chrome sits on rather than a strip above it.
+
+Keep: the deterministic per-record seeding (it makes each release its own figure), the
+mode picker with localStorage persistence, the reduced-motion freeze, and the honest comment
+at the top of the file explaining why an audio analyser is impossible here.
+
 ## Known deferred items
 
 None block use. Listed so they are not rediscovered as surprises.
