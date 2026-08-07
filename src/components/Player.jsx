@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Visualizer from './Visualizer'
-import { VIZ_MODES } from '../lib/vizModes'
+import { VIZ_MODES, DEFAULT_MODE, isMode } from '../lib/vizModes'
+import { trackBpm } from '../lib/vizSeed'
 
 const fmt = (secs) => {
   if (!secs) return ''
@@ -20,8 +21,13 @@ export default function Player({ release, onClose }) {
   const [picked, setPicked] = useState(null)
   // Remembered across sessions: which visual someone prefers is a taste
   // setting, not state worth re-asking for on every visit.
+  // Validated on read, not just defaulted: the modes were renamed once, so a
+  // returning visitor can hold a stored id that no longer exists.
   const [viz, setViz] = useState(() => {
-    try { return localStorage.getItem('aglow.viz') || 'ribbons' } catch { return 'ribbons' }
+    try {
+      const saved = localStorage.getItem('aglow.viz')
+      return isMode(saved) ? saved : DEFAULT_MODE
+    } catch { return DEFAULT_MODE }
   })
   const chooseViz = (id) => {
     setViz(id)
@@ -38,13 +44,18 @@ export default function Player({ release, onClose }) {
   const tracks = release.tracks ?? []
   const total = tracks.reduce((a, t) => a + trackDuration(t), 0)
 
+  // The embed opens on track one, so that is what the visual should pulse at
+  // until someone picks another.
+  const active = (picked && tracks.find(t => trackId(t) === picked)) || tracks[0]
+  const bpm = trackBpm(release, active)
+
   return (
     <aside className="player" aria-label={`Player — ${release.title}`}>
       {/* The visual is the panel's background, not a strip above it: Belson's
           mandala and Minter's kaleidoscope are centric forms and a 108px
           letterbox gave them nowhere to be centric. The chrome sits on top of
           it, and `player__stage` reserves the one region it keeps clear. */}
-      <Visualizer release={release} mode={viz} />
+      <Visualizer release={release} mode={viz} bpm={bpm} />
 
       <div className="player__viz-modes" role="group" aria-label="Visual style">
         {VIZ_MODES.map(m => (

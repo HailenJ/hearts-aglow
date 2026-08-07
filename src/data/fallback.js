@@ -1,5 +1,19 @@
 import { slugify } from '../lib/route.js'
 
+// Track shape: { title, duration (seconds), trackId, bpm? }
+//
+// `bpm` is optional and drives the visualizer's pulse. Add it per track:
+//
+//   { title: "Drift 36: Beau", duration: 894, trackId: '1055598064', bpm: 62 },
+//
+// A release-level `bpm` covers a whole record, and with neither the visual
+// falls back to 60 — a resting heart rate, which for the bio-sonified Drift
+// records is the same quantity the music was made from. Anything outside
+// 20–220 is clamped, so a stray zero cannot stop the pulse and a stray 6000
+// cannot turn it into a strobe. See src/lib/vizSeed.js.
+//
+// Nothing here is invented: values appear only where a real measurement exists.
+
 const rawMusicReleases = [
   {
     id: 1,

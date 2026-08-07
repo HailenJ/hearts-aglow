@@ -11,6 +11,28 @@ export const RINGS = 12
 export const SPOKES = 7
 export const TRAIL = 5
 
+// A resting heart rate, which is not an arbitrary placeholder here: the Drift
+// records are bio-sonified from diodes on people's arms, so a track's tempo and
+// the pulse it was made from are the same number.
+export const DEFAULT_BPM = 60
+
+// Guards the shader against a typo. 6000 in the data would otherwise become a
+// 100Hz strobe on a site whose entire subject is slow light.
+const BPM_MIN = 20
+const BPM_MAX = 220
+
+/**
+ * Beats per minute for whichever track is loaded: the track's own value, else
+ * the release's, else a resting pulse. Every level is optional, so the visual
+ * degrades to a steady 60 rather than breaking while the data is being filled
+ * in one record at a time.
+ */
+export function trackBpm(release, track) {
+  const raw = Number(track?.bpm ?? release?.bpm)
+  if (!Number.isFinite(raw) || raw <= 0) return DEFAULT_BPM
+  return Math.min(BPM_MAX, Math.max(BPM_MIN, raw))
+}
+
 const hash = (str) => {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {

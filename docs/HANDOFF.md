@@ -95,7 +95,37 @@ all three modes draw, reduced motion freezes without blanking, and mobile at 390
 horizontal overflow and no off-screen panel. Screenshots were looked at, one mode at a time,
 and two rounds of intensity fixes came out of that.
 
-One shortcut is marked in the file: Minter's trail is analytic — each spoke re-evaluated at
+### Modes renamed, and a BPM pulse — same day
+
+The modes are **Strand / Halo / Bloom**, named for what they look like rather than for who
+inspired them. The debts to Jordan Belson and Jeff Minter are paid in the comments where the
+maths actually is. Stored preferences are validated against `VIZ_MODES` on read now, so a
+returning visitor holding the old `belson` id lands on the default instead of an empty picker.
+
+**BPM drives a pulse, and it is a pulse, not sync.** `bpm` is optional per track in
+`src/data/fallback.js`, falling back to a release-level value and then to 60 — a resting heart
+rate, which for the bio-sonified Drift records is literally the quantity the music came from.
+Out-of-range values are clamped to 20–220 so a typo cannot become a strobe. The shader gets
+`uBeat` in Hz and every mode responds: brightness swings 17–27% per beat, plus a small
+geometric swell.
+
+The phase is **not** aligned to the audio and cannot be. Same iframe wall as the analyser: no
+`currentTime`, no play or pause events. An iframe-focus heuristic could guess when someone hit
+play but cannot see a pause, so it would desync permanently the first time anyone used one. The
+pulse is free-running at the right rate, which is honest; a fake sync that drifts would not be.
+
+**No BPM values are in the data yet, deliberately.** Inventing heart rates and attributing them
+to Beau, Patrick and Ryder by name would have looked authoritative and been fiction. The shape
+and a worked example are documented at the top of `fallback.js`; add real numbers as you have
+them and each track picks its own up immediately.
+
+Verified by measurement, not assertion: with a temporary `bpm: 150` on one track the pulse was
+counted at 150/min in Chrome, and the untouched next track at 61/min. The test value was
+reverted. Note `useSanityData.js` names the fields that survive the Sanity merge one by one —
+`bpm` had to be added there or it would have been silently dropped for remote data, the exact
+trap that function's own comment warns about.
+
+One shortcut is marked in the file: Bloom's trail is analytic — each spoke re-evaluated at
 five past instants — not a feedback buffer. Ceiling: a very fast spin reads as a dotted arc
 rather than a smear. Upgrade path is a ping-pong `RenderTarget`, which costs two framebuffers
 and a second program for a 340px panel.

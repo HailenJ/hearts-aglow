@@ -26,7 +26,10 @@ const withDurations = (list) => (list ?? []).map(r => {
     tracks: r.tracks.map((t, i) => {
       if (t && typeof t === 'object') return t
       const src = byTitle.get(t) ?? local.tracks[i] ?? {}
-      return { title: t, duration: src.duration ?? 0, trackId: src.trackId ?? '' }
+      // Every field the local record carries has to be named here or it is
+      // dropped on the floor for Sanity-backed data. `bpm` is optional and
+      // drives the visualizer's pulse; see lib/vizSeed.js.
+      return { title: t, duration: src.duration ?? 0, trackId: src.trackId ?? '', bpm: src.bpm ?? null }
     }),
   }
 })

@@ -1,12 +1,21 @@
 import { useEffect, useRef } from 'react'
 import { Renderer, Program, Mesh, Triangle } from 'ogl'
-import { vizSeed, WAVES, RINGS, SPOKES, TRAIL } from '../lib/vizSeed'
+import { vizSeed, DEFAULT_BPM, WAVES, RINGS, SPOKES, TRAIL } from '../lib/vizSeed'
 
 // HONEST NOTE, because this is easy to misread later:
 // None of these are audio analysers. They cannot be. The Bandcamp player is a
 // cross-origin iframe and its stream ships without CORS headers, so the
 // browser silences any Web Audio graph connected to it. Verified by request,
 // not assumed.
+//
+// The beat is not sync either, and the difference matters. `uBeat` comes from a
+// hardcoded BPM in the data, so the pulse runs at the track's true RATE but at
+// an arbitrary PHASE — it is a free-running oscillator, not a follower. The
+// same iframe boundary hides `currentTime`, play and pause, so there is no
+// instant to align to. An iframe-focus heuristic could guess when someone
+// pressed play, but it cannot see a pause, so it would desync permanently the
+// first time anyone used one. A pulse at the right tempo is honest; a fake sync
+// that drifts is worse than none, so this does not pretend.
 //
 // Instead each mode draws a deterministic portrait of the RECORD — see
 // lib/vizSeed.js. A signature, not a measurement, which suits a catalogue
@@ -19,7 +28,7 @@ import { vizSeed, WAVES, RINGS, SPOKES, TRAIL } from '../lib/vizSeed'
 // vocabulary as LightField.jsx: every figure is a sum of gaussians, each one a
 // tight core plus a wide halo, which is what shadowBlur was imitating.
 
-const MODE = { ribbons: 0, belson: 1, minter: 2 }
+const MODE = { strand: 0, halo: 1, bloom: 2 }
 
 // Where each figure centres, in CSS pixels down from the panel's top edge.
 // Must stay inside `.player__stage`, which is 148px at every width.
@@ -44,6 +53,7 @@ const fragment = /* glsl */ `
   uniform float uAspect;
   uniform float uFocus;
   uniform float uArms;
+  uniform float uBeat;   // Hz — the loaded track's BPM over sixty.
 
   uniform vec4  uWaves[${WAVES}];
   uniform float uWaveHue[${WAVES}];
@@ -72,7 +82,14 @@ const fragment = /* glsl */ `
 
   vec3 cool(float u) { return mix(VIOLET, CYAN, u); }
 
-  // Minter earns the saturation the quiet modes do not: amber through violet
+  // One beat: a fast attack and a long decay, which is the shape of a pulse
+  // rather than of a sine. Free-running — see the note in Visualizer.jsx about
+  // why the phase cannot be aligned to the audio.
+  float beat(float t) {
+    return exp(-fract(t * uBeat) * 2.6);
+  }
+
+  // Bloom earns the saturation the quiet modes do not: amber through violet
   // into the signal cyan.
   vec3 hot(float u) {
     return u < 0.5 ? mix(AMBER, VIOLET, u * 2.0) : mix(VIOLET, CYAN, (u - 0.5) * 2.0);
@@ -84,10 +101,10 @@ const fragment = /* glsl */ `
     return length(pa - ba * h);
   }
 
-  // Drift — travelling waves pinned at both ends. Distance to the curve is
+  // Strand — travelling waves pinned at both ends. Distance to the curve is
   // measured perpendicular, not vertically, or the ribbons would pinch wherever
   // they run steep. The slope is known analytically, so the correction is free.
-  vec3 drift(float t) {
+  vec3 strand(float t, float b) {
     vec3 col = vec3(0.0);
     float u = vUv.x;
     float y0 = vUv.y - uFocus;
@@ -96,39 +113,43 @@ const fragment = /* glsl */ `
     for (int i = 0; i < ${WAVES}; i++) {
       vec4 w = uWaves[i];
       float k = u * TAU * w.x + w.y + t * w.z;
-      float amp = 0.28 * w.w;
+      float amp = 0.28 * w.w * (1.0 + 0.07 * b);
       float y = sin(k) * amp * env;
       float slope = amp * (cos(k) * TAU * w.x * env + sin(k) * denv) / uAspect;
       float d = abs(y0 - y) / sqrt(1.0 + slope * slope);
       // Kept under the clip point: six ribbons crossing at 0.55 each summed to
       // white and threw the colour away exactly where the weave is busiest.
-      col += cool(uWaveHue[i]) * (g(d, 0.009) * 0.40 + g(d, 0.055) * 0.10);
+      col += cool(uWaveHue[i]) * (g(d, 0.009) * 0.40 + g(d, 0.055) * 0.10) * (0.86 + 0.22 * b);
     }
     return col;
   }
 
-  // Belson — concentric rings drifting off-centre around a breathing aperture.
-  // Allures and Samadhi are centric forms; this needs the panel, not a strip.
-  vec3 belson(vec2 p, float t) {
+  // Halo — concentric rings drifting off-centre around a breathing aperture,
+  // after Jordan Belson's Allures and Samadhi. Centric forms, so this needs the
+  // whole panel rather than a strip.
+  vec3 halo(vec2 p, float t, float b) {
     vec3 col = vec3(0.0);
-    col += VIOLET * g(length(p), 0.17 + 0.014 * sin(t * 0.27)) * 0.30;
+    // The slow breath stays and the beat rides on top of it: a long swell with
+    // a pulse in it, rather than one replacing the other.
+    col += VIOLET * g(length(p), 0.17 + 0.014 * sin(t * 0.27) + 0.020 * b) * (0.30 + 0.10 * b);
     for (int i = 0; i < ${RINGS}; i++) {
       vec4 r = uRings[i];
       vec2 c = vec2(sin(t * r.z + r.y), cos(t * r.z * 0.7 + r.y)) * 0.03;
       float rad = r.x * (1.0 + 0.07 * sin(t * r.z * 2.0 + r.y));
       float d = abs(length(p - c) - rad);
-      col += cool(r.w) * (g(d, 0.005) * 0.40 + g(d, 0.03) * 0.07) * uRingOn[i];
+      col += cool(r.w) * (g(d, 0.005) * 0.40 + g(d, 0.03) * 0.07) * uRingOn[i] * (0.86 + 0.22 * b);
     }
     return col;
   }
 
-  // Minter — the Llamasoft light-synth lineage, where the trail IS the image.
+  // Bloom — mirrored spokes after Jeff Minter's Llamasoft light synths, where
+  // the trail IS the image. The only mode that runs the full spectrum.
   // ponytail: the trail is analytic, not a feedback buffer — each spoke is
   // re-evaluated at ${TRAIL} past instants with decaying weight. Ceiling: it can only
   // trail as far back as the loop is long, so a very fast spin shows a dotted
   // arc rather than a smear. Upgrade path is a ping-pong RenderTarget, which
   // costs two framebuffers and a second program for a panel this size.
-  vec3 minter(vec2 p, float t) {
+  vec3 bloom(vec2 p, float t, float b) {
     vec3 col = vec3(0.0);
     float sector = TAU / uArms;
     float rr = length(p);
@@ -142,18 +163,18 @@ const fragment = /* glsl */ `
     // the Canvas version fell into. The spokes are held off the centre and the
     // core is drawn once, deliberately, instead of accumulating.
     float keepOff = smoothstep(0.03, 0.17, rr);
-    col += mix(AMBER, VIOLET, 0.5) * g(rr, 0.045) * 0.50;
+    col += mix(AMBER, VIOLET, 0.5) * g(rr, 0.045 + 0.010 * b) * (0.42 + 0.26 * b);
 
     for (int i = 0; i < ${SPOKES}; i++) {
       vec4 s = uSpokes[i];
       for (int k = 0; k < ${TRAIL}; k++) {
         float tk = t - float(k) * 0.06;
         float sa = abs(mod(s.x + tk * s.y, sector) - sector * 0.5);
-        float len = s.z * 0.42 * (0.55 + 0.45 * sin(tk * 0.9 + s.x * 3.0));
+        float len = s.z * 0.42 * (0.55 + 0.45 * sin(tk * 0.9 + s.x * 3.0)) * (1.0 + 0.06 * b);
         vec2 e = vec2(cos(sa), sin(sa)) * len;
         float d = segDist(q, e * 0.34, e);
         col += hot(fract(s.w + t * 0.03)) * (g(d, 0.006) * 0.26 + g(d, 0.032) * 0.055)
-             * exp(-float(k) * 0.6) * keepOff;
+             * exp(-float(k) * 0.6) * keepOff * (0.84 + 0.26 * b);
       }
     }
     return col;
@@ -166,10 +187,12 @@ const fragment = /* glsl */ `
     // there buried the aperture and the starburst's core under the chrome.
     vec2 p = (vUv - vec2(0.5, uFocus)) * vec2(uAspect, 1.0);
 
+    float b = beat(t);
+
     vec3 col;
-    if (uMode < 0.5)      col = drift(t);
-    else if (uMode < 1.5) col = belson(p, t);
-    else                  col = minter(p, t);
+    if (uMode < 0.5)      col = strand(t, b);
+    else if (uMode < 1.5) col = halo(p, t, b);
+    else                  col = bloom(p, t, b);
 
     // Per-pixel dither, for the same reason the field has it.
     col = max(col + (hash(gl_FragCoord.xy) - 0.5) / 255.0 * 1.6, 0.0);
@@ -181,7 +204,7 @@ const fragment = /* glsl */ `
   }
 `
 
-export default function Visualizer({ release, mode = 'ribbons' }) {
+export default function Visualizer({ release, mode = 'strand', bpm = DEFAULT_BPM }) {
   const hostRef = useRef(null)
   const liveRef = useRef(null)
 
@@ -211,6 +234,7 @@ export default function Visualizer({ release, mode = 'ribbons' }) {
         uAspect: { value: 1 },
         uFocus: { value: 0.5 },
         uArms: { value: seed.arms },
+        uBeat: { value: DEFAULT_BPM / 60 },
         uWaves: { value: seed.waves },
         uWaveHue: { value: seed.waveHue },
         uRings: { value: seed.rings },
@@ -269,17 +293,19 @@ export default function Visualizer({ release, mode = 'ribbons' }) {
     }
   }, [release])
 
-  // The mode is only a branch in the shader, so switching it must not rebuild
-  // the WebGL context — three buttons would churn three contexts per visit.
-  // `release` is a dependency because the effect above rebuilds the program
-  // when it changes, and the fresh program starts on mode zero.
+  // Mode and beat are both a single uniform, so changing either must not
+  // rebuild the WebGL context — three mode buttons and a twelve-track list
+  // would otherwise churn a context per click. `release` is a dependency
+  // because the effect above rebuilds the program when it changes, and the
+  // fresh program starts on mode zero at the default pulse.
   useEffect(() => {
     const live = liveRef.current
     if (!live) return
     live.program.uniforms.uMode.value = MODE[mode] ?? 0
-    // Frozen under reduced motion, so the switch has to paint the new mode itself.
+    live.program.uniforms.uBeat.value = bpm / 60
+    // Frozen under reduced motion, so the switch has to paint the change itself.
     if (live.program.uniforms.uMotion.value === 0) live.paint()
-  }, [release, mode])
+  }, [release, mode, bpm])
 
   return <div ref={hostRef} className="player__viz" aria-hidden="true" />
 }

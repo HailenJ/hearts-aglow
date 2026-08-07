@@ -12,6 +12,7 @@ const ALL_CONTENT_QUERY = `{
     artist,
     bandcampId,
     tracks,
+    bpm,
     order
   },
   "games": *[_type == "game"] | order(featured desc, year desc, _createdAt desc) {
