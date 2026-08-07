@@ -1,6 +1,21 @@
 import { useState } from 'react'
 import { resolveRoute } from '../lib/route'
 
+
+// Tracks may be a bare string (older/Sanity data) or { title, duration }.
+// Tolerating both means a CMS entry without durations still renders.
+const trackTitle = (t) => (typeof t === 'string' ? t : t?.title ?? '')
+const trackDuration = (t) => (typeof t === 'string' ? 0 : t?.duration ?? 0)
+const totalRuntime = (tracks) => (tracks ?? []).reduce((a, t) => a + trackDuration(t), 0)
+const formatRuntime = (secs) => {
+  if (!secs) return ''
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  const s = secs % 60
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${m}:${String(s).padStart(2, '0')}`
+}
+
 const releaseTypes = [
   { key: 'drift', label: 'Drift Series' },
   { key: 'album', label: 'Albums' },
@@ -179,10 +194,18 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
               )}
               {selectedRelease.tracks && selectedRelease.tracks.length > 0 && (
                 <div className="works__detail-tracks">
-                  <h4>Tracks</h4>
+                  <h4>
+                    Tracks
+                    <span className="works__runtime">{formatRuntime(totalRuntime(selectedRelease.tracks))}</span>
+                  </h4>
                   <ol>
                     {selectedRelease.tracks.map((track, i) => (
-                      <li key={i}>{track}</li>
+                      <li key={i}>
+                        <span className="works__track-title">{trackTitle(track)}</span>
+                        {trackDuration(track) > 0 && (
+                          <span className="works__track-time">{formatRuntime(trackDuration(track))}</span>
+                        )}
+                      </li>
                     ))}
                   </ol>
                 </div>

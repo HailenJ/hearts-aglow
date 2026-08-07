@@ -1497,3 +1497,11 @@ a:hover {
    address, so a field here would only make the visitor type it twice. */
 .game__signup { display: flex; flex-direction: column; gap: var(--s-2); align-items: flex-start; }
 a.game__submit { text-decoration: none; }
+
+/* Track rows carry a runtime. These releases are long-form — Drift 3 runs
+   208 minutes across six tracks — and the list gave no hint of that before. */
+.works__detail-tracks h4 { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
+.works__runtime { font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-faint); }
+.works__detail-tracks li { grid-template-columns: 22px 1fr auto; }
+.works__track-title { min-width: 0; }
+.works__track-time { flex: none; font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-faint); font-variant-numeric: tabular-nums; }

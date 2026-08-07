@@ -9,7 +9,20 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift-6',
     image: 'https://f4.bcbits.com/img/a3819146014_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift 36: Beau', 'Drift 37: Patrick', 'Drift 38: Ryder', 'Drift 39: Rich', 'Drift 40: Taegan', 'Drift 41: Lisa', 'Drift 42: Gavin', 'Drift 43: Maycee', 'Drift 44: Julie', 'Drift 45: Diane', 'Drift 46: Mary', 'Drift 47: River'],
+    tracks: [
+      { title: "Drift 36: Beau", duration: 894 },
+      { title: "Drift 37: Patrick", duration: 576 },
+      { title: "Drift 38: Ryder", duration: 777 },
+      { title: "Drift 39: Rich", duration: 448 },
+      { title: "Drift 40: Taegan", duration: 790 },
+      { title: "Drift 41: Lisa", duration: 666 },
+      { title: "Drift 42: Gavin", duration: 263 },
+      { title: "Drift 43: Maycee", duration: 491 },
+      { title: "Drift 44: Julie", duration: 434 },
+      { title: "Drift 45: Diane", duration: 224 },
+      { title: "Drift 46: Mary", duration: 617 },
+      { title: "Drift 47: River", duration: 905 }
+    ],
     description: `Drift 6 is the latest in the Drift album series, ambient albums created to help rest, relax, and inspire. Written completely with bio midi sonification from loved ones - friends and family had diodes strapped to their arms and that data was translated to midi notes. A love letter to important people in my life in a digital form that could last beyond their lifetimes.`,
     bandcampId: '329094219'
   },
@@ -21,7 +34,16 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift-5',
     image: 'https://f4.bcbits.com/img/a3423859940_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift 28', 'Drift 29', 'Drift 30', 'Drift 31', 'Drift 32', 'Drift 33', 'Drift 34', 'Drift 35'],
+    tracks: [
+      { title: "Drift 28", duration: 2141 },
+      { title: "Drift 29", duration: 3044 },
+      { title: "Drift 30", duration: 803 },
+      { title: "Drift 31", duration: 1276 },
+      { title: "Drift 32", duration: 2036 },
+      { title: "Drift 33", duration: 1394 },
+      { title: "Drift 34", duration: 581 },
+      { title: "Drift 35", duration: 616 }
+    ],
     description: `Fifth release in the Drift series, albums created for sleep/relaxation/studying. All sounds are guitar with help from Chase Bliss, Collision Devices, GFI System, Strymon Engineering and Empress Effects. Art by Justin LaGuff.`,
     bandcampId: '3943694481'
   },
@@ -33,7 +55,17 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/coda',
     image: 'https://f4.bcbits.com/img/a3405404133_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Process (feat Peachole, Maddi Baird)', 'Coda', 'Dusk', 'Amor Fati (feat. Beardy, Jess Pluto, Sleepyhaze, Maddi Baird)', 'From', 'Shift', 'Twin', 'We Don\'t Talk Anymore (feat. Maddi Baird)', 'Sunrise'],
+    tracks: [
+      { title: "Process (feat Peachole, Maddi Baird)", duration: 265 },
+      { title: "Coda", duration: 325 },
+      { title: "Dusk", duration: 126 },
+      { title: "Amor Fati (feat. Beardy, Jess Pluto, Sleepyhaze, Maddi Baird)", duration: 233 },
+      { title: "From", duration: 164 },
+      { title: "Shift", duration: 156 },
+      { title: "Twin", duration: 228 },
+      { title: "We Don't Talk Anymore (feat. Maddi Baird)", duration: 216 },
+      { title: "Sunrise", duration: 260 }
+    ],
     description: `The follow-up to Rebuild, in the works since 2019. A mix of everything I've made so far with some new things thrown in. Features people that mean the world to me - from features, field recordings, to voicemails left for this album. Art by grayson_bear.`,
     bandcampId: '2367866191'
   },
@@ -45,7 +77,20 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/the-secrets-we-keep',
     image: 'https://f4.bcbits.com/img/a4145378259_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['The Secrets We Keep I', 'The Secrets We Keep II', 'The Secrets We Keep III', 'The Secrets We Keep IV', 'The Secrets We Keep V', 'The Secrets We Keep VI', 'The Secrets We Keep VII', 'The Secrets We Keep VIII', 'The Secrets We Keep IX', 'The Secrets We Keep X', 'The Secrets We Keep XI', 'The Secrets We Keep XII'],
+    tracks: [
+      { title: "The Secrets We Keep I", duration: 358 },
+      { title: "The Secrets We Keep II", duration: 124 },
+      { title: "The Secrets We Keep III", duration: 118 },
+      { title: "The Secrets We Keep IV", duration: 76 },
+      { title: "The Secrets We Keep V", duration: 214 },
+      { title: "The Secrets We Keep VI", duration: 142 },
+      { title: "The Secrets We Keep VII", duration: 94 },
+      { title: "The Secrets We Keep VIII", duration: 100 },
+      { title: "The Secrets We Keep IX", duration: 336 },
+      { title: "The Secrets We Keep X", duration: 88 },
+      { title: "The Secrets We Keep XI", duration: 88 },
+      { title: "The Secrets We Keep XII", duration: 62 }
+    ],
     description: 'Original Soundtrack',
     bandcampId: '2841498943'
   },
@@ -57,7 +102,14 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift-4',
     image: 'https://f4.bcbits.com/img/a0800919021_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift 22: Philodendron Hederaceum', 'Drift 23: Pleurotus Djamor', 'Drift 24: Salix', 'Drift 25: Adenium Obesum', 'Drift 26: Hyacinthus', 'Drift 27: Crassula'],
+    tracks: [
+      { title: "Drift 22: Philodendron Hederaceum", duration: 1856 },
+      { title: "Drift 23: Pleurotus Djamor", duration: 2112 },
+      { title: "Drift 24: Salix", duration: 1792 },
+      { title: "Drift 25: Adenium Obesum", duration: 1815 },
+      { title: "Drift 26: Hyacinthus", duration: 1856 },
+      { title: "Drift 27: Crassula", duration: 1792 }
+    ],
     description: `Every song on this album was written by the plant in the title using a bio midi sonification device. Track 3 Salix was written by the dying willow tree that has been in my backyard my entire life. Art by Alexander Laird.`,
     bandcampId: '3050261402'
   },
@@ -69,7 +121,14 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift-3',
     image: 'https://f4.bcbits.com/img/a3086208354_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift Fifteen', 'Drift Sixteen', 'Drift Seventeen', 'Drift Eighteen', 'Drift Nineteen', 'Drift Twenty-one'],
+    tracks: [
+      { title: "Drift Sixteen", duration: 1300 },
+      { title: "Drift Seventeen", duration: 1590 },
+      { title: "Drift Eighteen", duration: 1285 },
+      { title: "Drift Nineteen", duration: 1884 },
+      { title: "Drift Twenty", duration: 3140 },
+      { title: "Drift Twenty-one", duration: 3300 }
+    ],
     description: `Third release in the Drift series, created for sleep and relaxation. Made using an Octatrack sampler.`,
     bandcampId: '994216100'
   },
@@ -81,7 +140,16 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/exalt',
     image: 'https://f4.bcbits.com/img/a0774289478_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['julytwentyfirst', 'decelerate', 'en_passant', 'five_am', 'fare', 'exalt', 'meander', 'rmbr'],
+    tracks: [
+      { title: "julytwentyfirst", duration: 79 },
+      { title: "decelerate", duration: 128 },
+      { title: "en_passant", duration: 131 },
+      { title: "five_am", duration: 136 },
+      { title: "fare", duration: 103 },
+      { title: "exalt", duration: 154 },
+      { title: "meander", duration: 144 },
+      { title: "rmbr", duration: 107 }
+    ],
     description: `Beat-driven electronic album exploring hip-hop and downtempo territories.`,
     bandcampId: '847710945'
   },
@@ -93,7 +161,16 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift-2',
     image: 'https://f4.bcbits.com/img/a1941621832_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift Eight', 'Drift Nine', 'Drift Ten', 'Drift Eleven', 'Drift Twelve', 'Drift Thirteen', 'Drift Fourteen'],
+    tracks: [
+      { title: "Drift Eight", duration: 660 },
+      { title: "Drift Nine", duration: 849 },
+      { title: "Drift Ten", duration: 1803 },
+      { title: "Drift Eleven", duration: 420 },
+      { title: "Drift Twelve", duration: 698 },
+      { title: "Drift Thirteen", duration: 438 },
+      { title: "Drift Fourteen", duration: 1056 },
+      { title: "Drift Fifteen", duration: 3655 }
+    ],
     description: `Second release in the Drift series, created for sleep and relaxation. Made using an OP-1 synth.`,
     bandcampId: '1153137225'
   },
@@ -105,7 +182,15 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/drift',
     image: 'https://f4.bcbits.com/img/a3393213433_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Drift One', 'Drift Two', 'Drift Three', 'Drift Four', 'Drift Five', 'Drift Six', 'Drift Seven'],
+    tracks: [
+      { title: "Drift One", duration: 570 },
+      { title: "Drift Two", duration: 540 },
+      { title: "Drift Three", duration: 418 },
+      { title: "Drift Four", duration: 425 },
+      { title: "Drift Five", duration: 370 },
+      { title: "Drift Six", duration: 401 },
+      { title: "Drift Seven", duration: 368 }
+    ],
     description: `The first Drift album, started during quarantine. Inspired by Brian Eno's Music For Airports. Created for sleep and relaxation using a Deluge sequencer.`,
     bandcampId: '1795009574'
   },
@@ -117,7 +202,18 @@ const rawMusicReleases = [
     url: 'https://hailenjackson.bandcamp.com/album/rebuild',
     image: 'https://f4.bcbits.com/img/a1518516741_10.jpg',
     artist: 'Hailen Jackson',
-    tracks: ['Walk', 'Campfire', 'Ponder', 'Steps', 'You Were Here', 'Build', 'Home', 'Waiting', 'Limb', 'Still'],
+    tracks: [
+      { title: "Walk", duration: 272 },
+      { title: "Campfire", duration: 248 },
+      { title: "Ponder", duration: 376 },
+      { title: "Steps", duration: 256 },
+      { title: "You Were Here", duration: 240 },
+      { title: "Build", duration: 180 },
+      { title: "Home", duration: 272 },
+      { title: "Waiting", duration: 256 },
+      { title: "Limb", duration: 356 },
+      { title: "Still", duration: 404 }
+    ],
     description: `Atmospheric electronic album blending ambient textures with introspective beats.`,
     bandcampId: '695879238'
   },
