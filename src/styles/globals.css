@@ -1214,7 +1214,7 @@ a:hover {
   right: var(--s-5);
   bottom: 84px;
   z-index: 45;
-  width: 300px;
+  width: 340px;
   border: 1px solid var(--hairline-focus);
   border-radius: 3px;
   background: var(--pane);
@@ -1505,3 +1505,79 @@ a.game__submit { text-decoration: none; }
 .works__detail-tracks li { grid-template-columns: 22px 1fr auto; }
 .works__track-title { min-width: 0; }
 .works__track-time { flex: none; font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+/* --- Player visualizer & tracklist ---
+   The ribbons are a generated portrait of the record, seeded from its id and
+   track durations — NOT an audio analyser, which is impossible through a
+   cross-origin iframe whose stream ships without CORS. See Visualizer.jsx. */
+.player__viz-wrap { position: relative; }
+
+.player__viz {
+  display: block;
+  width: 100%;
+  height: 92px;
+  background: linear-gradient(180deg, rgba(var(--void-rgb), 0.55), transparent);
+}
+
+.player__viz-wrap .player__meta {
+  position: absolute;
+  inset: auto 0 0 0;
+  border-bottom: 0;
+  background: linear-gradient(180deg, transparent, rgba(var(--void-rgb), 0.72));
+}
+
+.player__tracks-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-stretch: 118%;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+.player__tracks-toggle:hover { color: var(--signal); }
+.player__chev { transition: transform var(--dur-fast) var(--ease-out); }
+.player__chev--up { transform: rotate(180deg); }
+
+.player__tracks {
+  list-style: none;
+  counter-reset: ptrack;
+  margin: 0;
+  padding: 0 var(--s-3) var(--s-3);
+  max-height: 190px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.player__tracks li {
+  counter-increment: ptrack;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: 5px 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
+}
+.player__tracks li::before {
+  content: counter(ptrack, decimal-leading-zero);
+  font-family: var(--font-data);
+  font-size: 0.55rem;
+  color: var(--text-faint);
+}
+.player__track-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player__track-time {
+  font-family: var(--font-data);
+  font-size: 0.55rem;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
