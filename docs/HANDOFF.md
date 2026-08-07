@@ -30,9 +30,10 @@ After the flip, deploying is `npm run deploy` and nothing else. `dist/`, `assets
 
 ## Still needs you
 
+**Newsletter is live.** `NEWSLETTER_URL` points at `https://heartsaglow.beehiiv.com/subscribe`. It is a styled link rather than a form because beehiiv does not prefill from a query parameter — verified by rendering `/subscribe?email=probe@example.com` and finding the address nowhere in the DOM. A form here would have made people type their address twice.
+
 | Item | Where | Effect until supplied |
 |---|---|---|
-| **Newsletter URL** | `src/lib/config.js` → `NEWSLETTER_URL` | The signup form renders **disabled** with honest copy until set. Set it to your beehiiv subscribe page, e.g. `https://yourname.beehiiv.com/subscribe`. The form GETs there with the address prefilled, so our styled field stays ours instead of embedding beehiiv's unstylable widget. |
 | **Real key art** | Sanity | The takeover currently shows a near-white card reading "OTO" — the brightest object on a site whose whole subject is a dark light field. It reads as a placeholder because it is one. This is the single biggest visual weakness. |
 | **A store URL** | Sanity, game `url` | Empty on the current record, so the "Get it →" button does not render. With the newsletter still disabled, the game has no live action at all. |
 

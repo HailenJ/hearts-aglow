@@ -19,42 +19,24 @@ export default function Game({ game }) {
 
       {game?.logline && <p className="game__logline">{game.logline}</p>}
 
-      {/* GET, not POST: beehiiv's hosted subscribe page takes the address as a
-          query parameter, so this hands off with the field already filled in
-          rather than embedding an unstylable widget. Opens in a new tab so a
-          visitor mid-browse does not lose the site. */}
-      <form
-        className="game__form"
-        action={NEWSLETTER_URL || undefined}
-        method="get"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <label className="game__label" htmlFor="game-email">
-          Hear when it ships
-        </label>
-        <div className="game__row">
-          <input
-            id="game-email"
-            className="game__input"
-            type="email"
-            name="email"
-            placeholder="you@somewhere"
-            autoComplete="email"
-            required
-            disabled={!canSubscribe}
-            aria-describedby="game-signup-note"
-          />
-          <button className="game__submit" type="submit" disabled={!canSubscribe}>
-            Notify me
-          </button>
+      {/* A link, not a form: beehiiv does not prefill from a query parameter,
+          so collecting the address here would only make the visitor type it
+          twice. One action, styled as ours. */}
+      {canSubscribe ? (
+        <div className="game__signup">
+          <a
+            className="game__submit"
+            href={NEWSLETTER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Hear when it ships
+          </a>
+          <p className="game__note">Opens the newsletter signup in a new tab.</p>
         </div>
-        <p className="game__note" id="game-signup-note">
-          {canSubscribe
-            ? 'Opens beehiiv in a new tab to confirm.'
-            : 'Signup opens shortly — the list is not live yet.'}
-        </p>
-      </form>
+      ) : (
+        <p className="game__note">Signup opens shortly — the list is not live yet.</p>
+      )}
 
       {game?.storeUrl && (
         <a
