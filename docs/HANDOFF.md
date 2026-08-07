@@ -8,23 +8,24 @@
 
 ---
 
-## Deploy — do this first
+## Deploy — settled 2026-08-07
 
-**GitHub Pages currently serves heartsaglow.io from `main`'s root.** That is why `index.html` had a hardcoded `<script src="/assets/index-tGwAZRz3.js">` — the deploy method was copying build output into the repo root and committing it.
+**Deploying is `git push origin main`. There is nothing else.**
 
-That single line silently broke this entire revamp: `npm run dev` and `npm run build` both operated on the **old** prebuilt bundle for all fifteen tasks. It was only caught at the end.
+Pages `build_type` is now `workflow`, so `.github/workflows/deploy.yml` builds from source on
+every push to `main` and publishes `dist/`. `public/CNAME` carries the custom domain into the
+artifact. No build output is ever committed.
 
-The fix is in place, but it requires one action from you:
+The history, because it cost a whole revamp: Pages used to serve heartsaglow.io from `main`'s
+root, so the deploy method was copying build output into the repo root and committing it. That
+left a hardcoded `<script src="/assets/index-tGwAZRz3.js">` in `index.html`, and `npm run dev`
+and `npm run build` both silently operated on the **old** prebuilt bundle for all fifteen tasks
+of the revamp. It was only caught at the end.
 
-1. **GitHub → Settings → Pages → Source → branch `gh-pages`, folder `/ (root)`.**
-2. Confirm heartsaglow.io loads the new site.
-3. Then `git push origin main`.
-
-`gh-pages` already holds a clean 9-file build of the new site, published and verified. It is not live until you flip that setting.
-
-**Do not push `main` before flipping**, or the site will 404 — `index.html` on main now correctly points at `/src/main.jsx`, which is source, not a build artifact.
-
-After the flip, deploying is `npm run deploy` and nothing else. `dist/`, `assets/`, and `node_modules/` are now gitignored and untracked (7,661 → 52 tracked files).
+Three mechanisms existed at once — `main`/root, the `gh-pages` branch, and `deploy.yml`. Only
+the workflow survives. The `gh-pages` branch, the `predeploy`/`deploy` scripts, and the
+`gh-pages` devDependency were deleted so the mistake cannot recur. `dist/`, `assets/`, and
+`node_modules/` are gitignored and untracked (7,661 → 52 tracked files).
 
 ---
 
