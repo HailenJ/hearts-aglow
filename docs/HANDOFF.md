@@ -33,8 +33,10 @@ After the flip, deploying is `npm run deploy` and nothing else. `dist/`, `assets
 | Item | Where | Effect until supplied |
 |---|---|---|
 | **Newsletter URL** | `src/lib/config.js` → `NEWSLETTER_URL` | The signup form renders **disabled** with honest copy until set. Set it to your beehiiv subscribe page, e.g. `https://yourname.beehiiv.com/subscribe`. The form GETs there with the address prefilled, so our styled field stays ours instead of embedding beehiiv's unstylable widget. |
-| **5 missing Bandcamp IDs** | `src/data/fallback.js` | Drift 3, Exalt, Drift 2, Drift, and Rebuild show "Listen on Bandcamp →" with no inline player. The other five (Drift 6, Drift 5, Coda, The Secrets We Keep, Drift 4) have players. |
-| **Confirm the game record** | Sanity | The hero CTA and Game window read "YARG VENUES · 2026 · 2 Audio reactive venues." straight from your Sanity `game` document, with key art and a live store link. Confirm that is real and current, not test data. |
+| **Real key art** | Sanity | The takeover currently shows a near-white card reading "OTO" — the brightest object on a site whose whole subject is a dark light field. It reads as a placeholder because it is one. This is the single biggest visual weakness. |
+| **A store URL** | Sanity, game `url` | Empty on the current record, so the "Get it →" button does not render. With the newsletter still disabled, the game has no live action at all. |
+
+**Bandcamp IDs are done** — all 10 releases now have one. The five that were missing (Drift 3, Exalt, Drift 2, Drift, Rebuild) were extracted from the public album pages, so every release has an inline player and the affordance is finally consistent.
 
 Note: the local `src/data/fallback.js` `game` export is intentionally all empty strings. The game only appears when the Sanity fetch succeeds. If you want it visible offline, copy the real values in.
 
@@ -48,7 +50,8 @@ Note: the local `src/data/fallback.js` `game` export is intentionally all empty 
 - **Boot sequence** — an aperture opening, ~2.5s, once per session, skippable, and skipped entirely under `prefers-reduced-motion`.
 - **Deep links** — `#/works/drift-6` and friends, on native `hashchange`. No router dependency.
 - **Player** — Bandcamp's unstylable iframe wrapped in chrome we control, persisting across window open/close.
-- **Game window** — key art, logline, email capture, and a store-link slot that appears only when a store URL exists.
+- **Game takeover** — the game is deliberately NOT a window. It takes the whole field so the site's commercial priority never competes for z-order with three other panes; the dock stays above it so nobody gets trapped, and opening any window dismisses it.
+- **Windows size to content** up to a cap, with an overflow cue at the lower edge — macOS hides scrollbars until used, which previously left seven of ten releases invisible with no signal.
 - **Mobile** — full-bleed sheets, one window at a time, single 767px breakpoint.
 - **Structure** — `App.jsx` went from 584 lines to ~160, split across `components/` and `windows/`.
 - **Tests** — 38, on Node's built-in `node --test`. No test framework was added.
@@ -70,8 +73,14 @@ None block use. Listed so they are not rediscovered as surprises.
 
 ---
 
-## The one thing nobody verified
+## Verification status
 
-**Nothing in this build was seen in a real browser by a human.** Automated screenshots were taken (`docs/screenshots/`) and they look right, but they were captured headlessly and, for most of the build, against the stale bundle described above.
+The build **has** now been seen in a real browser and critiqued against those screenshots. The light field renders as intended — smooth violet-to-amber, no banding, no visible edge.
 
-Before considering this done, open it yourself and check the light field in particular — its brightness and colour are the heart of the direction, and they are the one thing a screenshot cannot settle to a designer's satisfaction.
+Three findings I reported during the build turned out to be **wrong**, and they are recorded here because the failure mode is worth remembering:
+
+- A mobile horizontal-overflow bug that did not exist. macOS Chrome clamps its window to ~500px, so a `--window-size=390` screenshot lays out at 500 and crops. Measured in a true 390px iframe, there is zero overflow on any route.
+- A hero contrast failure that did not exist. A subagent sampled the peach logo and reported it as the field. The shader's true worst case across the full 787s cycle is 7.50 / 5.89 / 4.59:1 for the three text tokens — all pass, though `--text-faint` is thin.
+- A claim in a code comment that the window geometry was "tuned so all four can be open without burying each other." It was not; Game covered 66.9% of Works. Geometry is now verified by computing rectangles at five widths rather than asserted in prose.
+
+The common cause in all three: accepting a premise because of how it was packaged. Numbers in this document were computed and re-checked against the thing itself.
