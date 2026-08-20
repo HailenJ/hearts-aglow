@@ -10,3 +10,6 @@ assets/
 .github/agents/
 .github/hooks/
 .github/skills/
+
+# graphify knowledge graph output (regenerate with /graphify)
+graphify-out/

@@ -48,6 +48,20 @@ const rng = (seed) => () => {
 }
 
 /**
+ * One number in 0..1 per record, for the light field's hue nudge.
+ *
+ * Separate from vizSeed() on purpose: the field needs a single scalar and
+ * building the full uniform payload (six waves, twelve rings, seven spokes)
+ * to read one hue would be waste. Same hash, so a record's field tint and its
+ * panel portrait always agree about which record this is.
+ */
+export function recordTint(release) {
+  if (!release) return 0
+  const key = `${release.bandcampId || release.slug || release.title}`
+  return (hash(key) % 997) / 997
+}
+
+/**
  * A portrait of one record, as uniform data. Every frequency, phase, angle and
  * hue derives from the release's own id and the shape of its tracklist, so
  * Drift 6 looks unlike Coda and each looks identical every time you open it.

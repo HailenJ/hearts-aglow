@@ -17,18 +17,19 @@ import Works from './windows/Works'
 import Game from './windows/Game'
 import Connect from './windows/Connect'
 import { windowsReducer, initialWindows, focusedId, openIds, WINDOW_IDS } from './lib/windows'
+import { recordTint } from './lib/vizSeed'
 import './styles/globals.css'
 
 // ============================================
 // COMPONENTS
 // ============================================
 
-function DesktopBackground() {
+function DesktopBackground({ bpm, playing, tint, activity }) {
   return (
     <div className="desktop__bg">
       <div className="grain" aria-hidden="true" />
       <ErrorBoundary>
-        <LightField />
+        <LightField bpm={bpm} playing={playing} tint={tint} activity={activity} />
       </ErrorBoundary>
     </div>
   )
@@ -54,6 +55,14 @@ function App() {
   const focused = focusedId(windows)
   const compact = useMediaQuery(COMPACT)
   const [playing, setPlaying] = useState(null)
+  // The tempo of whatever track the player has loaded, reported up from Player
+  // because only Player knows which one that is. Zero means nothing is loaded
+  // and the field holds still.
+  const [pulse, setPulse] = useState(0)
+  // Which game the takeover is showing. null means the featured one (what the
+  // hero CTA opens); a Works games card sets its own, so the tab can launch
+  // any title without the takeover needing a route of its own.
+  const [shownGame, setShownGame] = useState(null)
   const [booted, setBooted] = useState(false)
   // The raw detail segment from the hash, not a record resolved against
   // `data` — at mount `data` is still the local fallback, and Sanity hasn't
@@ -132,6 +141,15 @@ function App() {
     window.location.hash = buildHash(id, null)
   }
 
+  // Dispatches rather than assigning the hash, matching what the hero CTA
+  // has always done: the takeover is exclusive, so the projection effect
+  // writes #/game for it either way. Passing a game only picks which one
+  // renders; null means the featured one.
+  const openGame = (game) => {
+    setShownGame(game ?? null)
+    dispatch({ type: 'OPEN', id: 'game' })
+  }
+
   const selectRelease = (slug) => {
     window.location.hash = buildHash('works', slug)
     if (!slug) setWorksSlug(null)
@@ -156,19 +174,37 @@ function App() {
     }
   }
 
+  // null shownGame falls back to the featured game, which is what the hero
+  // CTA and a bare #/game deep link should always show.
+  const takeoverGame = shownGame ?? data.game
+
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} software={data.software} onPlay={setPlaying} selectedSlug={worksSlug} onSelect={selectRelease} />,
+    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} onOpenGame={openGame} selectedSlug={worksSlug} onSelect={selectRelease} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
   // Only ids with registered content actually mount a Window.
   const renderableOpen = openIds(windows).filter(id => windowConfigs[id])
 
+  // The closest thing to "energy" this page can honestly measure. Real audio
+  // is unreachable (see LightField.jsx), so the field responds to what the
+  // visitor has actually done: opened windows, taken the game, put a record
+  // on. Capped at three so the fourth window is not required to reach full.
+  const activity = Math.min(
+    1,
+    (renderableOpen.length + (windows.game.open ? 1 : 0) + (playing ? 1 : 0)) / 3
+  )
+
   return (
     <div className="desktop">
       <Boot onDone={() => setBooted(true)} />
-      <DesktopBackground />
+      <DesktopBackground
+        bpm={pulse}
+        playing={Boolean(playing)}
+        tint={recordTint(playing)}
+        activity={activity}
+      />
       <TitleBar nowPlaying={playing?.title ?? null} />
 
       <main className="desktop__content">
@@ -176,7 +212,7 @@ function App() {
           visible={booted && renderableOpen.length === 0 && !windows.game.open}
           heroSubtitle={data.heroSubtitle}
           game={data.game}
-          onOpenGame={() => dispatch({ type: 'OPEN', id: 'game' })}
+          onOpenGame={() => openGame(null)}
         />
 
         {WINDOW_IDS.filter(id => windowConfigs[id]).map(id => (
@@ -202,13 +238,17 @@ function App() {
       <Takeover
         open={windows.game.open && !windows.game.minimized}
         title="Game"
-        label={data.game?.title ? `${data.game.title} — the game` : 'The game'}
-        onClose={() => dispatch({ type: 'CLOSE', id: 'game' })}
+        label={takeoverGame?.title ? `${takeoverGame.title} — the game` : 'The game'}
+        onClose={() => { setShownGame(null); dispatch({ type: 'CLOSE', id: 'game' }) }}
       >
-        <Game game={data.game} />
+        <Game game={takeoverGame} />
       </Takeover>
 
-      <Player release={playing} onClose={() => setPlaying(null)} />
+      <Player
+        release={playing}
+        onClose={() => { setPulse(0); setPlaying(null) }}
+        onPulse={setPulse}
+      />
 
       <Dock
         windows={windows}

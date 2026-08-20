@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Visualizer from './Visualizer'
 import { VIZ_MODES, DEFAULT_MODE, isMode } from '../lib/vizModes'
 import { trackBpm } from '../lib/vizSeed'
@@ -13,7 +13,14 @@ const trackTitle = (t) => (typeof t === 'string' ? t : t?.title ?? '')
 const trackDuration = (t) => (typeof t === 'string' ? 0 : t?.duration ?? 0)
 const trackId = (t) => (typeof t === 'string' ? '' : t?.trackId ?? '')
 
-export default function Player({ release, onClose }) {
+// A component rather than an effect in Player, because Player returns early
+// when there is no release and hooks cannot live behind that branch.
+function PulseReport({ bpm, onPulse }) {
+  useEffect(() => { onPulse?.(bpm) }, [bpm, onPulse])
+  return null
+}
+
+export default function Player({ release, onClose, onPulse }) {
   // Selecting a track swaps the embed to that track's own Bandcamp player.
   // The album-level `t=` parameter is silently ignored by the small embed
   // (verified by rendering t=1 and t=4 — both showed track one), so per-track
@@ -49,8 +56,13 @@ export default function Player({ release, onClose }) {
   const active = (picked && tracks.find(t => trackId(t) === picked)) || tracks[0]
   const bpm = trackBpm(release, active)
 
+  // The field pulses at whatever is loaded here, so the panel is the only
+  // thing that knows the answer — `picked` is its own state. Reported upward
+  // rather than recomputed in App, which would have to duplicate the
+  // album-opens-on-track-one rule to get the same number.
   return (
     <aside className="player" aria-label={`Player — ${release.title}`}>
+      <PulseReport bpm={bpm} onPulse={onPulse} />
       {/* The visual is the panel's background, not a strip above it: Belson's
           mandala and Minter's kaleidoscope are centric forms and a 108px
           letterbox gave them nowhere to be centric. The chrome sits on top of

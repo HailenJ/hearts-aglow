@@ -8,17 +8,16 @@
   /* Channel form of --void, for translucent scrims and overlays. */
   --void-rgb: 8, 7, 11;
 
-  /* Bloom — the field's own colours, mirrored from the shader constants */
-  --bloom-warm: #c48aff;
-  /* Mirror LightField.jsx AMBER/DEEP shader constants; not applied to any
-     selector, kept here only so the palette can be read in one place.
-     Keep in sync with src/components/LightField.jsx. */
-  --bloom-warm-2: #ffa878;
-  --bloom-deep: #483478;
+  /* Bloom — the field's own colours, mirrored from the shader constants.
+     Keep in sync with the ROSE/PEACH/DEEP constants in LightField.jsx. */
+  --bloom-warm: #ff4d6d;   /* ROSE  — the field's lead colour */
+  --bloom-warm-2: #ffa878; /* PEACH — the warm end of the bloom cycle */
+  --bloom-deep: #7a2f43;   /* DEEP  — the wine floor under the blooms */
 
-  /* Warm peach accent inherited from the pre-revamp palette, distinct from
-     --bloom-warm (#c48aff, violet). Used for borders, glows, and gradient
-     washes in the Works and Connect sections. */
+  /* Warm peach accent inherited from the pre-revamp palette. Now a near
+     sibling of --bloom-warm-2 (#ffa878) rather than the odd one out it was
+     against the old violet field. Borders, glows, and gradient washes in the
+     Works and Connect sections. */
   --accent-warm-rgb: 232, 149, 120;
 
   /* Signal — focus, active state, live data. Nowhere else. */
@@ -27,8 +26,8 @@
   /* Glow — bloom/signal colours at the alpha the box-shadows need. Same
      source colours as above; kept as separate tokens so a shadow's alpha
      doesn't have to be re-derived by eye at every call site. */
-  --glow-warm: rgba(196, 138, 255, 0.4);
-  --glow-warm-soft: rgba(196, 138, 255, 0.35);
+  --glow-warm: rgba(255, 77, 109, 0.4);
+  --glow-warm-soft: rgba(255, 77, 109, 0.35);
   --glow-signal: rgba(223, 244, 255, 0.4);
 
   /* Text — contrast checked against the field's true peak brightness behind
@@ -1111,7 +1110,7 @@ a:hover {
   background:
     radial-gradient(circle at 30% 30%, hsla(var(--placeholder-h), 60%, 55%, 0.22), transparent 60%),
     radial-gradient(circle at 70% 75%, hsla(var(--placeholder-h2), 45%, 50%, 0.14), transparent 65%),
-    linear-gradient(135deg, var(--void), rgba(72, 52, 120, 0.35));
+    linear-gradient(135deg, var(--void), rgba(122, 47, 67, 0.35));
   display: grid;
   place-items: center;
   position: relative;
@@ -1378,7 +1377,7 @@ a:hover {
 .boot__aperture {
   position: absolute;
   width: 40vmax; height: 40vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(196,138,255,.5), transparent 62%);
+  background: radial-gradient(circle, rgba(255, 77, 109, 0.5), transparent 62%);
   filter: blur(40px);
   animation: aperture 2600ms var(--ease-out) forwards;
 }

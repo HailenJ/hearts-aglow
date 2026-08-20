@@ -24,8 +24,12 @@ const releaseTypes = [
 
 function ArtworkPlaceholder({ title }) {
   const seed = (title || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  const h = (seed * 17) % 360
-  const h2 = (h + 180) % 360
+  // Held inside the field's own arc (rose 340 through peach 20) instead of the
+  // full colour wheel. A free-running hue put missing covers anywhere on it,
+  // including greens the palette never uses and ~195, which is --signal's hue
+  // and reserved by Signal Discipline. Two neighbouring warms, not a lottery.
+  const h = (340 + (seed * 7) % 40) % 360
+  const h2 = (h + 340) % 360
   return (
     <div
       className="works__artwork works__artwork--placeholder"
@@ -53,7 +57,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   if (selectedItem) {
     return (
       <div className="works__detail">
-        <button className="works__back" onClick={onBack}>&larr; Back</button>
+        <button className="works__back" onClick={onBack}>← Back</button>
         <div className="works__detail-header">
           {selectedItem.image
             ? (
@@ -80,7 +84,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
                 rel="noopener noreferrer"
                 className="works__detail-link"
               >
-                View Project &rarr;
+                View Project →
               </a>
             )}
           </div>
@@ -120,9 +124,9 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   )
 }
 
-function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
+function Works({ musicReleases, games, software, onPlay, onOpenGame, selectedSlug, onSelect }) {
   const [manualTab, setManualTab] = useState('music')
-  const tabs = ['music', 'software']
+  const tabs = ['music', 'games', 'software']
 
   // The tab follows a deep-linked slug (so a software link doesn't land on
   // the music tab rendering music-only fields); with no slug selected, the
@@ -156,7 +160,7 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
         <>
           {selectedRelease ? (
             <div className="works__detail">
-              <button className="works__back" onClick={() => onSelect(null)}>&larr; Back</button>
+              <button className="works__back" onClick={() => onSelect(null)}>← Back</button>
               <div className="works__detail-header">
                 <div className="works__detail-artwork">
                   {selectedRelease.image
@@ -184,7 +188,7 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
                       rel="noopener noreferrer"
                       className="works__detail-link"
                     >
-                      On Bandcamp &#8599;
+                      On Bandcamp ↗
                     </a>
                   )}
                 </div>
@@ -267,12 +271,29 @@ function Works({ musicReleases, software, onPlay, selectedSlug, onSelect }) {
                   rel="noopener noreferrer"
                   className="works__link"
                 >
-                  View full discography &rarr;
+                  View full discography →
                 </a>
               </footer>
             </>
           )}
         </>
+      )}
+
+      {/* Games are launchers, not detail panes: a card opens the full-field
+          takeover, which is where the game already lives. That is why games
+          are absent from resolveRoute's byTab (no #/works/<game> route) —
+          one item must not have two competing detail views.
+          ponytail: no per-game deep link; add one to resolveRoute if a
+          second game ever ships and needs its own shareable URL. */}
+      {activeTab === 'games' && (
+        <ProjectGrid
+          items={games ?? []}
+          emptyTitle="Games"
+          emptyDescription="One title in development."
+          selectedItem={null}
+          onSelect={onOpenGame}
+          onBack={() => {}}
+        />
       )}
 
       {activeTab === 'software' && (

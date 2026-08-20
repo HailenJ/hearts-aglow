@@ -66,9 +66,13 @@ const fragment = /* glsl */ `
   const float PI  = 3.14159265359;
   const float TAU = 6.28318530718;
 
-  const vec3 VIOLET = vec3(0.769, 0.541, 1.000);
-  const vec3 CYAN   = vec3(0.875, 0.957, 1.000);
-  const vec3 AMBER  = vec3(1.000, 0.659, 0.471);
+  // Same ember palette as LightField.jsx, so a record's portrait and the room
+  // it plays in are lit by one set of colours. BONE replaces what was signal
+  // cyan (#dff4ff): --signal has four sanctioned uses and "bright end of a
+  // decorative ramp" is not one of them, so the hot core is a warm white now.
+  const vec3 ROSE  = vec3(1.000, 0.302, 0.427);  // #ff4d6d
+  const vec3 PEACH = vec3(1.000, 0.659, 0.471);  // #ffa878
+  const vec3 BONE  = vec3(1.000, 0.914, 0.871);  // #ffe9de
 
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -80,7 +84,7 @@ const fragment = /* glsl */ `
     return exp(-(d * d) / (r * r));
   }
 
-  vec3 cool(float u) { return mix(VIOLET, CYAN, u); }
+  vec3 ramp(float u) { return mix(ROSE, BONE, u); }
 
   // One beat: a fast attack and a long decay, which is the shape of a pulse
   // rather than of a sine. Free-running — see the note in Visualizer.jsx about
@@ -89,10 +93,10 @@ const fragment = /* glsl */ `
     return exp(-fract(t * uBeat) * 2.6);
   }
 
-  // Bloom earns the saturation the quiet modes do not: amber through violet
-  // into the signal cyan.
+  // Bloom earns the saturation the quiet modes do not: peach through rose and
+  // out into a white-hot core.
   vec3 hot(float u) {
-    return u < 0.5 ? mix(AMBER, VIOLET, u * 2.0) : mix(VIOLET, CYAN, (u - 0.5) * 2.0);
+    return u < 0.5 ? mix(PEACH, ROSE, u * 2.0) : mix(ROSE, BONE, (u - 0.5) * 2.0);
   }
 
   float segDist(vec2 p, vec2 a, vec2 b) {
@@ -119,7 +123,7 @@ const fragment = /* glsl */ `
       float d = abs(y0 - y) / sqrt(1.0 + slope * slope);
       // Kept under the clip point: six ribbons crossing at 0.55 each summed to
       // white and threw the colour away exactly where the weave is busiest.
-      col += cool(uWaveHue[i]) * (g(d, 0.009) * 0.40 + g(d, 0.055) * 0.10) * (0.86 + 0.22 * b);
+      col += ramp(uWaveHue[i]) * (g(d, 0.009) * 0.40 + g(d, 0.055) * 0.10) * (0.86 + 0.22 * b);
     }
     return col;
   }
@@ -131,13 +135,13 @@ const fragment = /* glsl */ `
     vec3 col = vec3(0.0);
     // The slow breath stays and the beat rides on top of it: a long swell with
     // a pulse in it, rather than one replacing the other.
-    col += VIOLET * g(length(p), 0.17 + 0.014 * sin(t * 0.27) + 0.020 * b) * (0.30 + 0.10 * b);
+    col += ROSE * g(length(p), 0.17 + 0.014 * sin(t * 0.27) + 0.020 * b) * (0.30 + 0.10 * b);
     for (int i = 0; i < ${RINGS}; i++) {
       vec4 r = uRings[i];
       vec2 c = vec2(sin(t * r.z + r.y), cos(t * r.z * 0.7 + r.y)) * 0.03;
       float rad = r.x * (1.0 + 0.07 * sin(t * r.z * 2.0 + r.y));
       float d = abs(length(p - c) - rad);
-      col += cool(r.w) * (g(d, 0.005) * 0.40 + g(d, 0.03) * 0.07) * uRingOn[i] * (0.86 + 0.22 * b);
+      col += ramp(r.w) * (g(d, 0.005) * 0.40 + g(d, 0.03) * 0.07) * uRingOn[i] * (0.86 + 0.22 * b);
     }
     return col;
   }
@@ -163,7 +167,7 @@ const fragment = /* glsl */ `
     // the Canvas version fell into. The spokes are held off the centre and the
     // core is drawn once, deliberately, instead of accumulating.
     float keepOff = smoothstep(0.03, 0.17, rr);
-    col += mix(AMBER, VIOLET, 0.5) * g(rr, 0.045 + 0.010 * b) * (0.42 + 0.26 * b);
+    col += mix(PEACH, ROSE, 0.5) * g(rr, 0.045 + 0.010 * b) * (0.42 + 0.26 * b);
 
     for (int i = 0; i < ${SPOKES}; i++) {
       vec4 s = uSpokes[i];
