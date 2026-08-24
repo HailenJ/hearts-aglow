@@ -139,7 +139,8 @@ None block use. Listed so they are not rediscovered as surprises.
 - `TOGGLE` in `src/lib/windows.js` and `isLoaded` in `useSanityData` are currently unused by the app but retained — both have tests and plausible near-term use.
 - `parseHash` folds a query string into the detail segment (`#/works/drift-6?x=1`). Harmless, since nothing generates such links.
 - `queries.js` sends the whole GROQ query in a GET query string. It is ~1.2 kB encoded, well inside every practical URL limit, but a much larger query would need a POST.
-- `queries.js` fetches music, games, software, and social only — `aboutParagraphs` and `heroSubtitle` are permanently fallback-only despite the "content comes from Sanity" story. Extend the query if you want to edit them in Sanity.
+- `queries.js` now fetches the About copy too, from a single `about` document (`aboutText`) whose `paragraphs` are plain strings; `{link}` in a paragraph marks where `linkText`/`linkUrl` land. `heroSubtitle` is still fallback-only — extend the query the same way if you want it editable.
+- The Studio source is **not in this repo**. It lives in `~/Downloads/hearts-aglow-sanity/hearts-aglow`, has no git remote, and was found stale on 2026-08-24: its music type was named `music` with a `url` field while the live docs are `musicRelease` with `link`, so music releases would have shown as an unknown type after any deploy. Realigned and redeployed. Give that folder a remote before it is lost.
 
 ---
 

@@ -34,6 +34,11 @@ const ALL_CONTENT_QUERY = `{
     url,
     "image": artwork.asset->url
   },
+  "aboutParagraphs": *[_type == "about"][0].paragraphs[] {
+    text,
+    linkText,
+    linkUrl
+  },
   "socialLinks": *[_type == "social"] | order(order asc) {
     "id": _id,
     name,
@@ -58,6 +63,10 @@ export async function fetchAllContent() {
 
   if (result.software?.length) {
     data.software = result.software
+  }
+
+  if (result.aboutParagraphs?.length) {
+    data.aboutParagraphs = result.aboutParagraphs
   }
 
   if (result.socialLinks?.length) {

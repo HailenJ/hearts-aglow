@@ -274,6 +274,6 @@ export const aboutParagraphs = [
   // replaced claimed the work had "soundtracked games, films, and
   // late-night radio across the world", which nothing in the catalogue
   // supports. If those credits are real they belong here by name.
-  { text: 'who has recorded ten albums under his own name since 2019, six of them in the ambient Drift series.', linkText: 'Hailen Jackson', linkUrl: 'https://hailenjackson.bandcamp.com' },
+  { text: 'Founded by {link}, who has recorded ten albums under his own name since 2019, six of them in the ambient Drift series.', linkText: 'Hailen Jackson', linkUrl: 'https://hailenjackson.bandcamp.com' },
   { text: 'We make things that breathe. Come drift with us.' },
 ]
