@@ -1,3 +1,5 @@
+import { statusLabel } from '../lib/game'
+
 // Tracks may be a bare string (older/Sanity data) or { title, duration }.
 // Tolerating both means a CMS entry without durations still renders.
 const trackTitle = (t) => (typeof t === 'string' ? t : t?.title ?? '')
@@ -36,16 +38,44 @@ function ArtworkPlaceholder({ title }) {
   )
 }
 
-function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSelect, onBack }) {
+function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSelect, onBack, soloAction }) {
   if (items.length === 0) {
     return (
-      <div className="works__section">
+      <div className="works__section works__section--empty">
         <div className="works__empty">
           <div className="works__empty-icon">&loz;</div>
           <h3>{emptyTitle}</h3>
           <p>{emptyDescription}</p>
           <span className="works__empty-status">Coming Soon</span>
         </div>
+      </div>
+    )
+  }
+
+  // One item is not a grid. Games and software carry 16:9 key art and the
+  // catalogue holds one of each, so the release-grid treatment rendered a
+  // 140px square crop of a widescreen image adrift in a pane built for ten
+  // album sleeves. A single project is shown as itself instead: its art at
+  // full width, which is the only size that art survives, and the copy that
+  // was previously a click away.
+  if (items.length === 1) {
+    const item = items[0]
+    return (
+      <div className="works__solo">
+        {item.image
+          ? (
+            <div className="works__solo-art">
+              <img src={item.image} alt={item.title} />
+            </div>
+          )
+          : <ArtworkPlaceholder title={item.title} />
+        }
+        <h2 className="works__solo-title">{item.title}</h2>
+        <p className="works__solo-meta">
+          {item.year}{item.status ? ` · ${statusLabel(item.status)}` : ''}
+        </p>
+        {item.description && <p className="works__solo-desc">{item.description}</p>}
+        {soloAction?.(item)}
       </div>
     )
   }
@@ -268,11 +298,28 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
           selectedItem={null}
           onSelect={onOpenGame}
           onBack={() => {}}
+          soloAction={item => (
+            <button className="works__solo-action" onClick={() => onOpenGame(item)}>
+              Open{' '}<span aria-hidden="true">&rarr;</span>
+            </button>
+          )}
         />
       )}
 
       {activeTab === 'software' && (
-        <ProjectGrid items={software} emptyTitle="Software" emptyDescription="Tools and utilities in development." selectedItem={selectedRelease} onSelect={(item) => onSelect(item.slug)} onBack={() => onSelect(null)} />
+        <ProjectGrid
+          items={software}
+          emptyTitle="Software"
+          emptyDescription="Tools and utilities in development."
+          selectedItem={selectedRelease}
+          onSelect={(item) => onSelect(item.slug)}
+          onBack={() => onSelect(null)}
+          soloAction={item => item.url && (
+            <a className="works__solo-action" href={item.url} target="_blank" rel="noopener noreferrer">
+              View project{' '}<span aria-hidden="true">&#8599;</span>
+            </a>
+          )}
+        />
       )}
     </div>
   )

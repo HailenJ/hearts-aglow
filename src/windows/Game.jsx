@@ -1,4 +1,5 @@
 import { NEWSLETTER_URL } from '../lib/config'
+import { statusLabel } from '../lib/game'
 
 export default function Game({ game }) {
   const named = Boolean(game?.title)
@@ -14,7 +15,7 @@ export default function Game({ game }) {
 
       <h3 className="game__title">{named ? game.title : 'Untitled'}</h3>
       <p className="game__meta">
-        {game?.year ? `${game.year} · ` : ''}{game?.status || 'in development'}
+        {game?.year ? `${game.year} · ` : ''}{statusLabel(game?.status)}
       </p>
 
       {game?.logline && <p className="game__logline">{game.logline}</p>}

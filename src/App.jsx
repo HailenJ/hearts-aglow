@@ -18,6 +18,7 @@ import Game from './windows/Game'
 import Connect from './windows/Connect'
 import { windowsReducer, initialWindows, focusedId, openIds, WINDOW_IDS } from './lib/windows'
 import { recordTint } from './lib/vizSeed'
+import { asGame } from './lib/game'
 import './styles/globals.css'
 
 // ============================================
@@ -170,7 +171,9 @@ function App() {
   // writes #/game for it either way. Passing a game only picks which one
   // renders; null means the featured one.
   const openGame = (game) => {
-    setShownGame(game ?? null)
+    // Mapped, not passed through: a games-grid card is a raw Sanity document
+    // and the takeover reads the `keyArt`/`logline` shape.
+    setShownGame(game ? asGame(game) : null)
     dispatch({ type: 'OPEN', id: 'game' })
   }
 
@@ -263,7 +266,7 @@ function App() {
 
       <Takeover
         open={windows.game.open && !windows.game.minimized}
-        title="Game"
+        title={takeoverGame?.title || 'Game'}
         label={takeoverGame?.title ? `${takeoverGame.title} — the game` : 'The game'}
         onClose={() => { setShownGame(null); dispatch({ type: 'CLOSE', id: 'game' }) }}
       >

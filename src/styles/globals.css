@@ -511,6 +511,90 @@ a:hover {
   border-bottom-color: var(--bloom-warm);
 }
 
+.works__solo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.works__solo-art {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  /* The art is the loudest thing in the pane, so it carries the pane's own
+     elevation rather than sitting flat against the glass. */
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+}
+
+.works__solo-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.works__solo .works__artwork--placeholder {
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+}
+
+.works__solo-title {
+  margin: var(--s-2) 0 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.works__solo-meta {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.works__solo-desc {
+  margin: 0;
+  max-width: 68ch;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+/* Display voice, not data — this is an action label, not a readout. Shares the
+   warm-accent link language with .works__detail-link rather than reaching for
+   --signal, which has four sanctioned roles and this is not one of them. */
+.works__solo-action {
+  align-self: flex-start;
+  margin-top: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 300;
+  font-stretch: 118%;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
+}
+
+.works__solo-action:hover {
+  color: var(--bloom-warm-2);
+  border-color: rgba(var(--accent-warm-rgb), 0.45);
+  box-shadow: 0 0 24px -8px rgba(var(--accent-warm-rgb), 0.35);
+}
+
 /* --- Works --- */
 /* The catalogue views used to have their own tab bar here. They are dock
    items now, so a person can see GAMES and SOFTWARE without opening the
@@ -880,7 +964,7 @@ a:hover {
 }
 
 /* Empty states */
-.works__section {
+.works__section--empty {
   min-height: 280px;
   display: flex;
   align-items: center;
@@ -1466,7 +1550,11 @@ a:hover {
 }
 
 @media (max-width: 767px) {
-  .takeover { padding: 0; }
+  /* Same inset as a mobile window sheet (34px titlebar / 62px dock). The
+     takeover was full-bleed here, so the site titlebar drew straight over its
+     own heading — and the dock, which is what keeps a visitor from being
+     trapped, sat underneath it. */
+  .takeover { padding: 34px 0 62px; }
   .takeover__panel {
     width: 100%;
     max-height: none;

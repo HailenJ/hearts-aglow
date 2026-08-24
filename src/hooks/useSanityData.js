@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchAllContent } from '../lib/queries'
 import { slugify } from '../lib/route'
+import { asGame } from '../lib/game'
 import * as fallback from '../data/fallback'
 
 const initialData = {
@@ -42,15 +43,7 @@ const withSlugs = list => (list ?? []).map(item => ({ ...item, slug: item.slug |
 // which is arbitrary between two games of the same year, so pin one.
 const featured = (games) => {
   const g = games?.find(x => x.featured) ?? games?.[0]
-  if (!g) return fallback.game
-  return {
-    title: g.title ?? '',
-    year: g.year ?? '',
-    status: g.status ?? 'in development',
-    logline: g.description ?? '',
-    keyArt: g.image ?? '',
-    storeUrl: g.url ?? '',
-  }
+  return g ? asGame(g) : fallback.game
 }
 
 export function useSanityData() {
