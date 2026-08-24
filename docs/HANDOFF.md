@@ -50,7 +50,7 @@ Note: the local `src/data/fallback.js` `game` export is intentionally all empty 
 - **Type** — Anybody / Archivo / Martian Mono, replacing Cormorant / Outfit / Space Mono.
 - **Window chrome** — minimize, maximize, resize, z-order. Focus reads as *more light* rather than a highlight ring.
 - **Boot sequence** — an aperture opening, ~2.5s, once per session, skippable, and skipped entirely under `prefers-reduced-motion`.
-- **Deep links** — `#/works/drift-6` and friends, on native `hashchange`. No router dependency.
+- **Deep links** — `#/music/drift-6`, `#/games`, `#/software/…` and friends, on native `hashchange`. No router dependency. `#/works` and `#/works/<slug>` are the pre-2026-08 names for the same pane and still resolve, landing on music.
 - **Player** — Bandcamp's unstylable iframe wrapped in chrome we control, persisting across window open/close.
 - **Game takeover** — the game is deliberately NOT a window. It takes the whole field so the site's commercial priority never competes for z-order with three other panes; the dock stays above it so nobody gets trapped, and opening any window dismisses it.
 - **Windows size to content** up to a cap, with an overflow cue at the lower edge — macOS hides scrollbars until used, which previously left seven of ten releases invisible with no signal.
@@ -137,7 +137,7 @@ None block use. Listed so they are not rediscovered as surprises.
 - `.about__text` (48ch) and `.works__detail-desc` (54ch) are narrower than the 68ch guideline. Narrow is safe; too wide is the failure mode.
 - `.titlebar__time` inherits its font and colour from `.titlebar` rather than declaring them.
 - `TOGGLE` in `src/lib/windows.js` and `isLoaded` in `useSanityData` are currently unused by the app but retained — both have tests and plausible near-term use.
-- `parseHash` folds a query string into the detail segment (`#/works/drift-6?x=1`). Harmless, since nothing generates such links.
+- `parseHash` folds a query string into the detail segment (`#/music/drift-6?x=1`). Harmless, since nothing generates such links.
 - `queries.js` sends the whole GROQ query in a GET query string. It is ~1.2 kB encoded, well inside every practical URL limit, but a much larger query would need a POST.
 - `queries.js` now fetches the About copy too, from a single `about` document (`aboutText`) whose `paragraphs` are plain strings; `{link}` in a paragraph marks where `linkText`/`linkUrl` land. `heroSubtitle` is still fallback-only — extend the query the same way if you want it editable.
 - The Studio source is **not in this repo**. It lives in `~/Downloads/hearts-aglow-sanity/hearts-aglow`, has no git remote, and was found stale on 2026-08-24: its music type was named `music` with a `url` field while the live docs are `musicRelease` with `link`, so music releases would have shown as an unknown type after any deploy. Realigned and redeployed. Give that folder a remote before it is lost.
@@ -155,3 +155,6 @@ Three findings I reported during the build turned out to be **wrong**, and they 
 - A claim in a code comment that the window geometry was "tuned so all four can be open without burying each other." It was not; Game covered 66.9% of Works. Geometry is now verified by computing rectangles at five widths rather than asserted in prose.
 
 The common cause in all three: accepting a premise because of how it was packaged. Numbers in this document were computed and re-checked against the thing itself.
+
+- The dock names five things and opens four windows: MUSIC, GAMES and SOFTWARE are views of the one `works` pane (`WORKS_TABS` in `src/lib/route.js`), because five floating windows do not fit a 1280px laptop and a visitor who only ever sees MUSIC never learns the rest exist. The takeover has no dock item at all — it used to, labelled "Game", and opening it closed every other window.
+- Fallback artwork for Exalt and Drift 2 pointed at bcbits URLs that now 404; repointed at the Sanity copies on 2026-08-24. The other eight were re-checked and still resolve.

@@ -152,7 +152,7 @@ const rawMusicReleases = [
     type: 'album',
     year: '2020',
     url: 'https://hailenjackson.bandcamp.com/album/exalt',
-    image: 'https://f4.bcbits.com/img/a0774289478_10.jpg',
+    image: 'https://cdn.sanity.io/images/lmi10j91/production/8c50685cac476b2fdd1452aa250d662f4e8b9da2-1200x1200.jpg',
     artist: 'Hailen Jackson',
     tracks: [
       { title: "julytwentyfirst", duration: 79, trackId: '4263645383' },
@@ -173,7 +173,7 @@ const rawMusicReleases = [
     type: 'drift',
     year: '2020',
     url: 'https://hailenjackson.bandcamp.com/album/drift-2',
-    image: 'https://f4.bcbits.com/img/a1941621832_10.jpg',
+    image: 'https://cdn.sanity.io/images/lmi10j91/production/759c25142f4961610d1ed17a32b0973e6c2273bd-1200x1200.jpg',
     artist: 'Hailen Jackson',
     tracks: [
       { title: "Drift Eight", duration: 660, trackId: '1909211336' },

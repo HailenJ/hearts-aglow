@@ -1,7 +1,3 @@
-import { useState } from 'react'
-import { resolveRoute } from '../lib/route'
-
-
 // Tracks may be a bare string (older/Sanity data) or { title, duration }.
 // Tolerating both means a CMS entry without durations still renders.
 const trackTitle = (t) => (typeof t === 'string' ? t : t?.title ?? '')
@@ -124,38 +120,17 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
   )
 }
 
-function Works({ musicReleases, games, software, onPlay, onOpenGame, selectedSlug, onSelect }) {
-  const [manualTab, setManualTab] = useState('music')
-  const tabs = ['music', 'games', 'software']
-
-  // The tab follows a deep-linked slug (so a software link doesn't land on
-  // the music tab rendering music-only fields); with no slug selected, the
-  // user's own tab click wins. resolveRoute is the same lookup App uses to
-  // turn a hash into a window + slug, reused here to turn a slug into a tab.
-  const resolved = resolveRoute(
-    selectedSlug ? { id: 'works', detail: selectedSlug } : null,
-    { musicReleases, software }
-  )
-  const activeTab = resolved.activeTab ?? manualTab
+// The view and the selected slug both arrive as props: they are route state,
+// and the dock is the tab bar now. App resolves them against current data,
+// which is why this component holds none of its own.
+function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, selectedSlug, onSelect }) {
   const collectionsByTab = { music: musicReleases, software }
-  const selectedRelease = resolved.slug
-    ? collectionsByTab[resolved.activeTab].find(r => r.slug === resolved.slug) ?? null
+  const selectedRelease = selectedSlug
+    ? (collectionsByTab[activeTab] ?? []).find(r => r.slug === selectedSlug) ?? null
     : null
 
   return (
     <div className="works">
-      <nav className="works__tabs">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            className={`works__tab ${activeTab === tab ? 'works__tab--active' : ''}`}
-            onClick={() => { setManualTab(tab); onSelect(null); }}
-          >
-            {tab}
-          </button>
-        ))}
-      </nav>
-
       {activeTab === 'music' && (
         <>
           {selectedRelease ? (

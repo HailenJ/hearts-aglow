@@ -2,7 +2,7 @@ import { useReducer, useState, useEffect } from 'react'
 import { useSanityData } from './hooks/useSanityData'
 import { useHashRoute } from './hooks/useHashRoute'
 import { useMediaQuery, COMPACT } from './hooks/useMediaQuery'
-import { buildHash, resolveRoute, parseHash } from './lib/route'
+import { buildHash, resolveRoute, parseHash, WORKS_TABS } from './lib/route'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
@@ -71,8 +71,21 @@ function App() {
   // at render time, so it naturally picks up the match once Sanity arrives.
   const [worksSlug, setWorksSlug] = useState(() => {
     const route = parseHash(window.location.hash)
-    return route && route.id === 'works' ? route.detail : null
+    return route && (route.id === 'works' || WORKS_TABS.includes(route.id)) ? route.detail : null
   })
+  // Which catalogue view the shared `works` pane is showing. The dock is its
+  // tab bar, so this is route state, not the pane's own.
+  const [worksTab, setWorksTab] = useState(() => {
+    const route = parseHash(window.location.hash)
+    return route && WORKS_TABS.includes(route.id) ? route.id : 'music'
+  })
+
+  // Resolved every render rather than once, for the same reason worksSlug is
+  // stashed raw: at mount `data` is still the local fallback, so a slug that
+  // only exists in Sanity matches nothing yet. Re-resolving here means the
+  // render that receives Sanity also corrects the view — a software link
+  // arriving under #/music lands on Software, not on the music grid.
+  const { activeTab: worksActiveTab } = resolveRoute({ id: worksTab, detail: worksSlug }, data)
 
   // Window state is the single source of truth for what is open — the hash
   // can only ever hold one route, but several windows can be open at once,
@@ -84,10 +97,12 @@ function App() {
   // and keeps the hash accurate via replaceState — which never fires
   // `hashchange`, so this can't loop back into the listener below.
   useEffect(() => {
-    const next = focused ? buildHash(focused, focused === 'works' ? worksSlug : null) : ''
+    const next = focused
+      ? buildHash(focused === 'works' ? worksActiveTab : focused, focused === 'works' ? worksSlug : null)
+      : ''
     if (window.location.hash === next) return
     history.replaceState(null, '', next || window.location.pathname)
-  }, [focused, worksSlug])
+  }, [focused, worksSlug, worksActiveTab])
 
   // The other direction: hash -> state, for pasted links and back/forward.
   // A route that resolves to nothing (empty hash, unknown id, or a detail
@@ -99,7 +114,7 @@ function App() {
     // whether the detail matches anything in `data` — so it's safe to read
     // here even before Sanity has loaded. The detail string itself is
     // stashed raw (see worksSlug above) rather than resolved.
-    const { windowToOpen } = resolveRoute(route, data)
+    const { windowToOpen, activeTab } = resolveRoute(route, data)
     if (!windowToOpen) {
       openIds(windows).forEach(id => dispatch({ type: 'CLOSE', id }))
       setWorksSlug(null)
@@ -107,7 +122,7 @@ function App() {
     }
     // Below 768px only one window is ever visible. Closing the rest happens
     // here, in the same dispatch pass that opens the new route, rather than
-    // in openWindow before the hash is even written — that would render an
+    // in navigate before the hash is even written — that would render an
     // intermediate `focused: null` state and race the projection effect
     // against this listener over what the hash should be.
     if (compact) {
@@ -120,7 +135,10 @@ function App() {
     // Only the works window carries a detail slug — opening any other
     // window (e.g. About) must not clobber whatever Works detail was
     // already selected underneath it.
-    if (windowToOpen === 'works') setWorksSlug(route.detail)
+    if (windowToOpen === 'works') {
+      setWorksTab(activeTab)
+      setWorksSlug(route.detail)
+    }
   })
 
   // User-initiated navigation: writes the hash directly (a real assignment,
@@ -128,14 +146,20 @@ function App() {
   // leaves a history entry for the back button to land on. Reconciling which
   // windows end up open — including the mobile one-at-a-time rule — is the
   // hashchange listener's job above; this just requests the route.
-  const openWindow = (id) => {
-    const isOpen = windows[id].open && !windows[id].minimized
-    if (isOpen && focused === id) {
-      dispatch({ type: 'CLOSE', id })
+  const navigate = (id) => {
+    // Three dock items name a view of the shared `works` pane rather than a
+    // window of their own, so "already here" means the right pane AND the
+    // right view — otherwise clicking GAMES while Music is up would close the
+    // pane instead of switching to Games.
+    const wid = WORKS_TABS.includes(id) ? 'works' : id
+    const sameView = wid !== 'works' || worksActiveTab === id
+    const isOpen = windows[wid].open && !windows[wid].minimized
+    if (isOpen && sameView && focused === wid) {
+      dispatch({ type: 'CLOSE', id: wid })
       return
     }
-    if (isOpen) {
-      dispatch({ type: 'FOCUS', id })
+    if (isOpen && sameView) {
+      dispatch({ type: 'FOCUS', id: wid })
       return
     }
     window.location.hash = buildHash(id, null)
@@ -151,7 +175,7 @@ function App() {
   }
 
   const selectRelease = (slug) => {
-    window.location.hash = buildHash('works', slug)
+    window.location.hash = buildHash(worksActiveTab, slug)
     if (!slug) setWorksSlug(null)
   }
 
@@ -165,11 +189,13 @@ function App() {
       geom: { top: '10%', left: '3%', width: 'clamp(320px, 24vw, 400px)', maxHeight: 'min(560px, 74vh)' }
     },
     works: {
-      title: 'Works',
+      // The pane is named by whatever view it holds; the dock item and the
+      // titlebar must not disagree about where you are.
+      title: worksActiveTab[0].toUpperCase() + worksActiveTab.slice(1),
       geom: { top: '10%', left: '30%', width: 'clamp(430px, 38vw, 620px)', maxHeight: 'min(700px, 76vh)' }
     },
     connect: {
-      title: 'Connect',
+      title: 'Say hi',
       geom: { top: '10%', left: '74%', width: 'clamp(290px, 22vw, 360px)', maxHeight: 'min(560px, 74vh)' }
     }
   }
@@ -180,7 +206,7 @@ function App() {
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} onOpenGame={openGame} selectedSlug={worksSlug} onSelect={selectRelease} />,
+    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} onOpenGame={openGame} activeTab={worksActiveTab} selectedSlug={worksSlug} onSelect={selectRelease} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
@@ -253,7 +279,8 @@ function App() {
       <Dock
         windows={windows}
         focused={focused}
-        onToggle={openWindow}
+        activeTab={worksActiveTab}
+        onNavigate={navigate}
       />
     </div>
   )
