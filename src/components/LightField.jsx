@@ -206,14 +206,16 @@ export default function LightField({ bpm = 0, playing = false, tint = 0, activit
     })
     const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })
 
+    let raf = 0
     const resize = () => {
       renderer.setSize(host.clientWidth, host.clientHeight)
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
+      // Resizing a canvas clears it. With no loop running (reduced motion)
+      // nothing else would repaint, and the field would sit black.
+      if (!raf) renderer.render({ scene: mesh })
     }
     resize()
     window.addEventListener('resize', resize)
-
-    let raf = 0
     let last = performance.now()
     const start = last
 

@@ -199,7 +199,9 @@ function App() {
     },
     connect: {
       title: 'Say hi',
-      geom: { top: '10%', left: '74%', width: 'clamp(290px, 22vw, 360px)', maxHeight: 'min(560px, 74vh)' }
+      // Anchored by its right edge: a 74% left plus a 290px floor ran past the
+      // viewport on anything under ~1115px wide.
+      geom: { top: '10%', left: 'calc(97% - clamp(290px, 22vw, 360px))', width: 'clamp(290px, 22vw, 360px)', maxHeight: 'min(560px, 74vh)' }
     }
   }
 
@@ -226,7 +228,7 @@ function App() {
   )
 
   return (
-    <div className="desktop">
+    <div className={`desktop ${playing ? 'desktop--playing' : ''}`}>
       <Boot onDone={() => setBooted(true)} />
       <DesktopBackground
         bpm={pulse}
@@ -259,7 +261,8 @@ function App() {
             onMove={(x, y) => dispatch({ type: 'MOVE', id, x, y })}
             onResize={(w, h) => dispatch({ type: 'RESIZE', id, w, h })}
           >
-            {windowContent[id]}
+            {/* One bad record from the CMS should cost a window, not the site. */}
+            <ErrorBoundary>{windowContent[id]}</ErrorBoundary>
           </Window>
         ))}
       </main>

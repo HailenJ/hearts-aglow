@@ -36,6 +36,10 @@ export default function Boot({ onDone }) {
 
   const [shown, setShown] = useState(skip ? LINES.length : 0)
   const [leaving, setLeaving] = useState(false)
+  // Unmounts on its own rather than waiting for hasBooted() to read true on
+  // the next render: if sessionStorage throws, that read never flips, and an
+  // opaque layer at z-index 90 would sit over the whole site for good.
+  const [gone, setGone] = useState(false)
 
   // onDone is whatever identity the caller passes on a given render (App.jsx
   // passes an inline arrow, so it's a new function every render). Reading it
@@ -54,6 +58,7 @@ export default function Boot({ onDone }) {
     const fire = () => {
       if (firedRef.current) return
       firedRef.current = true
+      setGone(true)
       doneRef.current()
     }
 
@@ -78,13 +83,13 @@ export default function Boot({ onDone }) {
     }
   }, [skip])
 
-  if (skip) return null
+  if (skip || gone) return null
 
   return (
     <div className={`boot ${leaving ? 'boot--leaving' : ''}`} role="status" aria-live="polite">
       <div className="boot__aperture" aria-hidden="true" />
       <pre className="boot__log">{LINES.slice(0, shown).join('\n')}</pre>
-      <p className="boot__skip">press any key to skip</p>
+      <p className="boot__skip">tap or press any key to skip</p>
     </div>
   )
 }

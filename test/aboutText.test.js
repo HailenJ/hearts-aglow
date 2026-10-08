@@ -21,3 +21,14 @@ test('about text is fetched from Sanity, not fallback-only', () => {
   assert.match(queries, /"aboutParagraphs":\s*\*\[_type == "about"\]/)
   assert.match(queries, /data\.aboutParagraphs = result\.aboutParagraphs/)
 })
+
+test('a paragraph with null fields from Sanity renders instead of throwing', async () => {
+  const { splitParagraph } = await import('../src/lib/about.js')
+  assert.equal(splitParagraph({ text: null, linkText: null, linkUrl: null }), '')
+  assert.equal(splitParagraph(null), '')
+  assert.equal(splitParagraph({ text: 'see {link} here', linkText: 'it', linkUrl: null }), 'see it here')
+  assert.deepEqual(
+    splitParagraph({ text: 'see {link} here', linkText: 'it', linkUrl: 'https://x' }),
+    ['see ', { text: 'it', url: 'https://x' }, ' here'],
+  )
+})

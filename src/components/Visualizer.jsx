@@ -250,6 +250,7 @@ export default function Visualizer({ release, mode = 'strand', bpm = DEFAULT_BPM
     const paint = () => renderer.render({ scene: mesh })
     liveRef.current = { program, paint }
 
+    let raf = 0
     const resize = () => {
       const w = host.clientWidth, h = host.clientHeight
       if (!w || !h) return
@@ -259,11 +260,13 @@ export default function Visualizer({ release, mode = 'strand', bpm = DEFAULT_BPM
       // chrome below is a fixed number of pixels while the panel's height rides
       // on how many tracks the record has.
       program.uniforms.uFocus.value = 1 - FOCUS_PX / h
+      // Resizing a canvas clears it; with no loop running, repaint by hand.
+      if (!raf) paint()
     }
     resize()
-    window.addEventListener('resize', resize)
-
-    let raf = 0
+    // The panel, not the window: it changes height when the tracklist opens.
+    const ro = new ResizeObserver(resize)
+    ro.observe(host)
     const start = performance.now()
     const loop = () => {
       raf = requestAnimationFrame(loop)
@@ -289,7 +292,7 @@ export default function Visualizer({ release, mode = 'strand', bpm = DEFAULT_BPM
 
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      ro.disconnect()
       reduced.removeEventListener('change', onMotionChange)
       liveRef.current = null
       if (gl.canvas.parentNode === host) host.removeChild(gl.canvas)

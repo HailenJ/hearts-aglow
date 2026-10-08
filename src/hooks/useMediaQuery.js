@@ -40,4 +40,7 @@ export function useMediaQuery(query) {
   )
 }
 
-export const COMPACT = '(max-width: 767px)'
+// A landscape phone is 844px wide but only ~390px tall — width alone handed
+// it the desktop layout, with Say hi's close button off the right edge.
+// Mirrored in globals.css; keep the two in step.
+export const COMPACT = '(max-width: 767px), (pointer: coarse) and (max-height: 500px)'

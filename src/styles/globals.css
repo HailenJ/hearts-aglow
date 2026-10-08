@@ -159,7 +159,10 @@ a:hover {
 
 /* --- Desktop Shell --- */
 .desktop { position: relative; height: 100%; z-index: 2; }
-.desktop__content { position: absolute; inset: 0; }
+.desktop__content { position: absolute; inset: 0; isolation: isolate; }
+/* isolation: every focus raises a window's z-index by one with no ceiling, so
+   after enough clicking the windows climbed past the takeover (30), the dock
+   and the titlebar (40). Now they compete only with each other. */
 
 /* --- Background --- */
 .desktop__bg {
@@ -1334,7 +1337,7 @@ a:hover {
    one-app-at-a-time: windows are full-bleed sheets, the dock is a fixed
    bottom bar. Sheet entry animates only transform/opacity — never
    width/height/inset — so it stays off the layout thread. */
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .titlebar__time {
     display: none;
   }
@@ -1344,11 +1347,17 @@ a:hover {
     inset: 34px 0 62px 0 !important;
     width: auto !important;
     height: auto !important;
+    /* The inline desktop max-height (74vh) survived the inset and left a
+       ~95px dead band above the dock. */
+    max-height: none !important;
     border-radius: 0;
     border-left: 0;
     border-right: 0;
     animation: sheet-up var(--dur-mid) var(--ease-out);
   }
+  /* While a record plays, the sheet stops above the player instead of
+     running underneath it. --player-h is measured by Player.jsx. */
+  .desktop--playing .window { bottom: calc(70px + var(--player-h, 0px) + var(--s-2)) !important; }
   @keyframes sheet-up {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: none; }
@@ -1549,7 +1558,7 @@ a:hover {
   overscroll-behavior: contain;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   /* Same inset as a mobile window sheet (34px titlebar / 62px dock). The
      takeover was full-bleed here, so the site titlebar drew straight over its
      own heading — and the dock, which is what keeps a visitor from being
@@ -1646,6 +1655,14 @@ a.game__submit { text-decoration: none; }
   overscroll-behavior: contain;
 }
 .player__tracks li { counter-increment: ptrack; }
+
+/* Phone: a short stage and a short list, so the window above keeps most of
+   the screen. Here rather than in the responsive block because these base
+   rules come later in the file and would win on source order. */
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+  .player__stage { height: 56px; }
+  .player__tracks { max-height: 168px; }
+}
 
 /* Rows are controls: clicking one swaps the embed to that track. */
 .player__track {

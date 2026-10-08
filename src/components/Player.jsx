@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Visualizer from './Visualizer'
+import ErrorBoundary from './ErrorBoundary'
+import { useMediaQuery, COMPACT } from '../hooks/useMediaQuery'
 import { VIZ_MODES, DEFAULT_MODE, isMode } from '../lib/vizModes'
 import { trackBpm } from '../lib/vizSeed'
 
@@ -40,6 +42,25 @@ export default function Player({ release, onClose, onPulse }) {
     setViz(id)
     try { localStorage.setItem('aglow.viz', id) } catch { /* private mode */ }
   }
+  // On a phone the full panel covered three quarters of the window it plays
+  // over, so the tracklist starts folded there. Desktop keeps it open.
+  const compact = useMediaQuery(COMPACT)
+  const [tracksOpen, setTracksOpen] = useState(false)
+  const showTracks = !compact || tracksOpen
+
+  // The panel's height, published as --player-h so a phone sheet can stop
+  // above it instead of running underneath. Measured, because it rides on
+  // the track count and on whether the list is open.
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    const root = document.documentElement
+    if (!el) return
+    const ro = new ResizeObserver(() => root.style.setProperty('--player-h', `${el.offsetHeight}px`))
+    ro.observe(el)
+    return () => { ro.disconnect(); root.style.removeProperty('--player-h') }
+  }, [release])
+
   if (!release) return null
 
   // Bandcamp's slim variant. We cannot style inside the iframe, so it borrows
@@ -61,13 +82,17 @@ export default function Player({ release, onClose, onPulse }) {
   // rather than recomputed in App, which would have to duplicate the
   // album-opens-on-track-one rule to get the same number.
   return (
-    <aside className="player" aria-label={`Player — ${release.title}`}>
+    <aside className="player" ref={ref} aria-label={`Player — ${release.title}`}>
       <PulseReport bpm={bpm} onPulse={onPulse} />
       {/* The visual is the panel's background, not a strip above it: Belson's
           mandala and Minter's kaleidoscope are centric forms and a 108px
           letterbox gave them nowhere to be centric. The chrome sits on top of
           it, and `player__stage` reserves the one region it keeps clear. */}
-      <Visualizer release={release} mode={viz} bpm={bpm} />
+      {/* No WebGL means ogl throws, and without a boundary pressing play
+          blanked the entire site. The panel works without its visual. */}
+      <ErrorBoundary>
+        <Visualizer release={release} mode={viz} bpm={bpm} />
+      </ErrorBoundary>
 
       <div className="player__viz-modes" role="group" aria-label="Visual style">
         {VIZ_MODES.map(m => (
@@ -111,7 +136,21 @@ export default function Player({ release, onClose, onPulse }) {
           seamless
         />
 
-        {tracks.length > 0 && (
+        {compact && tracks.length > 0 && (
+          <button
+            className="player__tracks-toggle"
+            onClick={() => setTracksOpen(o => !o)}
+            aria-expanded={tracksOpen}
+            aria-controls="player-tracks"
+          >
+            {tracks.length} tracks
+            <svg className={`player__chev ${tracksOpen ? 'player__chev--up' : ''}`} width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+              <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+
+        {showTracks && tracks.length > 0 && (
           <ol className="player__tracks" id="player-tracks">
             {tracks.map((t, i) => {
               const id = trackId(t)

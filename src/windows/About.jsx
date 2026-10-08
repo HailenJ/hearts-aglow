@@ -1,16 +1,16 @@
-// A paragraph is one editable string from Sanity. `{link}` marks where the
-// link goes, so every word — including the words around the link — is
-// editable in the CMS. No token, or no link text, renders as plain prose.
-function renderParagraph({ text = '', linkText, linkUrl }) {
-  const [before, ...rest] = text.split('{link}')
-  if (!rest.length || !linkText) return text.replace('{link}', '')
+import { splitParagraph } from '../lib/about'
+
+function renderParagraph(p) {
+  const parts = splitParagraph(p)
+  if (typeof parts === 'string') return parts
+  const [before, link, after] = parts
   return (
     <>
       {before}
-      <a href={linkUrl} target="_blank" rel="noopener noreferrer">
-        {linkText}
+      <a href={link.url} target="_blank" rel="noopener noreferrer">
+        {link.text}
       </a>
-      {rest.join('{link}')}
+      {after}
     </>
   )
 }
