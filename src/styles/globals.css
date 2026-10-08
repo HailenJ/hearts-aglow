@@ -193,7 +193,7 @@ a:hover {
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .titlebar__brand { display: flex; align-items: center; gap: var(--s-2); }
 .titlebar__dot {
@@ -206,7 +206,7 @@ a:hover {
   background: var(--signal);
   box-shadow: 0 0 10px var(--signal);
 }
-.titlebar__np { color: var(--signal); }
+.titlebar__np { color: var(--text); }
 
 /* --- Hero --- */
 .hero {
@@ -363,11 +363,10 @@ a:hover {
 /* Focus was previously conveyed only by brightening the focused window, which
    was below the perceptual threshold with several translucent panes over a lit
    field. The legible version does the opposite too: unfocused windows recede.
-   Contrast, not brightness, is what makes "which one is in front" readable. */
-.window:not(.window--focused) {
-  opacity: 0.82;
-  filter: saturate(0.85);
-}
+   Contrast, not brightness, is what makes "which one is in front" readable.
+   Only the chrome recedes: fading the whole window took body text below AA. */
+.window__bar { transition: opacity var(--dur-fast) var(--ease-out); }
+.window:not(.window--focused) .window__bar { opacity: 0.6; }
 
 .window--focused {
   border-color: var(--hairline-focus);
@@ -429,7 +428,7 @@ a:hover {
   cursor: pointer;
   transition: color var(--dur-fast), background var(--dur-fast);
 }
-.window__btn:hover { color: var(--signal); background: rgba(255, 255, 255, 0.07); }
+.window__btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
 
 .window__body {
   position: relative;
@@ -510,7 +509,7 @@ a:hover {
 }
 
 .about__text a:hover {
-  color: var(--bloom-warm);
+  color: var(--text);
   border-bottom-color: var(--bloom-warm);
 }
 
@@ -560,7 +559,7 @@ a:hover {
   font-size: 0.6rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 
 .works__solo-desc {
@@ -683,7 +682,7 @@ a:hover {
   content: 'Latest';
   position: absolute;
   top: var(--s-2);
-  right: var(--s-2);
+  left: var(--s-2);  /* the play button owns the right corner */
   padding: 4px 8px;
   background: rgba(var(--void-rgb), 0.72);
   backdrop-filter: blur(6px);
@@ -832,7 +831,7 @@ a:hover {
 }
 
 .works__back:hover {
-  color: var(--bloom-warm);
+  color: var(--text);
   transform: translateX(-3px);
 }
 
@@ -1050,7 +1049,7 @@ a:hover {
 
 .works__link:hover {
   border-color: rgba(var(--accent-warm-rgb), 0.4);
-  color: var(--bloom-warm);
+  color: var(--text);
   background: rgba(var(--accent-warm-rgb), 0.04);
 }
 
@@ -1083,10 +1082,12 @@ a:hover {
   font-family: var(--font-display);
   font-weight: 300;
   font-stretch: 118%;
-  font-size: 0.58rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--bloom-warm);
+  /* Rose on a rose field measured 1.6:1 at the field's peak; the rose lives
+     on in the card's hairline, not in its words. */
+  color: var(--text);
 }
 
 /* This is a contact value (an address/handle), not a release title, so it
@@ -1106,9 +1107,10 @@ a:hover {
 
 .contact__item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s-4);
+  gap: var(--s-1) var(--s-4);
   padding: var(--s-3) 0;
   border-bottom: 1px solid var(--hairline);
   transition: transform var(--dur-fast) var(--ease-out);
@@ -1119,7 +1121,7 @@ a:hover {
 }
 
 .contact__item:hover .contact__icon {
-  color: var(--bloom-warm);
+  color: var(--text);
 }
 
 .contact__item:last-child {
@@ -1146,15 +1148,17 @@ a:hover {
 }
 
 .contact__primary .contact__icon {
-  color: var(--bloom-warm);
+  color: var(--text);
 }
 
 .contact__value {
   /* hailenjackson.bandcamp.com has nowhere to break and was clipped at
-     "…bandcamp.c" in any Say hi window narrower than ~1318px of viewport. */
+     "…bandcamp.c" in a narrow Say hi. The row wraps (see .contact__item) so
+     the whole address drops under its label; breaking anywhere is only the
+     last resort for a sliver of a window. */
+  margin-left: auto;
   min-width: 0;
   overflow-wrap: anywhere;
-  text-align: right;
   font-size: 0.9rem;
   color: var(--text-dim);
   border-bottom: 1px solid transparent;
@@ -1220,7 +1224,7 @@ a:hover {
   margin: 0;
   font-family: var(--font-data);
   font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 
 .game__title {
@@ -1233,7 +1237,7 @@ a:hover {
   margin: 0;
   font-family: var(--font-data);
   font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .game__logline { margin: 0; max-width: 68ch; line-height: 1.7; color: var(--text-dim); }
 
@@ -1281,7 +1285,7 @@ a:hover {
   margin: 0;
   font-family: var(--font-data);
   font-size: 9px; letter-spacing: 0.12em;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .game__store {
   align-self: flex-start;
@@ -1330,20 +1334,20 @@ a:hover {
   font-family: var(--font-display);
   font-size: 10px; font-stretch: 118%;
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--signal);
+  color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .player__year {
   font-family: var(--font-data);
-  font-size: 8px; letter-spacing: 0.12em;
-  color: var(--text-faint);
+  font-size: 10px; letter-spacing: 0.12em;
+  color: var(--text-dim);
 }
 .player__close {
   display: grid; place-items: center;
   width: 22px; height: 22px; padding: 0; flex: none;
   border: 0; background: transparent; color: var(--text-faint); cursor: pointer;
 }
-.player__close:hover { color: var(--signal); }
+.player__close:hover { color: var(--text); }
 
 /* 42px is Bandcamp's slim embed height. Their widget, our frame. */
 .player__frame { display: block; width: 100%; height: 42px; border: 0; }
@@ -1479,7 +1483,7 @@ a:hover {
   margin: 0;
   font-family: var(--font-data);
   font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 
 /* --- Game takeover ---
@@ -1564,7 +1568,7 @@ a:hover {
   cursor: pointer;
   transition: color var(--dur-fast), background var(--dur-fast);
 }
-.takeover__close:hover { color: var(--signal); background: rgba(255, 255, 255, 0.07); }
+.takeover__close:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
 
 /* Scrolls if the content is tall; never clips it the way a fixed-height
    window did. */
@@ -1599,10 +1603,10 @@ a.game__submit { text-decoration: none; }
 /* Track rows carry a runtime. These releases are long-form — Drift 3 runs
    208 minutes across six tracks — and the list gave no hint of that before. */
 .works__detail-tracks h4 { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
-.works__runtime { font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-faint); }
+.works__runtime { font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
 .works__detail-tracks li { grid-template-columns: 22px 1fr auto; }
 .works__track-title { min-width: 0; }
-.works__track-time { flex: none; font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.works__track-time { flex: none; font-family: var(--font-data); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
 /* --- Player visualizer & tracklist ---
    The visual is a generated portrait of the record, seeded from its id and
@@ -1657,7 +1661,7 @@ a.game__submit { text-decoration: none; }
   cursor: pointer;
   transition: color var(--dur-fast);
 }
-.player__tracks-toggle:hover { color: var(--signal); }
+.player__tracks-toggle:hover { color: var(--text); }
 .player__chev { transition: transform var(--dur-fast) var(--ease-out); }
 .player__chev--up { transform: rotate(180deg); }
 
@@ -1703,7 +1707,7 @@ a.game__submit { text-decoration: none; }
   content: counter(ptrack, decimal-leading-zero);
   font-family: var(--font-data);
   font-size: 0.55rem;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .player__track:hover:not(:disabled) { color: var(--text); background: rgba(255, 255, 255, 0.05); }
 .player__track:disabled { cursor: default; opacity: 0.6; }
@@ -1714,15 +1718,15 @@ a.game__submit { text-decoration: none; }
   margin: 0;
   padding: 0 var(--s-3) var(--s-3);
   font-family: var(--font-data);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .player__track-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .player__track-time {
   font-family: var(--font-data);
   font-size: 0.55rem;
-  color: var(--text-faint);
+  color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1749,11 +1753,11 @@ a.game__submit { text-decoration: none; }
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   font-family: var(--font-display);
-  font-size: 8px;
+  font-size: 10px;
   font-stretch: 118%;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
   cursor: pointer;
   transition: color var(--dur-fast), border-color var(--dur-fast);
 }
