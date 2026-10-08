@@ -1,4 +1,5 @@
 import { slugify } from '../lib/route.js'
+import { asGame } from '../lib/game.js'
 
 // Track shape: { title, duration (seconds), trackId, bpm? }
 //
@@ -246,23 +247,39 @@ export const socialLinks = [
   { name: 'TikTok', url: 'https://tiktok.com/@hearts_aglow', label: '@hearts_aglow' },
 ]
 
-const rawGames = []
+// Mirrors of the live Sanity records (copied 2026-10-08). Empty lists here
+// meant a blocked or failed fetch announced "One title in development" and
+// "Tools and utilities in development" over two things that exist — one of
+// them released. Update these when the CMS records change.
+const rawGames = [
+  {
+    id: 'fe105441-78cc-497c-81f2-ea6e2989f19f',
+    title: 'OTO',
+    year: '2026',
+    status: 'development',
+    description: 'A visual music creation game inspired by elektroplankton.',
+    url: null,
+    featured: null,
+    image: 'https://cdn.sanity.io/images/lmi10j91/production/c1a7996adfa2c410ca6e00a927990cabe6e06bf8-1920x1080.png',
+  },
+]
 export const games = rawGames.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
 
-const rawSoftware = []
+const rawSoftware = [
+  {
+    id: 'fc41e421-3160-454f-9c85-76bbc2f1b910',
+    title: 'Sideways Prompts',
+    year: '2026',
+    status: 'released',
+    description: 'Sideways Prompts is a small music-creation inspiration tool for the Playdate inspired by Oblique Strategies.',
+    url: 'https://heartsaglow.itch.io/sideways-prompts',
+    image: 'https://cdn.sanity.io/images/lmi10j91/production/5f25d03f39e864a225bbbeb327bb925692a41f6e-2816x1536.png',
+  },
+]
 export const software = rawSoftware.map(r => ({ ...r, slug: slugify(r.title) || String(r.id) }))
 
-// Real product truth: one title, in development, publicly teased, not yet
-// named in site data. Every field stays empty until the real value arrives —
-// a placeholder title here would ship as a claim.
-export const game = {
-  title: '',
-  year: '',
-  status: 'in development',
-  logline: '',
-  keyArt: '',
-  storeUrl: '',
-}
+// The featured game, in the shape the hero and takeover read.
+export const game = asGame(rawGames[0])
 
 export const heroSubtitle = 'Light, sound, and what hums beneath.'
 

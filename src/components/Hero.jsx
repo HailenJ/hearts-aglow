@@ -1,3 +1,5 @@
+import { statusLabel } from '../lib/game'
+
 export default function Hero({ visible, heroSubtitle, game, onOpenGame }) {
   if (!visible) return null
 
@@ -18,7 +20,7 @@ export default function Hero({ visible, heroSubtitle, game, onOpenGame }) {
       <button className="hero__cta" onClick={onOpenGame}>
         <span className="hero__cta-name">{named ? game.title : 'A game'}</span>
         <span className="hero__cta-meta">
-          {game?.year ? `${game.year} · ` : ''}{game?.status || 'in development'}
+          {game?.year ? `${game.year} · ` : ''}{statusLabel(game?.status)}
         </span>
         <span className="hero__cta-go">
           Look inside <span aria-hidden="true">→</span>

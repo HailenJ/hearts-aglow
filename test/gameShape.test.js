@@ -38,3 +38,12 @@ test('statusLabel spells out the raw Sanity value', () => {
   assert.equal(statusLabel(''), 'In development')
   assert.equal(statusLabel(undefined), 'In development')
 })
+
+// A blocked or failed Sanity fetch used to leave Games and Software announcing
+// "in development" over a game that exists and a tool that has shipped.
+test('the offline fallback carries the real game and software', async () => {
+  const fb = await import('../src/data/fallback.js')
+  assert.ok(fb.games.length && fb.software.length)
+  assert.equal(fb.game.title, fb.games[0].title)
+  assert.equal(statusLabel(fb.game.status), 'In development')
+})

@@ -1,4 +1,5 @@
 import { statusLabel } from '../lib/game'
+import { BANDCAMP_URL, NEWSLETTER_URL } from '../lib/config'
 
 // Tracks may be a bare string (older/Sanity data) or { title, duration }.
 // Tolerating both means a CMS entry without durations still renders.
@@ -101,7 +102,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
             <h2 className="works__detail-title">{selectedItem.title}</h2>
             <span className="works__detail-meta">
               {selectedItem.year}
-              {selectedItem.status === 'development' ? ' · In Development' : ''}
+              {selectedItem.status ? ` · ${statusLabel(selectedItem.status)}` : ''}
             </span>
             {selectedItem.url && (
               <a
@@ -141,7 +142,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
             }
             <div className="works__info">
               <h3 className="works__title">{item.title}</h3>
-              <span className="works__meta">{item.year}{item.status === 'development' ? ' · In Development' : ''}</span>
+              <span className="works__meta">{item.year}{item.status ? ` · ${statusLabel(item.status)}` : ''}</span>
             </div>
           </button>
         ))}
@@ -271,7 +272,7 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
               })}
               <footer className="works__footer">
                 <a
-                  href="https://hailenjackson.bandcamp.com"
+                  href={BANDCAMP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="works__link"
@@ -298,10 +299,18 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
           selectedItem={null}
           onSelect={onOpenGame}
           onBack={() => {}}
+          // The pane already shows the art, title and logline, so the takeover
+          // is "look inside", same verb as the hero, and the signup sits here
+          // too rather than one click behind a near-duplicate view.
           soloAction={item => (
-            <button className="works__solo-action" onClick={() => onOpenGame(item)}>
-              Open{' '}<span aria-hidden="true">&rarr;</span>
-            </button>
+            <div className="works__solo-actions">
+              <button className="game__submit" onClick={() => onOpenGame(item)}>
+                Look inside{' '}<span aria-hidden="true">&rarr;</span>
+              </button>
+              <a className="works__solo-action" href={NEWSLETTER_URL} target="_blank" rel="noopener noreferrer">
+                Hear when it ships
+              </a>
+            </div>
           )}
         />
       )}
