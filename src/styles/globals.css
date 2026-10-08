@@ -120,6 +120,8 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
 }
+/* No pull-to-refresh over the desktop, no font inflation on rotate. */
+html { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 
 body {
   font-family: var(--font-body);
@@ -186,8 +188,8 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   gap: var(--s-4);
-  height: 34px;
-  padding: 0 var(--s-5);
+  height: calc(34px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) max(var(--s-5), env(safe-area-inset-right, 0px)) 0 max(var(--s-5), env(safe-area-inset-left, 0px));
   font-family: var(--font-data);
   font-size: 10px;
   font-weight: 400;
@@ -253,7 +255,7 @@ a:hover {
   box-shadow: 0 0 50px -14px var(--glow-warm-soft);
   color: var(--text);
   cursor: pointer;
-  transition: border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .hero__cta:hover {
   border-color: var(--text-dim);
@@ -304,7 +306,7 @@ a:hover {
   letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--text-dim);
   cursor: pointer;
-  transition: color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out);
+  transition: color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-mid) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 /* The marker is what distinguishes the four states; colour alone could not,
@@ -588,7 +590,7 @@ a:hover {
   text-decoration: none;
   color: var(--text);
   cursor: pointer;
-  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
+  transition: color var(--dur-mid) var(--ease-out), border-color var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 /* Primary and secondary side by side; the secondary's own top margin is
@@ -806,7 +808,7 @@ a:hover {
 
 /* Detail view */
 .works__detail {
-  animation: fade-in 0.2s ease;
+  animation: fade-in var(--dur-mid) var(--ease-out);
 }
 
 /* Nav/action label — display voice, not data. Hover no longer widens the
@@ -1066,14 +1068,13 @@ a:hover {
   border: 1px solid rgba(var(--accent-warm-rgb), 0.25);
   border-radius: 3px;
   text-decoration: none;
-  transition: border-color var(--dur-slow) var(--ease-out), background var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition: border-color var(--dur-mid) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
+/* No background change: a gradient cannot interpolate, so it snapped while
+   the border eased. The border carries the hover on its own. */
 .contact__primary:hover {
   border-color: rgba(var(--accent-warm-rgb), 0.5);
-  background:
-    radial-gradient(ellipse at top left, rgba(var(--accent-warm-rgb), 0.18), transparent 60%),
-    var(--pane);
   transform: translateY(-1px);
 }
 
@@ -1274,6 +1275,9 @@ a:hover {
   font-size: 10px; font-stretch: 118%;
   letter-spacing: 0.2em; text-transform: uppercase;
   cursor: pointer;
+  /* The site's primary actions snapped their glow while every quieter
+     control faded. */
+  transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .works__play { align-self: flex-start; }
 .works__play-icon { font-size: 9px; }
@@ -1358,13 +1362,21 @@ a:hover {
    bottom bar. Sheet entry animates only transform/opacity — never
    width/height/inset — so it stays off the layout thread. */
 @media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+  /* Sheet edges: the titlebar above, the dock below, plus whatever the notch
+     and home indicator take once viewport-fit=cover hands them to us. */
+  :root {
+    --sheet-top: calc(34px + env(safe-area-inset-top, 0px));
+    --sheet-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+    --player-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
+
   .titlebar__time {
     display: none;
   }
 
   .window {
     position: fixed;
-    inset: 34px 0 62px 0 !important;
+    inset: var(--sheet-top) 0 var(--sheet-bottom) 0 !important;
     width: auto !important;
     height: auto !important;
     /* The inline desktop max-height (74vh) survived the inset and left a
@@ -1373,14 +1385,15 @@ a:hover {
     border-radius: 0;
     border-left: 0;
     border-right: 0;
-    animation: sheet-up var(--dur-mid) var(--ease-out);
+    /* The dock is a tab bar here, hit constantly; a 240ms rise on every
+       switch read as a modal. A short fade only. */
+    animation: sheet-in 120ms var(--ease-out);
   }
   /* While a record plays, the sheet stops above the player instead of
      running underneath it. --player-h is measured by Player.jsx. */
-  .desktop--playing .window { bottom: calc(70px + var(--player-h, 0px) + var(--s-2)) !important; }
-  @keyframes sheet-up {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: none; }
+  .desktop--playing .window { bottom: calc(var(--player-bottom) + var(--player-h, 0px) + var(--s-2)) !important; }
+  @keyframes sheet-in {
+    from { opacity: 0; }
   }
 
   .window__bar { cursor: default; }
@@ -1393,7 +1406,7 @@ a:hover {
     transform: none;
     justify-content: space-around;
     gap: 0;
-    padding: var(--s-2) 0 calc(var(--s-2) + env(safe-area-inset-bottom));
+    padding: var(--s-2) env(safe-area-inset-right, 0px) calc(var(--s-2) + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px);
     background: rgba(8, 7, 11, 0.6);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -1417,7 +1430,7 @@ a:hover {
   }
   .dock__item--focused { box-shadow: none; }
 
-  .player { left: var(--s-3); right: var(--s-3); bottom: 70px; width: auto; }
+  .player { left: var(--s-3); right: var(--s-3); bottom: var(--player-bottom); width: auto; }
   .hero__logo { width: 74vw; }
 
   .works__grid {
@@ -1460,8 +1473,9 @@ a:hover {
 .boot__aperture {
   position: absolute;
   width: 40vmax; height: 40vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 77, 109, 0.5), transparent 62%);
-  filter: blur(40px);
+  /* No blur: the gradient is already edgeless, and a 40px blur on a layer
+     scaling 80x only cost frames. */
+  background: radial-gradient(circle, rgba(255, 77, 109, 0.5), transparent 72%);
   animation: aperture 2600ms var(--ease-out) forwards;
 }
 @keyframes aperture {
@@ -1514,7 +1528,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   width: min(760px, 100%);
-  max-height: 88vh;
+  /* dvh, and inside the scrim's own padding: 88vh overran a short viewport. */
+  max-height: calc(100dvh - 2 * var(--s-6));
   border: 1px solid var(--hairline-focus);
   border-radius: 3px;
   background: var(--pane);
@@ -1583,7 +1598,12 @@ a:hover {
      takeover was full-bleed here, so the site titlebar drew straight over its
      own heading — and the dock, which is what keeps a visitor from being
      trapped, sat underneath it. */
-  .takeover { padding: 34px 0 62px; }
+  /* One row that is exactly the padded box, so the panel's height: 100%
+     means "the space left", not "as tall as my content". */
+  .takeover { padding: var(--sheet-top) 0 var(--sheet-bottom); grid-template-rows: minmax(0, 1fr); }
+  /* Same as a window sheet: stop above a playing record, or the player
+     (z 45) sits on the signup button. */
+  .desktop--playing .takeover { padding-bottom: calc(var(--player-bottom) + var(--player-h, 0px) + var(--s-2)); }
   .takeover__panel {
     width: 100%;
     max-height: none;
@@ -1763,3 +1783,28 @@ a.game__submit { text-decoration: none; }
 }
 .player__viz-mode:hover { color: var(--text); }
 .player__viz-mode--on { color: var(--signal); border-color: var(--hairline-focus); }
+
+/* --- Touch ---
+   Nothing here can hover, so what hover reveals must simply be there, and a
+   hover lift must not stick after the tap that triggered it. Last in the file
+   so it wins over the base :hover rules on source order. */
+html { -webkit-tap-highlight-color: transparent; }
+button, [role="button"] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+.dock__item:active, .hero__cta:active, .game__submit:active:not(:disabled),
+.works__play:active, .works__solo-action:active { transform: scale(0.97); }
+
+@media (hover: none) {
+  .works__item-play, .player__viz-modes { opacity: 1; transform: none; }
+  .works__item:hover, .works__back:hover,
+  .contact__primary:hover, .contact__item:hover { transform: none; }
+}
+
+/* Fingers, not cursors: 44px minimum for anything that closes or navigates. */
+@media (pointer: coarse) {
+  .window__btn, .player__close, .takeover__close { min-width: 44px; min-height: 44px; }
+  .window__bar { height: 44px; }  /* or the 44px close overhangs a 34px bar */
+  .works__back { padding-block: 12px; }
+  .player__track { padding-block: 12px; }
+  .player__viz-mode { padding: 8px 10px; }
+}

@@ -81,7 +81,7 @@ The ground is not decoration behind the UI; it is the UI's primary event, render
 - The light field is the primary visual event; the OS chrome is glass floating over it, not a page sitting on a background.
 - A hard, named rule (Signal Discipline) restricts the one saturated color in the system to four functional roles — never decorative.
 - Type is role-strict: display is always shouted (uppercase, wide tracking, light weight), data is always whispered in mono, and prose is never dressed as either.
-- Motion is transform/opacity only, system-wide, so the light field never has to compete with layout thrash.
+- No layout property ever animates — no width, height, inset, top/left in CSS — so the light field never competes with layout thrash. Paint-only properties (border-color, box-shadow, background colour) do transition on hover; window drag writes `left`/`top` directly, outside any transition.
 - There is exactly one responsive breakpoint (767px); the desktop metaphor collapses to one-app-at-a-time sheets below it rather than gaining a second, intermediate layout.
 
 ## Colors
@@ -96,7 +96,7 @@ The palette is almost monochrome by design — a near-black void, a narrow warm 
 ### Neutral
 - **Text** (`rgba(255,255,255,0.95)`, `--text`, `globals.css:26`): primary reading color — headings, focused window titles, primary body text.
 - **Text Dim** (`rgba(255,255,255,0.80)`, `--text-dim`, `globals.css:27`): secondary text — unfocused window titles, tab labels at rest, meta lines, body copy in About/Works/Contact.
-- **Text Faint** (`rgba(255,255,255,0.66)`, `--text-faint`, `globals.css:28`): tertiary — title-bar clock, empty-state icons, disabled-adjacent notes, dock minimize state.
+- **Text Faint** (`rgba(255,255,255,0.66)`, `--text-faint`): non-text marks only — the title-bar dot, icon buttons at rest, the dock's minimised state. It measures 3.6:1 on a pane at the field's peak, so it never colours small text; that is `--text-dim`'s job.
 - **Hairline** (`rgba(255,255,255,0.11)`, `--hairline`, `globals.css:31`): the default border color for every glass edge — windows, dock items, the CTA button, input fields.
 - **Hairline Focus** (`rgba(223,244,255,0.34)`, `--hairline-focus`, `globals.css:32`): the focused/hovered border state, derived from signal's hue at higher alpha rather than from `--signal` directly.
 - **Pane** (`rgba(255,255,255,0.045)`, `--pane`, `globals.css:33`): the glass fill for windows, dock items, and the player — always this faint, never opaque.
@@ -206,8 +206,8 @@ Two-tab nav (`.works__tabs`/`.works__tab`, `globals.css:420-463`) using the same
 - **Do** use Anybody only for titles, section labels, and tab labels — uppercase, letter-spacing ≥ 0.12em, weight ≤ 300, font-stretch 118%+.
 - **Do** use Martian Mono only for years, durations, track numbers, status readouts, and the boot log.
 - **Do** keep the three text-alpha steps (`--text` 0.95, `--text-dim` 0.80, `--text-faint` 0.66) exactly as specified — they were raised during the build specifically to clear WCAG AA 4.5:1 against the light field's brightest measured phase, `rgb(90,64,103)` (`globals.css:22-25`). Lowering any of them silently breaks accessibility against a moving background, not just against a static swatch.
-- **Do** respect `prefers-reduced-motion`: it freezes the light field's shader motion (`uMotion` uniform → 0, `LightField.jsx:97,119`), skips the boot sequence outright (`Boot.jsx:33-34`), and zeroes all CSS animation/transition durations globally (`globals.css:93-99`).
-- **Do** keep the single 767px breakpoint in sync between `globals.css:1119` and `useMediaQuery.js:33` if it ever changes; don't let the two drift or add a second breakpoint.
+- **Do** respect `prefers-reduced-motion`: it freezes the light field's shader motion (`uMotion` uniform → 0, `LightField.jsx:97,119`), skips the boot sequence outright (`Boot.jsx:33-34`), and zeroes all CSS animation/transition durations globally (the `prefers-reduced-motion` block near the top of `globals.css`).
+- **Do** keep the one compact query — `(max-width: 767px), (pointer: coarse) and (max-height: 500px)` — identical between `COMPACT` in `useMediaQuery.js` and every place it appears in `globals.css`. The second clause is what gives a landscape phone the phone layout; don't let the copies drift.
 
 ### Don't:
 - **Don't** reintroduce a second responsive breakpoint. There is exactly one, at 767px.

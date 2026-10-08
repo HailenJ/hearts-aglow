@@ -238,7 +238,10 @@ function App() {
       />
       <TitleBar nowPlaying={playing?.title ?? null} />
 
-      <main className="desktop__content">
+      {/* The takeover says aria-modal; inert makes that true, so Shift+Tab
+          cannot wander into windows hidden under its scrim. The dock stays
+          reachable on purpose — it is the way out. */}
+      <main className="desktop__content" inert={windows.game.open && !windows.game.minimized}>
         <Hero
           visible={booted && renderableOpen.length === 0 && !windows.game.open}
           heroSubtitle={data.heroSubtitle}
