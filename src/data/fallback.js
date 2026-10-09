@@ -257,7 +257,7 @@ const rawGames = [
     title: 'OTO',
     year: '2026',
     status: 'development',
-    description: 'A visual music creation game inspired by elektroplankton.',
+    description: 'A visual music creation game inspired by Electroplankton.',
     url: null,
     featured: null,
     image: 'https://cdn.sanity.io/images/lmi10j91/production/c1a7996adfa2c410ca6e00a927990cabe6e06bf8-1920x1080.png',
