@@ -1,5 +1,6 @@
 import { statusLabel } from '../lib/game'
 import { BANDCAMP_URL, NEWSLETTER_URL } from '../lib/config'
+import { sized } from '../lib/img'
 
 // Tracks may be a bare string (older/Sanity data) or { title, duration }.
 // Tolerating both means a CMS entry without durations still renders.
@@ -66,7 +67,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
         {item.image
           ? (
             <div className="works__solo-art">
-              <img src={item.image} alt={item.title} />
+              <img src={sized(item.image, 1600)} alt={item.title} />
             </div>
           )
           : <ArtworkPlaceholder title={item.title} />
@@ -89,7 +90,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
           {selectedItem.image
             ? (
               <div className="works__detail-artwork">
-                <img src={selectedItem.image} alt={selectedItem.title} />
+                <img src={sized(selectedItem.image, 350)} alt={selectedItem.title} />
               </div>
             )
             : (
@@ -135,7 +136,7 @@ function ProjectGrid({ items, emptyTitle, emptyDescription, selectedItem, onSele
             {item.image
               ? (
                 <div className="works__artwork">
-                  <img src={item.image} alt={item.title} loading="lazy" />
+                  <img src={sized(item.image, 700)} alt={item.title} loading="lazy" />
                 </div>
               )
               : <ArtworkPlaceholder title={item.title} />
@@ -170,7 +171,7 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
               <div className="works__detail-header">
                 <div className="works__detail-artwork">
                   {selectedRelease.image
-                    ? <img src={selectedRelease.image} alt={selectedRelease.title} />
+                    ? <img src={sized(selectedRelease.image, 350)} alt={selectedRelease.title} />
                     : <ArtworkPlaceholder title={selectedRelease.title} />
                   }
                 </div>
@@ -245,7 +246,7 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
                             {release.image
                               ? (
                                 <div className="works__artwork">
-                                  <img src={release.image} alt={release.title} loading="lazy" />
+                                  <img src={sized(release.image, 700)} alt={release.title} loading="lazy" />
                                 </div>
                               )
                               : <ArtworkPlaceholder title={release.title} />

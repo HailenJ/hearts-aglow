@@ -4,6 +4,7 @@ import ErrorBoundary from './ErrorBoundary'
 import { useMediaQuery, COMPACT } from '../hooks/useMediaQuery'
 import { VIZ_MODES, DEFAULT_MODE, isMode } from '../lib/vizModes'
 import { trackBpm } from '../lib/vizSeed'
+import { sized } from '../lib/img'
 
 const fmt = (secs) => {
   if (!secs) return ''
@@ -112,7 +113,7 @@ export default function Player({ release, onClose, onPulse }) {
       <div className="player__body">
         <div className="player__meta">
           {release.image
-            ? <img className="player__art" src={release.image} alt="" aria-hidden="true" />
+            ? <img className="player__art" src={sized(release.image, 100)} alt="" aria-hidden="true" />
             : null}
           <div className="player__text">
             <span className="player__title">{release.title}</span>

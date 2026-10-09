@@ -1,5 +1,6 @@
 import { NEWSLETTER_URL } from '../lib/config'
 import { statusLabel } from '../lib/game'
+import { sized } from '../lib/img'
 
 export default function Game({ game }) {
   const named = Boolean(game?.title)
@@ -9,7 +10,7 @@ export default function Game({ game }) {
     <div className="game">
       <div className="game__art">
         {game?.keyArt
-          ? <img src={game.keyArt} alt={named ? game.title : 'Key art'} />
+          ? <img src={sized(game.keyArt, 1600)} alt={named ? game.title : 'Key art'} />
           : <p className="game__art-empty">Key art in progress</p>}
       </div>
 

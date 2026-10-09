@@ -120,6 +120,15 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
 }
+/* Paired with the load listener in main.jsx. Settles from a hair oversized,
+   like the field coming into focus; reduced motion makes it a cut. */
+img {
+  opacity: 0;
+  scale: 1.015;
+  transition: opacity var(--dur-slow) var(--ease-out), scale 600ms var(--ease-out);
+}
+img[data-loaded] { opacity: 1; scale: 1; }
+
 /* No pull-to-refresh over the desktop, no font inflation on rotate. */
 html { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 

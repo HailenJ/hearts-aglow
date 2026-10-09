@@ -7,7 +7,7 @@ export default function Hero({ visible, heroSubtitle, game, onOpenGame }) {
 
   return (
     <div className="hero">
-      <img src="/logo.png" alt="Hearts Aglow" className="hero__logo" />
+      <img src="/logo.webp" width="720" height="720" alt="Hearts Aglow" className="hero__logo" />
       <p className="hero__tagline">{heroSubtitle}</p>
 
       <div className="hero__rule" aria-hidden="true" />
