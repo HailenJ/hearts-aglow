@@ -1,6 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+// Self-hosted, weight axis only — the same instances Google served, so
+// `font-stretch` still has no width axis to act on. Each file carries
+// unicode-range subsets, so a Latin page fetches only the Latin slice.
+import '@fontsource-variable/anybody'
+import '@fontsource-variable/archivo'
+import '@fontsource-variable/archivo/wght-italic.css'
+import '@fontsource-variable/martian-mono'
 import './styles/globals.css'
 
 // Images arrive hidden and fade in once decoded, rather than painting in

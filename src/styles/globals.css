@@ -45,9 +45,9 @@
   --pane-blur: 20px;
 
   /* Type */
-  --font-display: 'Anybody', system-ui, sans-serif;
-  --font-body: 'Archivo', system-ui, sans-serif;
-  --font-data: 'Martian Mono', ui-monospace, monospace;
+  --font-display: 'Anybody Variable', system-ui, sans-serif;
+  --font-body: 'Archivo Variable', system-ui, sans-serif;
+  --font-data: 'Martian Mono Variable', ui-monospace, monospace;
 
   /* Spacing — one rhythm for the whole surface */
   --s-1: 4px;
