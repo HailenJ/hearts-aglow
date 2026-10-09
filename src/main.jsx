@@ -9,6 +9,7 @@ import '@fontsource-variable/archivo'
 import '@fontsource-variable/archivo/wght-italic.css'
 import '@fontsource-variable/martian-mono'
 import './styles/globals.css'
+import { track } from './lib/track'
 
 // Images arrive hidden and fade in once decoded, rather than painting in
 // strips over the glass. `load` doesn't bubble, so listen in the capture
@@ -17,6 +18,13 @@ import './styles/globals.css'
 document.addEventListener('load', e => {
   if (e.target.tagName === 'IMG') e.target.dataset.loaded = ''
 }, true)
+
+// Every way off the site — Bandcamp, itch, the newsletter, email — in one
+// listener rather than a handler on each link.
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('a[href]')
+  if (a && a.host !== location.host) track(`out/${a.protocol === 'mailto:' ? 'email' : a.hostname}`)
+})
 
 // This is the entry point - it mounts our App component to the DOM
 ReactDOM.createRoot(document.getElementById('root')).render(

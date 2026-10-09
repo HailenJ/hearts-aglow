@@ -38,6 +38,15 @@
     <meta name="twitter:description" content="Light, sound, and what hums beneath." />
     <meta name="twitter:image" content="https://heartsaglow.io/og.jpg" />
     <meta name="twitter:image:alt" content="OTO" />
+
+    <!-- GoatCounter: no cookies, no banner. Routes live in the hash, which it
+         ignores by default, so the path includes it; App writes most route
+         changes with location.hash, which fires hashchange. -->
+    <script>
+      window.goatcounter = { path: () => location.pathname + location.hash }
+      addEventListener('hashchange', () => window.goatcounter.count?.())
+    </script>
+    <script data-goatcounter="https://heartsaglow.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   </head>
   <body>
     <!--

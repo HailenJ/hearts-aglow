@@ -3,6 +3,7 @@ import { useSanityData } from './hooks/useSanityData'
 import { useHashRoute } from './hooks/useHashRoute'
 import { useMediaQuery, COMPACT } from './hooks/useMediaQuery'
 import { buildHash, resolveRoute, parseHash, WORKS_TABS } from './lib/route'
+import { track } from './lib/track'
 import LightField from './components/LightField'
 import ErrorBoundary from './components/ErrorBoundary'
 import Window from './components/Window'
@@ -56,6 +57,7 @@ function App() {
   const focused = focusedId(windows)
   const compact = useMediaQuery(COMPACT)
   const [playing, setPlaying] = useState(null)
+  const play = (release) => { setPlaying(release); if (release) track(`play/${release.slug}`) }
   // The tempo of whatever track the player has loaded, reported up from Player
   // because only Player knows which one that is. Zero means nothing is loaded
   // and the field holds still.
@@ -175,6 +177,8 @@ function App() {
     // and the takeover reads the `keyArt`/`logline` shape.
     setShownGame(game ? asGame(game) : null)
     dispatch({ type: 'OPEN', id: 'game' })
+    // The hash is written with replaceState, so no page view sees this.
+    track('look-inside')
   }
 
   const selectRelease = (slug) => {
@@ -211,7 +215,7 @@ function App() {
 
   const windowContent = {
     about: <About aboutParagraphs={data.aboutParagraphs} />,
-    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={setPlaying} onOpenGame={openGame} activeTab={worksActiveTab} selectedSlug={worksSlug} onSelect={selectRelease} />,
+    works: <Works musicReleases={data.musicReleases} games={data.games} software={data.software} onPlay={play} onOpenGame={openGame} activeTab={worksActiveTab} selectedSlug={worksSlug} onSelect={selectRelease} />,
     connect: <Connect socialLinks={data.socialLinks} />
   }
 
