@@ -1,16 +1,38 @@
+import { useState } from 'react'
 import { NEWSLETTER_URL } from '../lib/config'
 import { statusLabel } from '../lib/game'
 import { sized } from '../lib/img'
+import { track } from '../lib/track'
 
 export default function Game({ game }) {
   const named = Boolean(game?.title)
   const canSubscribe = Boolean(NEWSLETTER_URL)
+  // The player loads only on request: an idle YouTube embed is ~1 MB of
+  // script and a third-party cookie jar on a page most people only glance at.
+  const [watching, setWatching] = useState(false)
+  const art = game?.keyArt ? sized(game.keyArt, 1600) : game?.trailer && `https://i.ytimg.com/vi/${game.trailer}/hqdefault.jpg`
+  const alt = named ? game.title : 'Key art'
+  // Steam's page is a wishlist until release day, and saying so is the ask.
+  const wishlist = /store\.steampowered\.com/.test(game?.storeUrl ?? '') && game?.status !== 'released'
 
   return (
     <div className="game">
       <div className="game__art">
-        {game?.keyArt
-          ? <img src={sized(game.keyArt, 1600)} alt={named ? game.title : 'Key art'} />
+        {watching ? (
+          <iframe
+            className="game__video"
+            src={`https://www.youtube-nocookie.com/embed/${game.trailer}?autoplay=1&rel=0`}
+            title={named ? `${game.title} trailer` : 'Trailer'}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        ) : game?.trailer ? (
+          <button className="game__trailer" onClick={() => { setWatching(true); track('trailer') }}>
+            <img src={art} alt={alt} />
+            <span className="game__trailer-play"><span aria-hidden="true">▶</span> Watch the trailer</span>
+          </button>
+        ) : art
+          ? <img src={art} alt={alt} />
           : <p className="game__art-empty">Key art in progress</p>}
       </div>
 
@@ -46,9 +68,9 @@ export default function Game({ game }) {
           href={game.storeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={named ? `Get ${game.title}` : 'Get the game'}
+          aria-label={wishlist ? `Wishlist ${named ? game.title : 'the game'} on Steam` : named ? `Get ${game.title}` : 'Get the game'}
         >
-          Get it →
+          {wishlist ? 'Wishlist on Steam →' : 'Get it →'}
         </a>
       )}
     </div>

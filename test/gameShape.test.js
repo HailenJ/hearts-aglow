@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { asGame, statusLabel } from '../src/lib/game.js'
+import { asGame, statusLabel, youtubeId } from '../src/lib/game.js'
 
 // The bug this guards: the Games grid handed the takeover a raw Sanity
 // document, whose art lives on `image`, and the takeover read `keyArt` — so
@@ -22,12 +22,13 @@ test('a games-grid card maps onto the shape the takeover reads', () => {
     logline: 'A visual music creation game.',
     keyArt: 'https://cdn.sanity.io/images/x/y-1920x1080.png',
     storeUrl: '',
+    trailer: '',
   })
 })
 
 test('asGame fills every field, so no consumer reads undefined', () => {
   const g = asGame(undefined)
-  assert.deepEqual(Object.keys(g).sort(), ['keyArt', 'logline', 'status', 'storeUrl', 'title', 'year'])
+  assert.deepEqual(Object.keys(g).sort(), ['keyArt', 'logline', 'status', 'storeUrl', 'title', 'trailer', 'year'])
   assert.equal(g.status, 'in development')
   assert.equal(g.keyArt, '')
 })
@@ -46,4 +47,12 @@ test('the offline fallback carries the real game and software', async () => {
   assert.ok(fb.games.length && fb.software.length)
   assert.equal(fb.game.title, fb.games[0].title)
   assert.equal(statusLabel(fb.game.status), 'In development')
+})
+
+test('youtubeId reads every link shape the Video URL field might hold', () => {
+  for (const u of ['https://youtu.be/ihJS3HBN5DI', 'https://www.youtube.com/watch?v=ihJS3HBN5DI&t=3', 'https://www.youtube.com/embed/ihJS3HBN5DI', 'https://youtube.com/shorts/ihJS3HBN5DI'])
+    assert.equal(youtubeId(u), 'ihJS3HBN5DI', u)
+  assert.equal(youtubeId('https://vimeo.com/123'), '')
+  assert.equal(youtubeId(null), '')
+  assert.equal(asGame({ videoUrl: 'https://youtu.be/ihJS3HBN5DI' }).trailer, 'ihJS3HBN5DI')
 })

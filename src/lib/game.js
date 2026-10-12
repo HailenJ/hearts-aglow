@@ -15,6 +15,13 @@ export function statusLabel(status) {
   return s[0].toUpperCase() + s.slice(1)
 }
 
+// The Studio's Video URL field takes any YouTube link a person might paste.
+// Anything else (Vimeo, a direct file) yields '' and the art stays a still.
+export function youtubeId(url) {
+  const m = String(url ?? '').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([\w-]{11})/)
+  return m ? m[1] : ''
+}
+
 export function asGame(g) {
   return {
     title: g?.title ?? '',
@@ -23,5 +30,6 @@ export function asGame(g) {
     logline: g?.description ?? '',
     keyArt: g?.image ?? '',
     storeUrl: g?.url ?? '',
+    trailer: youtubeId(g?.videoUrl),
   }
 }

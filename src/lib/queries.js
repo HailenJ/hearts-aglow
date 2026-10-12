@@ -23,6 +23,7 @@ const ALL_CONTENT_QUERY = `{
     status,
     url,
     featured,
+    videoUrl,
     "image": artwork.asset->url
   },
   "software": *[_type == "software"] | order(year desc) {

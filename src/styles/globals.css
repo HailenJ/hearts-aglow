@@ -1230,6 +1230,29 @@ a:hover {
   background: transparent;
 }
 .game__art img { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+.game__trailer, .game__video { display: block; width: 100%; height: 100%; border: 0; border-radius: 2px; }
+.game__trailer { position: relative; padding: 0; background: none; cursor: pointer; }
+.game__trailer img { display: block; }
+/* Bottom-left, off the title lettering the key art centres on. */
+.game__trailer-play {
+  position: absolute; left: var(--s-4); bottom: var(--s-4);
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  border: 1px solid var(--hairline-focus);
+  border-radius: 2px;
+  background: rgba(8, 6, 14, 0.55);
+  backdrop-filter: blur(8px);
+  color: var(--signal);
+  font-family: var(--font-display);
+  font-size: 10px; font-stretch: 118%;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
+}
+.game__trailer:hover .game__trailer-play,
+.game__trailer:focus-visible .game__trailer-play {
+  background: rgba(8, 6, 14, 0.72);
+  box-shadow: 0 0 24px -6px var(--glow-signal);
+}
 .game__art-empty {
   margin: 0;
   font-family: var(--font-data);
@@ -1816,4 +1839,9 @@ button, [role="button"] { -webkit-user-select: none; user-select: none; -webkit-
   .works__back { padding-block: 12px; }
   .player__track { padding-block: 12px; }
   .player__viz-mode { padding: 8px 10px; }
+}
+
+/* A phone's art is ~200px tall; the full-size label sat on the lettering. */
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+  .game__trailer-play { left: var(--s-2); bottom: var(--s-2); padding: var(--s-2) var(--s-3); }
 }
