@@ -1,0 +1,56 @@
+{
+  "_source": "Captured from https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=heartsaglow.io&limit=30 on 2026-11-10; trimmed to 3 posts and the fields the parser reads",
+  "feed": [
+    {
+      "post": {
+        "uri": "at://did:plc:dwfupigypmqul4rdpt6wfaee/app.bsky.feed.post/3mvdwx7cwuc2l",
+        "author": {
+          "handle": "heartsaglow.io"
+        },
+        "record": {
+          "text": "OTO - music playground game #screenshotsaturday #indiedev #gamedev",
+          "createdAt": "2026-09-12T20:41:39.417Z"
+        },
+        "replyCount": 0,
+        "repostCount": 6,
+        "likeCount": 18,
+        "quoteCount": 1,
+        "indexedAt": "2026-09-12T20:41:42.565Z"
+      }
+    },
+    {
+      "post": {
+        "uri": "at://did:plc:dwfupigypmqul4rdpt6wfaee/app.bsky.feed.post/3mo7ibrvh7s2h",
+        "author": {
+          "handle": "heartsaglow.io"
+        },
+        "record": {
+          "text": "some screenshots of my upcoming music game OTO #screenshotsaturday #indiedev #gamedev",
+          "createdAt": "2026-06-14T00:12:07.965Z"
+        },
+        "replyCount": 0,
+        "repostCount": 3,
+        "likeCount": 11,
+        "quoteCount": 0,
+        "indexedAt": "2026-06-14T00:12:11.261Z"
+      }
+    },
+    {
+      "post": {
+        "uri": "at://did:plc:dwfupigypmqul4rdpt6wfaee/app.bsky.feed.post/3mmwpejxef22q",
+        "author": {
+          "handle": "heartsaglow.io"
+        },
+        "record": {
+          "text": "komorebi- a music for airports like generator for my upcoming game OTO #gamedev #indiedev #ambient",
+          "createdAt": "2026-05-28T18:59:47.229Z"
+        },
+        "replyCount": 0,
+        "repostCount": 3,
+        "likeCount": 9,
+        "quoteCount": 0,
+        "indexedAt": "2026-05-28T18:59:48.568Z"
+      }
+    }
+  ]
+}

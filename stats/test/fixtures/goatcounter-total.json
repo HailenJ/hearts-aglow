@@ -1,0 +1,5 @@
+{
+  "_source": "Shaped from https://www.goatcounter.com/api.json handlers.apiCountTotalResponse (GET /api/v0/stats/total); total includes events. Values hand-set.",
+  "total": 40, "total_events": 12, "total_utc": 40,
+  "stats": [{ "day": "2026-11-09", "daily": 40, "hourly": [] }]
+}

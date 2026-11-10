@@ -15,5 +15,5 @@
   ],
   // 12:00 UTC = 05:00 MST / 06:00 MDT
   "triggers": { "crons": ["0 12 * * *"] },
-  "vars": { "TEAM_DOMAIN": "", "POLICY_AUD": "" }
+  "vars": { "TEAM_DOMAIN": "", "POLICY_AUD": "", "BSKY_HANDLE": "heartsaglow.io", "GOATCOUNTER_SITE": "heartsaglow" }
 }

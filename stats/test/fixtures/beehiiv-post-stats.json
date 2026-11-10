@@ -1,0 +1,7 @@
+{
+  "_source": "Shaped from https://developers.beehiiv.com/api-reference/posts/show (GET /v2/publications/{id}/posts/{postId}?expand=stats; stats.email.* per PostStatsEmail). Values hand-set.",
+  "data": {
+    "id": "post_aaa",
+    "stats": { "email": { "recipients": 50, "unique_clicks": 9, "unique_verified_clicks": 6, "unsubscribes": 1, "open_rate": 45.5 } }
+  }
+}

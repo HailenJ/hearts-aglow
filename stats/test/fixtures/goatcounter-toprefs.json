@@ -1,0 +1,10 @@
+{
+  "_source": "Shaped from https://www.goatcounter.com/api.json handlers.apiStatsResponse (GET /api/v0/stats/toprefs; page name per GoatCounter source, not listed in the public docs). Values hand-set.",
+  "more": false,
+  "stats": [
+    { "id": "a", "name": "www.Bsky.app", "count": 7, "ref_scheme": "h" },
+    { "id": "b", "name": "bsky.app", "count": 2, "ref_scheme": "h" },
+    { "id": "c", "name": "https://News.Example.com/some/path", "count": 3, "ref_scheme": "h" },
+    { "id": "d", "name": "", "count": 9, "ref_scheme": "h" }
+  ]
+}

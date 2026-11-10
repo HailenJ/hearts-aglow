@@ -1,0 +1,7 @@
+{
+  "_source": "Shaped from https://developers.beehiiv.com/api-reference/posts/index (GET /v2/publications/{id}/posts; id, title, web_url, publish_date in epoch seconds). Values hand-set.",
+  "data": [
+    { "id": "post_aaa", "title": "OTO devlog 1", "web_url": "https://heartsaglow.beehiiv.com/p/oto-devlog-1", "publish_date": 1794000000 },
+    { "id": "post_bbb", "title": "OTO devlog 2", "web_url": "https://heartsaglow.beehiiv.com/p/oto-devlog-2", "publish_date": 1794600000 }
+  ]
+}

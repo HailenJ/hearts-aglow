@@ -1,0 +1,10 @@
+{
+  "_source": "Shaped from https://www.goatcounter.com/api.json handlers.apiHitsResponse (GET /api/v0/stats/hits). Event paths are the ones the live site sends. Values hand-set.",
+  "more": false, "total": 52,
+  "hits": [
+    { "path_id": 1, "path": "/#/works", "event": false, "count": 25 },
+    { "path_id": 2, "path": "look-inside", "event": true, "count": 5 },
+    { "path_id": 3, "path": "out/store.steampowered.com", "event": true, "count": 4 },
+    { "path_id": 4, "path": "play/some-release", "event": true, "count": 3 }
+  ]
+}

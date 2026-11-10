@@ -1,0 +1,4 @@
+{
+  "_source": "Shaped from https://developers.beehiiv.com/api-reference/publications/show (GET /v2/publications/{id}?expand=stats; stats.active_subscriptions is an integer). Values hand-set.",
+  "data": { "id": "pub_00000000-0000-0000-0000-000000000000", "name": "Hearts Aglow", "stats": { "active_subscriptions": 57 } }
+}
