@@ -1,0 +1,17 @@
+{
+  "_source": "Built from the documented field names of GetAppWishlistReporting (https://partner.steamgames.com/doc/webapi/IPartnerFinancialsService). The doc's own sample is malformed JSON, so this is a hand-built clean body, not a captured response. Numbers are made up.",
+  "appid": 4433980,
+  "date": "2026-11-10",
+  "wishlist_summary": {
+    "wishlist_adds": 30,
+    "wishlist_deletes": 15,
+    "wishlist_purchases": 10,
+    "wishlist_gifts": 2,
+    "wishlist_adds_windows": 28,
+    "wishlist_adds_mac": 1,
+    "wishlist_adds_linux": 1
+  },
+  "country_summary": [],
+  "language_summary": [],
+  "app_min_date": "2026-01-01"
+}

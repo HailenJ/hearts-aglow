@@ -1,10 +1,12 @@
+import { steam } from './connectors/steam.js'
+import { itch } from './connectors/itch.js'
 import { upsertReadings, upsertItems, recordSync } from './db.js'
 
 export const MANUAL_SOURCES = ['apple', 'tiktok', 'x', 'spotify', 'bandcamp', 'steam_traffic']
 
 // Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today }) -> { readings, items? } }
 // Tasks 5-7 push into this.
-export const CONNECTORS = []
+export const CONNECTORS = [steam, itch]
 
 // One connector failing must not stop the others; each outcome is recorded.
 export async function runSync(env, { now, connectors = CONNECTORS, fetch = globalThis.fetch }) {

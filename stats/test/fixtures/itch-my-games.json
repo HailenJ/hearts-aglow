@@ -1,0 +1,31 @@
+{
+  "_source": "Shaped from the documented my-games sample at https://itch.io/docs/api/serverside-legacy (keys: id, title, views_count, downloads_count, purchases_count, earnings[{currency, amount_formatted, amount}]). Values hand-set; the doc leaves the amount's unit undefined but its sample (5047 for $50.47) implies cents.",
+  "games": [
+    {
+      "id": 1234567,
+      "title": "OTO Demo",
+      "type": "default",
+      "url": "https://heartsaglow.itch.io/oto-demo",
+      "published": true,
+      "min_price": 0,
+      "views_count": 2682,
+      "downloads_count": 109,
+      "purchases_count": 4,
+      "earnings": [
+        { "currency": "USD", "amount_formatted": "$50.47", "amount": 5047 },
+        { "currency": "EUR", "amount_formatted": "€3.00", "amount": 300 }
+      ]
+    },
+    {
+      "id": 7654321,
+      "title": "Free Jam Game",
+      "type": "default",
+      "url": "https://heartsaglow.itch.io/jam",
+      "published": true,
+      "min_price": 0,
+      "views_count": 10,
+      "downloads_count": 0,
+      "purchases_count": 0
+    }
+  ]
+}
