@@ -1,16 +1,17 @@
 import { verifyAccess } from './auth.js'
 import { runSync } from './sync.js'
 import { connectRoute, callbackRoute } from './oauth.js'
+import { manualRoute, logRoute, settingsRoute, json } from './manual.js'
 
 // Later tasks fill these in: 'METHOD /path' -> handler(request, env, ctx, param?)
 const routes = {
   'GET /api/connect/:param': connectRoute,
   'GET /api/callback/:param': callbackRoute,
+  'POST /api/manual': manualRoute,
+  'POST /api/log': logRoute,
+  'POST /api/settings': settingsRoute,
 }
 const parametric = ['GET /api/connect/', 'GET /api/callback/', 'POST /api/import/']
-
-const json = (body, status) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 
 export default {
   async fetch(request, env, ctx) {
