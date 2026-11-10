@@ -50,6 +50,16 @@ test('the offline fallback carries the real game and software', async () => {
   assert.equal(statusLabel(fb.game.status), 'In development')
 })
 
+// The Steam link carries a UTM tag so store visits from the site are
+// attributable. The tagged store link must still dedupe against the Steam
+// button, so no second Steam entry reaches the takeover.
+test('OTO links to Steam with a UTM tag, and no second Steam button', async () => {
+  const fb = await import('../src/data/fallback.js')
+  const g = asGame(fb.games[0])
+  assert.match(g.storeUrl, /utm_source=heartsaglow/)
+  assert.ok(!g.links.some(l => /store\.steampowered\.com/.test(l.url)))
+})
+
 test('youtubeId reads every link shape the Video URL field might hold', () => {
   for (const u of ['https://youtu.be/ihJS3HBN5DI', 'https://www.youtube.com/watch?v=ihJS3HBN5DI&t=3', 'https://www.youtube.com/embed/ihJS3HBN5DI', 'https://youtube.com/shorts/ihJS3HBN5DI'])
     assert.equal(youtubeId(u), 'ihJS3HBN5DI', u)

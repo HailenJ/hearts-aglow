@@ -258,11 +258,11 @@ const rawGames = [
     year: '2026',
     status: 'development',
     description: 'A visual music creation game inspired by Electroplankton.',
-    url: 'https://store.steampowered.com/app/4433980/OTO/',
+    url: 'https://store.steampowered.com/app/4433980/OTO/?utm_source=heartsaglow&utm_medium=website',
     featured: null,
     videoUrl: 'https://www.youtube.com/watch?v=-H76zfPIqzk',
     buttons: [
-      { label: 'Steam', url: 'https://store.steampowered.com/app/4433980/OTO/' },
+      { label: 'Steam', url: 'https://store.steampowered.com/app/4433980/OTO/?utm_source=heartsaglow&utm_medium=website' },
       { label: 'Itch.io', url: 'https://heartsaglow.itch.io/oto' },
     ],
     image: 'https://cdn.sanity.io/images/lmi10j91/production/c1a7996adfa2c410ca6e00a927990cabe6e06bf8-1920x1080.png',
