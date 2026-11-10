@@ -25,6 +25,15 @@ test('no header, expired token, wrong aud, wrong iss each fail', async () => {
   assert.equal(await verifyAccess(req(await sign({ iss: 'https://evil.example' })), env, jwks), false)
 })
 
+test('a forged signature or a non-RS256 algorithm fails', async () => {
+  const claims = (h, key) => new SignJWT({}).setProtectedHeader(h)
+    .setIssuer(env.TEAM_DOMAIN).setAudience(env.POLICY_AUD).setIssuedAt().setExpirationTime('1h').sign(key)
+  const other = await generateKeyPair('RS256')
+  assert.equal(await verifyAccess(req(await claims({ alg: 'RS256', kid: 'k1' }, other.privateKey)), env, jwks), false)
+  const secret = new TextEncoder().encode('any-secret-of-sufficient-length-0123456789')
+  assert.equal(await verifyAccess(req(await claims({ alg: 'HS256', kid: 'k1' }, secret)), env, jwks), false)
+})
+
 test('fetch returns 403 for / and /style.css without a valid token', async () => {
   let called = false
   const e = { ...env, ASSETS: { fetch: () => { called = true; return new Response('x') } } }
