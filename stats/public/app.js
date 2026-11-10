@@ -59,7 +59,8 @@ function table(cols, rows) {
 }
 const bar = (v, max) => (v > 0 && max > 0 ? `<span class="bar" style="width:${Math.round((v / max) * 60)}px"></span>` : '')
 const maxOf = (xs) => Math.max(0, ...xs.filter((x) => x != null))
-const link = (text, url) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text))
+// Only web links become anchors; anything else (javascript:, data:) stays text.
+const link = (text, url) => (/^https?:\/\//i.test(url ?? '') ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text))
 
 // Inert until the CSV importers land.
 const drop = (what) => `<div class="pane drop"><span class="glyph">↥</span><span>${what}</span><span class="lbl">CSV import coming soon</span></div>`
@@ -88,8 +89,10 @@ function chip(h) {
       const msg = esc(m.toLowerCase().startsWith(label.toLowerCase() + ':') ? m.slice(label.length + 1).trim() : m)
       return `<span class="chip warn">${name}${OAUTH.includes(h.source) ? `<a href="/api/connect/${h.source}">${msg}</a>` : msg}</span>`
     }
-    case 'waiting': return `<span class="chip">${name}${esc(h.message ?? 'waiting')}</span>`
-    case 'manual': return `<span class="chip${h.message ? ' warn' : ''}">${name}${[h.since && since, h.message && esc(h.message)].filter(Boolean).join(' · ')}</span>`
+    case 'waiting':
+      if (!h.message) return `<span class="chip">${name}waiting</span>`
+      // falls through: typed-in TikTok reads like any typed source
+    case 'manual': return `<span class="chip${/update$/.test(h.message ?? '') ? ' warn' : ''}">${name}${[h.since && since, h.message && esc(h.message)].filter(Boolean).join(' · ')}</span>`
     default: return `<span class="chip">${name}off</span>`
   }
 }
@@ -116,8 +119,8 @@ function overview(v) {
   const s = o.strip
   const cell = (label, t, f = num) => `<div${t.stale ? ' class="stale"' : ''}><span class="lbl">${label}${t.stale ? ' · stale' : ''}</span><b>${t.value == null ? DASH : f(t.value)}</b></div>`
   return `
-    <div class="pane since">
-      <span class="lbl">Since you last looked · ${seen}</span>
+    <div class="pane since${o.since.stale ? ' stale' : ''}">
+      <span class="lbl">Since you last looked · ${seen}${staleMark(o.since)}</span>
       <span class="big">${signed(o.since.wishlists)} wishlists</span>
       <span class="rest">${signed(o.since.subscribers)} subscribers</span>
       ${flags.map((f) => `<div class="flag">⚑ ${f} <a href="#log">What happened?</a></div>`).join('')}
@@ -207,7 +210,7 @@ function social(v) {
   return `
     <div class="tiles">
       ${tile('Clicks to the site · 30d', s.clicks, { delta: (x) => pct(x, 0), ctx: after(s.clicks, 'the one that matters') })}
-      ${tile('Engagement · 30d avg', s.engagement, { fmt: pct, ctx: 'likes + replies + shares ÷ reach' })}
+      ${tile('Engagement · 30d avg', s.engagement, { fmt: pct, ctx: 'likes + replies + shares ÷ reach, or ÷ followers where a platform gives no reach' })}
       ${tile('Followers · all', s.followers, { ctx: after(s.followers, 'shown, not chased') })}
     </div>
     <div class="pane chart">${head('By platform · 30 days')}
@@ -375,7 +378,19 @@ function draw(name) {
 
 function show(name) {
   if (!TABS[name]) name = 'overview'
-  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.v === name))
+  // Runs every connector now; the health strip shows each result once the view reloads.
+const $sync = document.getElementById('sync')
+$sync.addEventListener('click', async () => {
+  $sync.disabled = true
+  $sync.textContent = 'Syncing…'
+  const error = await post('/api/sync')
+  $sync.disabled = false
+  $sync.textContent = 'Sync now'
+  if (error) document.getElementById('stamp').textContent = `Sync failed · ${error}`
+  else load()
+})
+
+document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.v === name))
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === 'v-' + name))
   draw(name)
 }
@@ -413,16 +428,14 @@ async function post(path, body) {
 
 let seen = false
 async function load() {
-  let v
   try {
     const res = await fetch('/api/dashboard')
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-    v = await res.json()
+    render(await res.json())
   } catch (e) {
     $views.innerHTML = `<p class="pane load">Couldn't load the dashboard: ${esc(e.message)}</p>`
     return
   }
-  render(v)
   // Marked only after the page has shown the "since you last looked" numbers.
   if (!seen) { seen = true; post('/api/seen') }
 }
@@ -448,6 +461,18 @@ $views.addEventListener('submit', async (e) => {
   btn.disabled = false
   out.textContent = error ?? ''
   if (!error) load()
+})
+
+// Runs every connector now; the health strip shows each result once the view reloads.
+const $sync = document.getElementById('sync')
+$sync.addEventListener('click', async () => {
+  $sync.disabled = true
+  $sync.textContent = 'Syncing…'
+  const error = await post('/api/sync')
+  $sync.disabled = false
+  $sync.textContent = 'Sync now'
+  if (error) document.getElementById('stamp').textContent = `Sync failed · ${error}`
+  else load()
 })
 
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { location.hash = t.dataset.v }))
