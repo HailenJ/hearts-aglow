@@ -3,14 +3,17 @@ import { readingDates } from '../db.js'
 const BASE = 'https://partner.steam-api.com/IPartnerFinancialsService/GetAppWishlistReporting/v1/'
 const APPID = 4433980
 const METRICS = ['wishlist_adds', 'wishlist_deletes', 'wishlist_purchases', 'wishlist_gifts']
-const LAUNCH = '2026-11-06' // the Steam page went up; nothing exists before it
+const LAUNCH = '2026-11-10' // Steam's app_min_date for OTO: its wishlist data starts here
 const REVISED = 2 // Steam revises recent days, so re-pull them; upsert makes it idempotent
 const BATCH = 7
 const MAX_DAYS = 14 // per run, so a long catch-up can't eat the Worker's subrequest budget
 
-// A metric Steam omits is no reading, never 0; a reply with no summary at all is an error.
+// A metric Steam omits is no reading, never 0; a reply with no summary at all is an error,
+// unless the day is before app_min_date, where Steam has no data to give.
 export function parseWishlistDay(json, date) {
-  const s = (json.response ?? json).wishlist_summary
+  const r = json.response ?? json
+  const s = r.wishlist_summary
+  if (!s && r.app_min_date > date) return []
   if (!s) throw new Error('Steam: reply had no wishlist_summary')
   return METRICS.filter((m) => Number.isFinite(s[m])).map((metric) => ({ source: 'steam', metric, dim: '', date, value: s[metric] }))
 }

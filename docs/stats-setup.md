@@ -129,7 +129,7 @@ The sample data ends 2026-11-09. If the page looks empty later, the dates need s
 The daily sync runs at 12:00 UTC (5 or 6 a.m. Mountain). To run it right now:
 
 - On your computer: `npx wrangler dev --test-scheduled`, then in another terminal `curl "http://localhost:8787/__scheduled"`. Locally it only reaches services whose secrets are in `.dev.vars`.
-- On the live site: press **Sync now** next to the sync time at the top of the dashboard. It runs every source straight away (the same sync the cron runs) and reloads the page, so the health strip shows each result. Steam fetches at most 14 days per sync, so filling the days since 2026-11-06 (or a long outage) can take a few presses or a few daily runs. Each one starts from the earliest missing day.
+- On the live site: press **Sync now** next to the sync time at the top of the dashboard. It runs every source straight away (the same sync the cron runs) and reloads the page, so the health strip shows each result. Steam fetches at most 14 days per sync, so filling the days since 2026-11-10 (the first day Steam has data for OTO) (or a long outage) can take a few presses or a few daily runs. Each one starts from the earliest missing day.
 - To watch what happens as it runs: `cd stats && npx wrangler tail`, and trigger the sync while that is open.
 
 The health strip at the top of the dashboard shows each source's last result and any error message.
