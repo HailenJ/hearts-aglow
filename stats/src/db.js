@@ -53,6 +53,28 @@ export async function dims(db, { source, metric, from, to }) {
   return results
 }
 
+// Newest reading per (metric, dim). metric is a GLOB, so 'earnings_cents_*' finds every
+// currency; SQLite returns the bare value column from the MAX(date) row.
+export async function latestRows(db, { source, metric, before }) {
+  const { results } = await db
+    .prepare(
+      `SELECT metric, dim, MAX(date) AS date, value FROM readings
+       WHERE source = ? AND metric GLOB ? AND (? IS NULL OR date < ?)
+       GROUP BY metric, dim`,
+    )
+    .bind(source, metric, before ?? null, before ?? null)
+    .all()
+  return results
+}
+
+export async function items(db, source) {
+  const { results } = await db
+    .prepare('SELECT id, title, url, date FROM items WHERE source = ? ORDER BY date DESC, id')
+    .bind(source)
+    .all()
+  return results
+}
+
 export async function getSetting(db, key) {
   const row = await db.prepare('SELECT value FROM settings WHERE key = ?').bind(key).first()
   return row ? row.value : null

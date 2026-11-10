@@ -2,9 +2,12 @@ import { verifyAccess } from './auth.js'
 import { runSync } from './sync.js'
 import { connectRoute, callbackRoute } from './oauth.js'
 import { manualRoute, logRoute, settingsRoute, json } from './manual.js'
+import { dashboardRoute, seenRoute } from './view.js'
 
 // Later tasks fill these in: 'METHOD /path' -> handler(request, env, ctx, param?)
 const routes = {
+  'GET /api/dashboard': dashboardRoute,
+  'POST /api/seen': seenRoute,
   'GET /api/connect/:param': connectRoute,
   'GET /api/callback/:param': callbackRoute,
   'POST /api/manual': manualRoute,
