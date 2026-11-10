@@ -26,7 +26,8 @@ export const beehiiv = {
       return res
     }
 
-    const publication = await (await ok(await get('', { expand: '["stats"]' }))).json()
+    // Plain expand=stats: the live API ignores the docs' expand=["stats"] example (checked 2026-11-10).
+    const publication = await (await ok(await get('', { expand: 'stats' }))).json()
     const posts = (await (await ok(await get('/posts', { limit: POSTS, order_by: 'publish_date', direction: 'desc', status: 'confirmed' }))).json()).data ?? []
 
     const readings = []
@@ -35,10 +36,10 @@ export const beehiiv = {
 
     // Stats render in the background: 202 means wait Retry-After and ask once more, then skip.
     const postStats = async (id) => {
-      let res = await get(`/posts/${id}`, { expand: '["stats"]' })
+      let res = await get(`/posts/${id}`, { expand: 'stats' })
       if (res.status === 202) {
         await sleep((Number(res.headers.get('Retry-After')) || 1) * 1000)
-        res = await get(`/posts/${id}`, { expand: '["stats"]' })
+        res = await get(`/posts/${id}`, { expand: 'stats' })
         if (res.status === 202) return []
       }
       return parsePostStats(await (await ok(res)).json(), id, today)

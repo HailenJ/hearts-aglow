@@ -55,7 +55,7 @@ test('beehiiv records subscribers and per-post recipients, unique (verified) cli
   assert.ok(calls.every((c) => c.url.pathname.startsWith('/v2/publications/pub_1')))
   const expands = calls.filter((c) => !c.url.pathname.endsWith('/posts')).map((c) => c.url.search.match(/expand=[^&]*/)[0])
   assert.equal(expands.length, 3)
-  assert.ok(expands.every((e) => e === 'expand=%5B%22stats%22%5D'))
+  assert.ok(expands.every((e) => e === 'expand=stats'))
   assert.equal(readings.find((r) => r.metric === 'subscribers').value, 57)
   const a = Object.fromEntries(readings.filter((r) => r.dim === 'post_aaa').map((r) => [r.metric, r.value]))
   assert.deepEqual(a, { recipients: 50, unique_clicks: 6, unsubscribes: 1, open_rate: 45.5 })
