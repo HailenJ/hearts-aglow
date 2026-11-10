@@ -231,3 +231,31 @@ test('callback route redirects home on success and answers 400 in plain text on 
   assert.equal(bad.status, 400)
   assert.match(await bad.text(), /^YouTube: state mismatch/)
 })
+
+test('youtube titles more than 50 distinct videos in batches of at most 50 ids', async () => {
+  const db = openTestDb()
+  await fresh(db, 'youtube')
+  const listCalls = []
+  const fetch = async (u) => {
+    const url = new URL(u)
+    if (url.hostname === 'www.googleapis.com') {
+      const ids = url.searchParams.get('id').split(',')
+      listCalls.push(ids)
+      return respond({ items: ids.map((id) => ({ id, snippet: { title: `t-${id}`, publishedAt: '2026-10-01T00:00:00Z' } })) })
+    }
+    if (url.searchParams.get('dimensions') === 'day') return respond({ columnHeaders: [], rows: [] })
+    // a different top 10 every day: 70 distinct ids
+    const day = url.searchParams.get('startDate')
+    return respond({
+      columnHeaders: [{ name: 'video' }, { name: 'views' }],
+      rows: Array.from({ length: 10 }, (_, i) => [`${day}-${i}`, 10 - i]),
+    })
+  }
+  const { readings, items } = await youtube.pull(ytEnv(db), { fetch, today, now })
+  assert.equal(listCalls.length, 2)
+  assert.ok(listCalls.every((ids) => ids.length <= 50))
+  const dims = new Set(readings.map((r) => r.dim))
+  assert.equal(dims.size, 70)
+  assert.equal(items.length, 70)
+  assert.ok(items.every((i) => dims.has(i.id) && i.title === `t-${i.id}`))
+})

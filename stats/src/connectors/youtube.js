@@ -43,8 +43,11 @@ export const youtube = {
 
     const ids = [...new Set(readings.filter((r) => r.dim).map((r) => r.dim))]
     if (!ids.length) return { readings, items: [] }
-    // videos.list takes at most 50 ids; 7 days x top 10 stays under it
-    const { items = [] } = await get(VIDEOS, { part: 'snippet', id: ids.join(',') })
+    // videos.list takes at most 50 ids and 7 days x top 10 can reach 70, so batch.
+    const batches = []
+    for (let i = 0; i < ids.length; i += 50) batches.push(ids.slice(i, i + 50))
+    const lists = await Promise.all(batches.map((b) => get(VIDEOS, { part: 'snippet', id: b.join(',') })))
+    const items = lists.flatMap((l) => l.items ?? [])
     return {
       readings,
       items: items.map((v) => ({
