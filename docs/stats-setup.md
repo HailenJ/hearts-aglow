@@ -70,14 +70,7 @@ YouTube asks you to approve access once, from the dashboard.
 
 ## 6. Instagram
 
-1. The Instagram account must be a **Creator** (or Business) account: Instagram app, **Settings**, **Account type and tools**, **Switch to professional account**, choose Creator.
-2. Go to developers.facebook.com, **My Apps**, **Create app**. Pick the use case for Instagram, then add the product **Instagram API with Instagram Login**.
-3. In that product's settings: add your Instagram account as a tester or use it as the app owner's own account (no app review is needed for your own account). Request `instagram_business_basic` and `instagram_business_manage_insights`.
-4. Under **Set up Instagram business login** add this OAuth redirect URI exactly: `https://stats.heartsaglow.io/api/callback/instagram`
-5. Copy the **Instagram app ID** and **Instagram app secret** (these are on the Instagram product page, not the main app settings), then from `stats/`:
-   - `npx wrangler secret put IG_APP_ID`
-   - `npx wrangler secret put IG_APP_SECRET`
-6. After deploy, open `https://stats.heartsaglow.io/api/connect/instagram` and approve. Instagram logins last 60 days and are renewed automatically while the sync runs. If the sync is ever down for longer than that, use the reconnect link.
+Typed in on the Social tab for now (followers and 28-day engagement, like TikTok and X). In October 2026 Meta moved new apps to "Instagram API (Unified Login)", which goes through Facebook Login for Business, needs the Instagram account linked to a Facebook business portfolio, and needs extra permissions; the dashboard's Instagram Login connector cannot authorize a new app. `stats/src/connectors/instagram.js` stays in the repo, unregistered, until it is ported. The `IG_APP_ID` / `IG_APP_SECRET` secrets set earlier are unused and harmless.
 
 ## 7. itch.io
 
