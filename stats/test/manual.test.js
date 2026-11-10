@@ -17,6 +17,8 @@ test('rejects negative, non-numeric, future-dated, unknown source and unknown me
     [{ ...base, values: { followers: '12' } }, 'followers must be a number of 0 or more'],
     [{ ...base, date: '2026-11-11' }, "date can't be in the future"],
     [{ ...base, source: 'myspace' }, 'unknown source'],
+    [{ ...base, source: 'constructor' }, 'unknown source'],
+    [{ ...base, source: '__proto__' }, 'unknown source'],
     [{ ...base, values: { followers: 5, likes: 3 } }, 'unknown metric likes for tiktok'],
   ]
   for (const [body, error] of cases) {

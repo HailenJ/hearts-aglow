@@ -23,8 +23,9 @@ function checkDate(date, today) {
 }
 
 export function validateManual(body, today) {
-  const metrics = MANUAL_METRICS[body?.source]
-  if (!metrics) return bad('unknown source')
+  // hasOwn: user-supplied source must not hit inherited keys like constructor
+  if (!Object.hasOwn(MANUAL_METRICS, body?.source)) return bad('unknown source')
+  const metrics = MANUAL_METRICS[body.source]
   const dateError = checkDate(body.date, today)
   if (dateError) return bad(dateError)
   const entries = Object.entries(body.values ?? {})
