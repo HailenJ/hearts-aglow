@@ -18,15 +18,15 @@ import { json } from './manual.js'
  *     since:{wishlists:number|null, subscribers:number|null},
  *     anomaly:{wishlists:boolean, deleteRate:boolean},
  *     tiles:{wishlists:Tile, newsletter:Tile, listeners:Tile},  // wishlists: last full week, delta = change vs the week before as a fraction; newsletter delta = subscribers gained in 7 days
- *     strip:{wishlists:number|null, itchViews:number|null, bandcampSales30d:number|null, youtubeViews28d:number|null,
- *            blueskyFollowers:number|null, instagramEngagement:number|null, tiktokFollowers:number|null, siteVisits30d:number|null},
+ *     strip:{wishlists:Tile, itchViews:Tile, bandcampSales30d:Tile, youtubeViews28d:Tile,  // delta always null
+ *            blueskyFollowers:Tile, instagramEngagement:Tile, tiktokFollowers:Tile, siteVisits30d:Tile},
  *     weekly:Week[]  // net wishlists, 12 weeks, the last one partial
  *   },
  *   game:{total:Tile, deleteRate:Tile, conversion:Tile, pace:{reachDate:string|null, onTrack:boolean|null, launchDate:string|null},
  *         daily:Point[], utm:{source:string, visits:number|null, wishlists:number|null, conversion:number|null}[]},
- *   music:{listeners:Tile, saveRate:Tile, streamsPerListener:Tile, streams:Week[], releases:object[]},
+ *   music:{listeners:Tile, applePlays:Tile, saveRate:Tile, streamsPerListener:Tile, streams:Week[], releases:object[]},  // listeners, applePlays: Apple 28d, delta since the previous typed reading
  *   social:{clicks:Tile, engagement:Tile, followers:Tile,
- *           platforms:{platform:string, followers:number|null, delta30:number|null, engagement:number|null, clicks:number|null}[],
+ *           platforms:{platform:string, followers:number|null, delta:number|null, engagement:number|null, clicks:number|null}[],  // delta: 30 days for synced platforms, since the previous reading for typed ones
  *           posts:{platform:string, title:string|null, url:string|null, metric:'views'|'engagement', value:number}[]},
  *   news:{subscribers:Tile, clickRate:Tile, openRate:Tile, weekly:Week[],
  *         sends:{id:string, title:string|null, url:string|null, date:string|null, clickRate:number|null, unsubscribes:number|null}[]},
@@ -52,6 +52,13 @@ const SOCIAL_HOSTS = { 'youtube.com': 'youtube', 'bsky.app': 'bluesky', 'instagr
 async function snapshot(db, source, metric, since) {
   const [now, then] = await Promise.all([latest(db, { source, metric }), latest(db, { source, metric, before: since })])
   return { value: now?.value ?? null, delta: now && then ? now.value - then.value : null }
+}
+
+// A typed-in reading and its change since the previous typed reading, however long ago.
+async function typed(db, source, metric) {
+  const now = await latest(db, { source, metric })
+  const prev = now && (await latest(db, { source, metric, before: now.date }))
+  return { value: now?.value ?? null, delta: prev ? now.value - prev.value : null }
 }
 
 // Snapshots become flows by differencing, so weekly() can bucket them.
@@ -120,9 +127,18 @@ async function gameTab(c) {
   }
 }
 
-// Spotify and Bandcamp arrive by CSV (Task 13); until then the tab is all empty.
-function musicTab() {
-  return { listeners: tile(null, null, false), saveRate: tile(null, null, false), streamsPerListener: tile(null, null, false), streams: [], releases: [] }
+// Apple is typed in and shown on its own, never summed into streams. Spotify and
+// Bandcamp arrive by CSV (Task 13); until then the rest of the tab is empty.
+async function musicTab(c) {
+  const [listeners, plays] = await Promise.all(['listeners_28d', 'plays_28d'].map((m) => typed(c.db, 'apple', m)))
+  return {
+    listeners: tile(listeners.value, listeners.delta, false),
+    applePlays: tile(plays.value, plays.delta, false),
+    saveRate: tile(null, null, false),
+    streamsPerListener: tile(null, null, false),
+    streams: [],
+    releases: [],
+  }
 }
 
 // Mean engagement per post across the newest snapshot of the feed.
@@ -137,10 +153,11 @@ async function platform(c, name) {
   if (name === 'youtube') {
     // The connector pulls no subscriber count or likes, only daily gains and losses.
     const [gained, lost] = await Promise.all(['subs_gained', 'subs_lost'].map((metric) => series(db, { source: 'youtube', metric, from: from30, to: today })))
-    const delta30 = gained.length || lost.length ? (total(gained) ?? 0) - (total(lost) ?? 0) : null
-    return { followers: null, delta30, engagement: null }
+    const delta = gained.length || lost.length ? (total(gained) ?? 0) - (total(lost) ?? 0) : null
+    return { followers: null, delta, engagement: null }
   }
-  const f = await snapshot(db, name, 'followers', from30)
+  const manual = name === 'tiktok' || name === 'x'
+  const f = manual ? await typed(db, name, 'followers') : await snapshot(db, name, 'followers', from30)
   let engagement = null
   if (name === 'bluesky') {
     // Bluesky gives no reach, so the rate is per-post engagement ÷ followers.
@@ -152,7 +169,7 @@ async function platform(c, name) {
     // Typed-in TikTok/X give no reach either: 28-day engagement ÷ followers.
     engagement = engagementRate((await latest(db, { source: name, metric: 'engagement_28d' }))?.value ?? null, f.value)
   }
-  return { followers: f.value, delta30: f.delta, engagement }
+  return { followers: f.value, delta: f.delta, engagement }
 }
 
 async function topPost(db, platformName, metric, rows) {
@@ -193,7 +210,8 @@ async function socialTab(c) {
   return {
     clicks: tile(sumClicks(refs, clicks), growth(sumClicks(refs, clicks), sumClicks(prevRefs, clicksBy(prevRefs))), c.stale('goatcounter')),
     engagement: tile(mean(present('engagement')), null, autoStale),
-    followers: tile(sum(present('followers')), sum(present('delta30')), autoStale),
+    // YouTube has a subscriber change but no count, so its change stays out of the sum
+    followers: tile(sum(present('followers')), sum(platforms.filter((p) => p.followers != null && p.delta != null).map((p) => p.delta)), autoStale),
     platforms,
     posts: posts.filter(Boolean),
   }
@@ -272,17 +290,19 @@ export async function buildView(db, { now, env }) {
   const bad = new Set(health.filter((h) => h.state === 'stale' || h.state === 'broken').map((h) => h.source))
   const c = { db, today, from30: addDays(today, -29), stale: (...sources) => sources.some((s) => bad.has(s)) }
 
-  const [game, social, news, site, earnings, itchViews, ytViews] = await Promise.all([
-    gameTab(c), socialTab(c), newsTab(c), siteTab(c), earningsTab(c),
+  const [game, music, social, news, site, earnings, itchViews, ytViews] = await Promise.all([
+    gameTab(c), musicTab(c), socialTab(c), newsTab(c), siteTab(c), earningsTab(c),
     latestRows(db, { source: 'itch', metric: 'views' }),
     series(db, { source: 'youtube', metric: 'views', from: addDays(today, -27), to: today }),
   ])
-  const [wish, subs] = sinceLast([
-    { source: 'steam', metric: 'net_wishlists', kind: 'flow', points: game.net },
-    { source: 'beehiiv', metric: 'subscribers', kind: 'snapshot', points: news.subs },
-  ], lastSeen)
+  // Readings carry dates, not write times. The cron writes day D's flow on D+1, so a flow
+  // dated the visit's day is new; a snapshot dated that day was taken that morning, before it.
+  const seenDay = lastSeen?.slice(0, 10) ?? null
+  const [wish] = sinceLast([{ source: 'steam', metric: 'net_wishlists', kind: 'flow', points: game.net }], seenDay && addDays(seenDay, -1))
+  const [subs] = sinceLast([{ source: 'beehiiv', metric: 'subscribers', kind: 'snapshot', points: news.subs }], seenDay)
   const byPlatform = Object.fromEntries(social.platforms.map((p) => [p.platform, p]))
   const [prevWeek, lastWeek] = game.lastWeeks.slice(-2)
+  const strip = (value, source) => tile(value, null, c.stale(source))
 
   return {
     asOf: now.toISOString(),
@@ -292,21 +312,21 @@ export async function buildView(db, { now, env }) {
     overview: {
       since: { wishlists: wish.delta, subscribers: subs.delta },
       anomaly: game.anomaly,
-      tiles: { wishlists: tile(lastWeek, growth(lastWeek, prevWeek), c.stale('steam')), newsletter: news.tab.subscribers, listeners: musicTab().listeners },
+      tiles: { wishlists: tile(lastWeek, growth(lastWeek, prevWeek), c.stale('steam')), newsletter: news.tab.subscribers, listeners: music.listeners },
       strip: {
-        wishlists: game.tab.total.value,
-        itchViews: total(itchViews),
-        bandcampSales30d: null,
-        youtubeViews28d: total(ytViews),
-        blueskyFollowers: byPlatform.bluesky.followers,
-        instagramEngagement: byPlatform.instagram.engagement,
-        tiktokFollowers: byPlatform.tiktok.followers,
-        siteVisits30d: site.funnel[0].value,
+        wishlists: strip(game.tab.total.value, 'steam'),
+        itchViews: strip(total(itchViews), 'itch'),
+        bandcampSales30d: strip(null, 'bandcamp'),
+        youtubeViews28d: strip(total(ytViews), 'youtube'),
+        blueskyFollowers: strip(byPlatform.bluesky.followers, 'bluesky'),
+        instagramEngagement: strip(byPlatform.instagram.engagement, 'instagram'),
+        tiktokFollowers: strip(byPlatform.tiktok.followers, 'tiktok'),
+        siteVisits30d: strip(site.funnel[0].value, 'goatcounter'),
       },
       weekly: game.weekly,
     },
     game: game.tab,
-    music: musicTab(),
+    music,
     social,
     news: news.tab,
     site,

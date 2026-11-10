@@ -129,3 +129,62 @@ test('POST /api/seen stores last_seen; GET /api/dashboard returns the view and n
   assert.equal(seen.status, 204)
   assert.equal(await getSetting(env.DB, 'last_seen'), now.toISOString())
 })
+
+test('Apple listeners feed the listeners tiles with Δ since the previous typed reading, kept out of streams', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('apple', 'listeners_28d', '2026-11-01', 300),
+    r('apple', 'listeners_28d', '2026-11-08', 320),
+    r('apple', 'plays_28d', '2026-11-08', 900),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.deepEqual(v.music.listeners, { value: 320, delta: 20, stale: false })
+  assert.deepEqual(v.overview.tiles.listeners, v.music.listeners)
+  assert.deepEqual(v.music.applePlays, { value: 900, delta: null, stale: false })
+  assert.deepEqual(v.music.streams, [])
+})
+
+test('typed TikTok followers show Δ since the previous reading, not a 30-day baseline', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('tiktok', 'followers', '2026-09-01', 50),
+    r('tiktok', 'followers', '2026-10-30', 100),
+    r('tiktok', 'followers', '2026-11-09', 112),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.equal(v.social.platforms.find((p) => p.platform === 'tiktok').delta, 12)
+})
+
+test('a stale source marks its strip entry stale', async () => {
+  const db = openTestDb()
+  await recordSync(db, ok('steam', '2026-11-07T12:00:00.000Z'))
+  await recordSync(db, ok('goatcounter'))
+  const { strip } = (await buildView(db, { now, env: {} })).overview
+  assert.equal(strip.wishlists.stale, true)
+  assert.equal(strip.siteVisits30d.stale, false)
+})
+
+test('the followers tile sums deltas only for platforms with a follower count', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('youtube', 'subs_gained', '2026-11-05', 5),
+    r('bluesky', 'followers', '2026-10-01', 90),
+    r('bluesky', 'followers', '2026-11-09', 100),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.deepEqual(v.social.followers, { value: 100, delta: 10, stale: false })
+})
+
+test('since-last-visit counts a reading dated the same UTC day as lastSeen, which is written after it', async () => {
+  const db = openTestDb()
+  // the cron writes day D's flow on D+1 and the morning's snapshot before a daytime visit
+  await setSetting(db, 'last_seen', '2026-11-08T18:00:00.000Z')
+  await upsertReadings(db, [
+    r('steam', 'wishlist_adds', '2026-11-07', 9),
+    r('steam', 'wishlist_adds', '2026-11-08', 4),
+    r('beehiiv', 'subscribers', '2026-11-08', 50),
+    r('beehiiv', 'subscribers', '2026-11-09', 55),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.deepEqual(v.overview.since, { wishlists: 4, subscribers: 5 })
+})
