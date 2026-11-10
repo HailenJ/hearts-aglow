@@ -67,6 +67,14 @@ export async function latestRows(db, { source, metric, before }) {
   return results
 }
 
+export async function readingDates(db, { source, from, to }) {
+  const { results } = await db
+    .prepare('SELECT DISTINCT date FROM readings WHERE source = ? AND date BETWEEN ? AND ? ORDER BY date')
+    .bind(source, from, to)
+    .all()
+  return results.map((r) => r.date)
+}
+
 export async function items(db, source) {
   const { results } = await db
     .prepare('SELECT id, title, url, date FROM items WHERE source = ? ORDER BY date DESC, id')

@@ -1,4 +1,4 @@
-import { latestRows } from '../db.js'
+import { readingDates } from '../db.js'
 
 const BASE = 'https://partner.steam-api.com/IPartnerFinancialsService/GetAppWishlistReporting/v1/'
 const APPID = 4433980
@@ -6,6 +6,7 @@ const METRICS = ['wishlist_adds', 'wishlist_deletes', 'wishlist_purchases', 'wis
 const LAUNCH = '2026-11-06' // the Steam page went up; nothing exists before it
 const REVISED = 2 // Steam revises recent days, so re-pull them; upsert makes it idempotent
 const BATCH = 7
+const MAX_DAYS = 14 // per run, so a long catch-up can't eat the Worker's subrequest budget
 
 // A metric Steam omits is no reading, never 0; a reply with no summary at all is an error.
 export function parseWishlistDay(json, date) {
@@ -16,12 +17,23 @@ export function parseWishlistDay(json, date) {
 
 const addDays = (d, n) => new Date(Date.parse(d) + n * 864e5).toISOString().slice(0, 10)
 
-// Every day from the newest stored one (less the revision window) through today, so
-// launch week and outage gaps get filled and the all-time total stays whole.
-async function startDate(db) {
-  const newest = db ? (await latestRows(db, { source: 'steam', metric: '*' })).reduce((d, r) => (r.date > d ? r.date : d), '') : ''
-  const from = newest ? addDays(newest, -REVISED) : LAUNCH
-  return from > LAUNCH ? from : LAUNCH
+// The days to fetch: from the earliest day with nothing stored (a launch-week or outage gap,
+// or a day that failed mid-run), else the revision window; always ending with the recent days.
+// The rest of a long gap is picked up by the next run, which starts at the next missing day.
+// ponytail: a day Steam answers with no metrics at all stays "missing" and is re-fetched each
+// run; if 11+ such days pile up the catch-up stalls. Store a fetched-days marker if that happens.
+async function plan(db, today) {
+  const stored = new Set(db ? await readingDates(db, { source: 'steam', from: LAUNCH, to: today }) : [])
+  const newest = [...stored].at(-1)
+  let start = newest ? addDays(newest, -REVISED) : LAUNCH
+  for (let d = LAUNCH; d < start; d = addDays(d, 1)) if (!stored.has(d)) { start = d; break }
+  if (start < LAUNCH) start = LAUNCH
+  const recentFrom = start > addDays(today, -REVISED) ? start : addDays(today, -REVISED)
+  const dates = []
+  for (let d = recentFrom; d <= today; d = addDays(d, 1)) dates.push(d)
+  const catchUp = []
+  for (let d = start; d < recentFrom && catchUp.length < MAX_DAYS - dates.length; d = addDays(d, 1)) catchUp.push(d)
+  return [...catchUp, ...dates]
 }
 
 export const steam = {
@@ -31,8 +43,7 @@ export const steam = {
   // One failed day must not discard the rest: successes come back with the first error.
   async pull(env, { fetch, today, db }) {
     if (!env.STEAM_PUBLISHER_KEY) throw new Error('Steam: STEAM_PUBLISHER_KEY is not configured')
-    const dates = []
-    for (let d = await startDate(db); d <= today; d = addDays(d, 1)) dates.push(d)
+    const dates = await plan(db, today)
     const day = async (date) => {
       const url = `${BASE}?${new URLSearchParams({ key: env.STEAM_PUBLISHER_KEY, appid: APPID, date })}`
       const res = await fetch(url)

@@ -11,6 +11,7 @@ const steamDay = fixture('steam-wishlist.json')
 const respond = (body, status = 200) => new Response(JSON.stringify(body), { status })
 
 const dateOf = (u) => new URL(u).searchParams.get('date')
+const next = (d) => new Date(Date.parse(d) + 864e5).toISOString().slice(0, 10)
 
 test('steam with nothing stored backfills from the Steam page launch (2026-11-06), one call per day, four metrics per day', async () => {
   const urls = []
@@ -32,7 +33,9 @@ test('steam with nothing stored backfills from the Steam page launch (2026-11-06
 
 test('steam with rows stored up to D re-pulls D−2 through today', async () => {
   const db = openTestDb()
-  await upsertReadings(db, [{ source: 'steam', metric: 'wishlist_adds', dim: '', date: '2026-11-20', value: 1 }])
+  const stored = []
+  for (let d = '2026-11-06'; d <= '2026-11-20'; d = next(d)) stored.push({ source: 'steam', metric: 'wishlist_adds', dim: '', date: d, value: 1 })
+  await upsertReadings(db, stored)
   const dates = []
   await steam.pull({ STEAM_PUBLISHER_KEY: 'k' }, { fetch: async (u) => { dates.push(dateOf(u)); return respond(steamDay) }, today: '2026-11-24', db })
   assert.deepEqual(dates.sort(), ['2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22', '2026-11-23', '2026-11-24'])
@@ -47,8 +50,38 @@ test('steam backfill runs at most 7 days at once', async () => {
     return respond(steamDay)
   }
   const { readings } = await steam.pull({ STEAM_PUBLISHER_KEY: 'k' }, { fetch, today: '2026-11-30', db: openTestDb() })
-  assert.equal(readings.length, 25 * 4)
+  assert.equal(readings.length, 14 * 4) // capped at 14 days a run
   assert.equal(peak, 7)
+})
+
+test('steam re-fetches a day that failed mid-range on the next pull', async () => {
+  const db = openTestDb()
+  const env = { STEAM_PUBLISHER_KEY: 'k' }
+  const first = await steam.pull(env, { fetch: async (u) => (dateOf(u) === '2026-11-08' ? respond({}, 500) : respond(steamDay)), today: '2026-11-18', db })
+  await upsertReadings(db, first.readings)
+  const dates = []
+  await steam.pull(env, { fetch: async (u) => { dates.push(dateOf(u)); return respond(steamDay) }, today: '2026-11-19', db })
+  assert.ok(dates.includes('2026-11-08'), dates.join())
+})
+
+test('steam: a 40-day gap fetches 14 days a run (the recent 3 included) and continues from the next missing day', async () => {
+  const db = openTestDb()
+  const env = { STEAM_PUBLISHER_KEY: 'k' }
+  const stored = []
+  for (let d = '2026-11-06'; d <= '2026-11-10'; d = next(d)) stored.push({ source: 'steam', metric: 'wishlist_adds', dim: '', date: d, value: 1 })
+  await upsertReadings(db, stored)
+  const run = async () => {
+    const dates = []
+    const { readings } = await steam.pull(env, { fetch: async (u) => { dates.push(dateOf(u)); return respond(steamDay) }, today: '2026-12-20', db })
+    await upsertReadings(db, readings)
+    return dates.sort()
+  }
+  const one = await run()
+  assert.equal(one.length, 14)
+  assert.deepEqual([one[0], one.at(-4), one.at(-3), one.at(-1)], ['2026-11-08', '2026-11-18', '2026-12-18', '2026-12-20'])
+  const two = await run()
+  assert.equal(two.length, 14)
+  assert.deepEqual([two[0], two.at(-4)], ['2026-11-19', '2026-11-29'])
 })
 
 test('steam: one day failing keeps the other days and reports the error', async () => {
