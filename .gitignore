@@ -13,3 +13,5 @@ assets/
 
 # graphify knowledge graph output (regenerate with /graphify)
 graphify-out/
+stats/.wrangler/
+stats/node_modules/
