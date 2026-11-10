@@ -9,7 +9,7 @@
     {
       "binding": "DB",
       "database_name": "stats",
-      "database_id": "REPLACE_WITH_ID_FROM_WRANGLER_D1_CREATE",
+      "database_id": "7baf1f82-4d5c-4862-a31a-e753967322b9",
       "migrations_dir": "migrations"
     }
   ],
