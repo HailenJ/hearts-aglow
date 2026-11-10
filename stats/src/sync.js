@@ -3,13 +3,14 @@ import { itch } from './connectors/itch.js'
 import { bluesky } from './connectors/bluesky.js'
 import { beehiiv } from './connectors/beehiiv.js'
 import { goatcounter } from './connectors/goatcounter.js'
+import { youtube } from './connectors/youtube.js'
+import { instagram } from './connectors/instagram.js'
 import { upsertReadings, upsertItems, recordSync } from './db.js'
 
 export const MANUAL_SOURCES = ['apple', 'tiktok', 'x', 'spotify', 'bandcamp', 'steam_traffic']
 
-// Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today }) -> { readings, items? } }
-// Tasks 5-7 push into this.
-export const CONNECTORS = [steam, itch, bluesky, beehiiv, goatcounter]
+// Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today, now }) -> { readings, items? } }
+export const CONNECTORS = [steam, itch, bluesky, beehiiv, goatcounter, youtube, instagram]
 
 // One connector failing must not stop the others; each outcome is recorded.
 export async function runSync(env, { now, connectors = CONNECTORS, fetch = globalThis.fetch }) {
@@ -20,7 +21,7 @@ export async function runSync(env, { now, connectors = CONNECTORS, fetch = globa
   const settled = await Promise.allSettled(
     active.map(async (c) => {
       try {
-        const { readings, items = [] } = await c.pull(env, { fetch, today })
+        const { readings, items = [] } = await c.pull(env, { fetch, today, now })
         await upsertReadings(env.DB, readings)
         await upsertItems(env.DB, items)
         await recordSync(env.DB, { source: c.source, ok: true, at })

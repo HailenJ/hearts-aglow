@@ -1,0 +1,7 @@
+{
+  "_source": "Hand-built from IG Media fields id, permalink, timestamp, like_count, comments_count (https://developers.facebook.com/docs/instagram-platform/reference/instagram-media). Numbers are made up.",
+  "data": [
+    { "id": "18000000000000001", "permalink": "https://www.instagram.com/p/AAA/", "timestamp": "2026-11-05T18:00:00+0000", "like_count": 21, "comments_count": 3 },
+    { "id": "18000000000000002", "permalink": "https://www.instagram.com/reel/BBB/", "timestamp": "2026-10-28T18:00:00+0000", "like_count": 9, "comments_count": 0 }
+  ]
+}

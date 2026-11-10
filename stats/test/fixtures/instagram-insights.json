@@ -1,0 +1,7 @@
+{
+  "_source": "Hand-built from the IG User insights response with metric_type=total_value (https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/reference/ig-user/insights). Numbers are made up.",
+  "data": [
+    { "name": "reach", "period": "day", "title": "Accounts reached", "total_value": { "value": 140 }, "id": "17841400000000001/insights/reach/day" },
+    { "name": "views", "period": "day", "title": "Views", "total_value": { "value": 410 }, "id": "17841400000000001/insights/views/day" }
+  ]
+}

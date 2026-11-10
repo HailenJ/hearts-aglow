@@ -1,8 +1,12 @@
 import { verifyAccess } from './auth.js'
 import { runSync } from './sync.js'
+import { connectRoute, callbackRoute } from './oauth.js'
 
 // Later tasks fill these in: 'METHOD /path' -> handler(request, env, ctx, param?)
-const routes = {}
+const routes = {
+  'GET /api/connect/:param': connectRoute,
+  'GET /api/callback/:param': callbackRoute,
+}
 const parametric = ['GET /api/connect/', 'GET /api/callback/', 'POST /api/import/']
 
 const json = (body, status) =>

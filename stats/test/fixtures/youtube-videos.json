@@ -1,0 +1,8 @@
+{
+  "_source": "Hand-built from the videos.list resource shape (https://developers.google.com/youtube/v3/docs/videos/list), part=snippet. Titles are made up.",
+  "kind": "youtube#videoListResponse",
+  "items": [
+    { "kind": "youtube#video", "id": "vid_a", "snippet": { "title": "OTO trailer", "publishedAt": "2026-10-01T17:00:00Z" } },
+    { "kind": "youtube#video", "id": "vid_b", "snippet": { "title": "OTO devlog 1", "publishedAt": "2026-10-20T17:00:00Z" } }
+  ]
+}

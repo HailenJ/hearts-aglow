@@ -1,0 +1,15 @@
+{
+  "_source": "Hand-built from the documented resultTable shape of reports.query (https://developers.google.com/youtube/analytics/reference/reports/query): columnHeaders in request order, dimensions first, rows as arrays. Numbers are made up.",
+  "kind": "youtubeAnalytics#resultTable",
+  "columnHeaders": [
+    { "name": "day", "columnType": "DIMENSION", "dataType": "STRING" },
+    { "name": "views", "columnType": "METRIC", "dataType": "INTEGER" },
+    { "name": "estimatedMinutesWatched", "columnType": "METRIC", "dataType": "INTEGER" },
+    { "name": "subscribersGained", "columnType": "METRIC", "dataType": "INTEGER" },
+    { "name": "subscribersLost", "columnType": "METRIC", "dataType": "INTEGER" }
+  ],
+  "rows": [
+    ["2026-11-03", 120, 340, 4, 1],
+    ["2026-11-04", 95, 210, 2, 0]
+  ]
+}
