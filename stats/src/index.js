@@ -1,4 +1,5 @@
 import { verifyAccess } from './auth.js'
+import { runSync } from './sync.js'
 
 // Later tasks fill these in: 'METHOD /path' -> handler(request, env, ctx, param?)
 const routes = {}
@@ -25,6 +26,7 @@ export default {
     return handler ? handler(request, env, ctx, param) : json({ error: 'not found' }, 404)
   },
 
-  // Task 3 fills this in.
-  async scheduled() {},
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runSync(env, { now: new Date(event.scheduledTime) }))
+  },
 }
