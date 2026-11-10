@@ -129,7 +129,7 @@ The sample data ends 2026-11-09. If the page looks empty later, the dates need s
 The daily sync runs at 12:00 UTC (5 or 6 a.m. Mountain). To run it right now:
 
 - On your computer: `npx wrangler dev --test-scheduled`, then in another terminal `curl "http://localhost:8787/__scheduled"`. Locally it only reaches services whose secrets are in `.dev.vars`.
-- On the live site: Cloudflare dashboard, **Workers & Pages**, `heartsaglow-stats`, **Settings**, **Triggers**, **Cron Triggers**. Or open the **Observability / Logs** page.
+- On the live site: press **Sync now** next to the sync time at the top of the dashboard. It runs every source straight away (the same sync the cron runs) and reloads the page, so the health strip shows each result. A first Steam sync fetches every day since 2026-11-06, so it can take a little while.
 - To watch what happens as it runs: `cd stats && npx wrangler tail`, and trigger the sync while that is open.
 
 The health strip at the top of the dashboard shows each source's last result and any error message.
