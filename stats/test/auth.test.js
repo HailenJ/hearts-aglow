@@ -51,3 +51,12 @@ test('fetch returns 403 when TEAM_DOMAIN or POLICY_AUD is unset', async () => {
     assert.equal((await worker.fetch(req(token), e)).status, 403)
   }
 })
+
+test('DEV_SKIP_ACCESS opens the gate only when ENVIRONMENT is dev', async () => {
+  const assets = { fetch: () => new Response('page') }
+  const open = { DEV_SKIP_ACCESS: '1', TEAM_DOMAIN: '', POLICY_AUD: '', ASSETS: assets }
+  assert.equal((await worker.fetch(req(null), { ...open, ENVIRONMENT: 'dev' })).status, 200)
+  for (const ENVIRONMENT of [undefined, '', 'production', 'Dev']) {
+    assert.equal((await worker.fetch(req(null), { ...open, ENVIRONMENT })).status, 403)
+  }
+})

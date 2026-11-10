@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Hearts Aglow · Stats</title>
+<link rel="preload" href="/fonts/anybody-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/style.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<div class="field" aria-hidden="true"><div class="bloom b1"></div><div class="bloom b2"></div><div class="bloom b3"></div></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand"><span class="live" aria-hidden="true"></span>Hearts Aglow · Stats</div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+
+  <div class="health" id="health" aria-label="Source health"></div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-v="overview">Overview</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="game">Game</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="music">Music</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="social">Social</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="news">News</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="site">Site</button>
+    <button class="tab log" role="tab" aria-selected="false" data-v="log">+ Log</button>
+  </nav>
+
+  <main id="views"><p class="pane load">Loading…</p></main>
+</div>
+</body>
+</html>

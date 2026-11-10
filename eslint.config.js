@@ -34,6 +34,11 @@ export default defineConfig([
   },
   {
     files: ['stats/**/*.js'],
+    ignores: ['stats/public/**'],
     languageOptions: { globals: { ...globals.worker, ...globals.node } },
+  },
+  {
+    files: ['stats/public/**/*.js'],
+    languageOptions: { globals: globals.browser },
   },
 ])

@@ -4,6 +4,8 @@ import { createRemoteJWKSet, jwtVerify } from 'jose'
 const remote = new Map()
 
 export async function verifyAccess(request, env, jwks) {
+  // Local preview only: both flags live in the gitignored .dev.vars, never in wrangler.jsonc.
+  if (env.ENVIRONMENT === 'dev' && env.DEV_SKIP_ACCESS === '1') return true
   const token = request.headers.get('Cf-Access-Jwt-Assertion')
   // Fail closed: an unconfigured gate admits nobody.
   if (!token || !env.TEAM_DOMAIN || !env.POLICY_AUD) return false

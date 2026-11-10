@@ -1,0 +1,4 @@
+# Local preview only (npx wrangler dev). Copy to .dev.vars, which is gitignored.
+# The gate is skipped only when ENVIRONMENT is exactly "dev"; never put these in wrangler.jsonc.
+ENVIRONMENT=dev
+DEV_SKIP_ACCESS=1
