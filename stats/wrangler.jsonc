@@ -15,5 +15,5 @@
   ],
   // 12:00 UTC = 05:00 MST / 06:00 MDT
   "triggers": { "crons": ["0 12 * * *"] },
-  "vars": { "TEAM_DOMAIN": "", "POLICY_AUD": "", "BSKY_HANDLE": "heartsaglow.io", "GOATCOUNTER_SITE": "heartsaglow" }
+  "vars": { "TEAM_DOMAIN": "https://fancy-truth-53ec.cloudflareaccess.com", "POLICY_AUD": "b9d28a87d2185e0629e9ca2321d8c00eb4cd656831e5b343298aecee7e035548", "BSKY_HANDLE": "heartsaglow.io", "GOATCOUNTER_SITE": "heartsaglow" }
 }
