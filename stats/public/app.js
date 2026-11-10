@@ -378,19 +378,7 @@ function draw(name) {
 
 function show(name) {
   if (!TABS[name]) name = 'overview'
-  // Runs every connector now; the health strip shows each result once the view reloads.
-const $sync = document.getElementById('sync')
-$sync.addEventListener('click', async () => {
-  $sync.disabled = true
-  $sync.textContent = 'Syncing…'
-  const error = await post('/api/sync')
-  $sync.disabled = false
-  $sync.textContent = 'Sync now'
-  if (error) document.getElementById('stamp').textContent = `Sync failed · ${error}`
-  else load()
-})
-
-document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.v === name))
+  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.v === name))
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === 'v-' + name))
   draw(name)
 }
@@ -418,7 +406,7 @@ function render(v) {
 // Resolves to the server's error text, or null on success.
 async function post(path, body) {
   try {
-    const res = await fetch(path, { method: 'POST', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body && JSON.stringify(body) })
+    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) })
     if (res.ok) return null
     return (await res.json().catch(() => null))?.error ?? `${res.status} ${res.statusText}`
   } catch {
