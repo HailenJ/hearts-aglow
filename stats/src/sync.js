@@ -9,7 +9,8 @@ import { upsertReadings, upsertItems, recordSync } from './db.js'
 
 export const MANUAL_SOURCES = ['apple', 'tiktok', 'x', 'spotify', 'bandcamp', 'steam_traffic']
 
-// Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today, now }) -> { readings, items? } }
+// Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today, now, db }) -> { readings, items?, error? } }
+// error alongside readings = a partial pull: what arrived is kept, the source still shows broken.
 export const CONNECTORS = [steam, itch, bluesky, beehiiv, goatcounter, youtube, instagram]
 
 // One connector failing must not stop the others; each outcome is recorded.
@@ -21,9 +22,10 @@ export async function runSync(env, { now, connectors = CONNECTORS, fetch = globa
   const settled = await Promise.allSettled(
     active.map(async (c) => {
       try {
-        const { readings, items = [] } = await c.pull(env, { fetch, today, now })
+        const { readings, items = [], error } = await c.pull(env, { fetch, today, now, db: env.DB })
         await upsertReadings(env.DB, readings)
         await upsertItems(env.DB, items)
+        if (error) throw new Error(error)
         await recordSync(env.DB, { source: c.source, ok: true, at })
         return { source: c.source, ok: true }
       } catch (e) {

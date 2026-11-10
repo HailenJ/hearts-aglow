@@ -36,3 +36,17 @@ test('a connector missing its required secret is skipped and not recorded', asyn
   assert.deepEqual(await runSync({ DB: db }, { now, connectors: [c] }), [])
   assert.deepEqual(await syncStatus(db), [])
 })
+
+test('a connector returning readings with an error writes the readings and is recorded broken', async () => {
+  const db = openTestDb()
+  const pull = async (_e, deps) => {
+    assert.equal(deps.db, db)
+    return { readings: [{ source: 'steam', metric: 'wishlist_adds', date: '2026-11-09', value: 4 }], error: 'Steam: HTTP 500' }
+  }
+  const res = await runSync({ DB: db }, { now, connectors: [{ source: 'steam', cadenceHours: 24, pull }] })
+  assert.deepEqual(res, [{ source: 'steam', ok: false, error: 'Steam: HTTP 500' }])
+  assert.deepEqual(await series(db, { source: 'steam', metric: 'wishlist_adds', from: '2026-11-09', to: '2026-11-09' }), [{ date: '2026-11-09', value: 4 }])
+  const st = (await syncStatus(db)).find((s) => s.source === 'steam')
+  assert.equal(st.error, 'Steam: HTTP 500')
+  assert.equal(st.last_ok, null)
+})

@@ -140,7 +140,7 @@ A few details of other companies' APIs could not be confirmed until the real thi
 
 | Check | How to confirm |
 |---|---|
-| **Steam**: the wishlist path version (`/v1/` or `/v001/`) and the shape of the reply. | `npx wrangler tail` during a sync. A 404 means the path version is wrong. A "no data" message with a 200 means the reply wrapper differs. Compare Steam's adds/deletes for a day with the Steamworks wishlist report. |
+| **Steam**: the wishlist path version (`/v1/` or `/v001/`) and the shape of the reply. | `npx wrangler tail` during a sync. A 404 means the path version is wrong. A "reply had no wishlist_summary" error on the Steam chip means the call worked but the reply wrapper differs. Compare Steam's adds/deletes for a day with the Steamworks wishlist report. |
 | **itch**: earnings `amount` is in **cents**. | Compare the earnings figure with your itch.io dashboard total. If it is 100 times too big or small, the unit is wrong. |
 | **GoatCounter**: the `/stats/toprefs` referrer endpoint works, and whether its day buckets are **UTC** or your site's local time. | Referrers tile fills in. For the buckets, compare one day's visit total with GoatCounter's own page for the same day, near midnight: if the numbers sit one day off, the buckets use local time. |
 | **Instagram**: fields `followers_count`, and `like_count` / `comments_count` per post, are returned under Instagram Login. | After the first sync, followers and post engagement are filled. A "field not found" error in `wrangler tail` means that field is not allowed for this login type. |
