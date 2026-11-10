@@ -33,7 +33,7 @@ Access is the front door. Without a valid login nobody can open the page, and th
 5. Under login methods make sure **One-time PIN** is on. (Cloudflare emails you a 6-digit code each time you sign in.)
 6. Save the application. Open it again and copy the **Application Audience (AUD) Tag**, a long hex string.
 7. Your **team domain** is shown under Zero Trust, **Settings**, **Custom pages** (or in the page's "Team domain"). It looks like `yourname.cloudflareaccess.com`.
-8. In `stats/wrangler.jsonc`, under `vars`, set `TEAM_DOMAIN` to that team domain (for example `"yourname.cloudflareaccess.com"`) and `POLICY_AUD` to the AUD tag. Commit. These are not secrets.
+8. In `stats/wrangler.jsonc`, under `vars`, set `TEAM_DOMAIN` to that team domain including the `https://` and no slash at the end (for example `"https://yourname.cloudflareaccess.com"`), and `POLICY_AUD` to the AUD tag. Commit. These are not secrets. If `TEAM_DOMAIN` is wrong, the dashboard answers "Forbidden" for everything with no other clue, so check it first if that happens.
 
 ## 3. Let GitHub deploy for you
 
