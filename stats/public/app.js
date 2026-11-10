@@ -7,9 +7,9 @@ const NAMES = {
   steam: 'Steam', itch: 'itch.io', bluesky: 'Bluesky', beehiiv: 'beehiiv', goatcounter: 'GoatCounter', youtube: 'YouTube',
   instagram: 'Instagram', apple: 'Apple Music', tiktok: 'TikTok', x: 'X', spotify: 'Spotify', bandcamp: 'Bandcamp', steam_traffic: 'Steam traffic',
 }
-const OAUTH = ['youtube', 'instagram']
+const OAUTH = ['youtube']
 // Mirrors MANUAL_METRICS and EVENT_KINDS in src/manual.js; the server rejects anything else.
-const METRICS = { apple: ['listeners_28d', 'plays_28d'], tiktok: ['followers', 'engagement_28d'], x: ['followers', 'engagement_28d'] }
+const METRICS = { apple: ['listeners_28d', 'plays_28d'], instagram: ['followers', 'engagement_28d'], tiktok: ['followers', 'engagement_28d'], x: ['followers', 'engagement_28d'] }
 const METRIC_LABELS = { listeners_28d: 'Listeners · 28d', plays_28d: 'Plays · 28d', followers: 'Followers', engagement_28d: 'Engagements · 28d' }
 const KINDS = [['trailer', 'Trailer / video'], ['release', 'Release'], ['newsletter', 'Newsletter send'], ['post', 'Post'], ['festival', 'Festival / sale'], ['other', 'Other']]
 
@@ -206,7 +206,7 @@ function music(v) {
 function social(v) {
   const s = v.social
   const maxClicks = maxOf(s.platforms.map((p) => p.clicks))
-  const kind = { tiktok: 'typed · until approved', x: 'typed' }
+  const kind = { instagram: 'typed', tiktok: 'typed · until approved', x: 'typed' }
   return `
     <div class="tiles">
       ${tile('Clicks to the site · 30d', s.clicks, { delta: (x) => pct(x, 0), ctx: after(s.clicks, 'the one that matters') })}
@@ -223,7 +223,8 @@ function social(v) {
     <div class="pane chart mt">${head('Top posts · 30 days', 'by views or engagement')}
       ${s.posts.length ? s.posts.map((p) => `<div class="post"><span class="kind">${NAMES[p.platform]}</span><p>${link(p.title ?? 'Untitled', p.url)}</p><span>${num(p.value)} ${p.metric === 'views' ? 'views' : 'engagements'}</span></div>`).join('') : none}
     </div>
-    <div class="two">${entryForm('tiktok')}${entryForm('x')}</div>`
+    <div class="two">${entryForm('instagram')}${entryForm('tiktok')}</div>
+    <div class="two">${entryForm('x')}</div>`
 }
 
 function news(v) {

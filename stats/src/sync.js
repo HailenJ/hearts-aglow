@@ -4,14 +4,15 @@ import { bluesky } from './connectors/bluesky.js'
 import { beehiiv } from './connectors/beehiiv.js'
 import { goatcounter } from './connectors/goatcounter.js'
 import { youtube } from './connectors/youtube.js'
-import { instagram } from './connectors/instagram.js'
 import { upsertReadings, upsertItems, recordSync } from './db.js'
 
-export const MANUAL_SOURCES = ['apple', 'tiktok', 'x', 'spotify', 'bandcamp', 'steam_traffic']
+export const MANUAL_SOURCES = ['apple', 'tiktok', 'x', 'instagram', 'spotify', 'bandcamp', 'steam_traffic']
 
 // Connector: { source, cadenceHours, requires?: ['SECRET'], pull(env, { fetch, today, now, db }) -> { readings, items?, error? } }
 // error alongside readings = a partial pull: what arrived is kept, the source still shows broken.
-export const CONNECTORS = [steam, itch, bluesky, beehiiv, goatcounter, youtube, instagram]
+// ponytail: Instagram is typed in. Meta moved new apps to Unified Login (Facebook Login for
+// Business) in Oct 2026; connectors/instagram.js speaks the old Instagram Login and waits for a port.
+export const CONNECTORS = [steam, itch, bluesky, beehiiv, goatcounter, youtube]
 
 // One connector failing must not stop the others; each outcome is recorded.
 export async function runSync(env, { now, connectors = CONNECTORS, fetch = globalThis.fetch }) {

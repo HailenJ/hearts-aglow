@@ -155,6 +155,20 @@ test('typed TikTok followers show Δ since the previous reading, not a 30-day ba
   assert.equal(v.social.platforms.find((p) => p.platform === 'tiktok').delta, 12)
 })
 
+test('Instagram is typed in: Δ since the previous reading, and engagement ÷ followers', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('instagram', 'followers', '2026-10-30', 400),
+    r('instagram', 'followers', '2026-11-09', 420),
+    r('instagram', 'engagement_28d', '2026-11-09', 21),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  const ig = v.social.platforms.find((p) => p.platform === 'instagram')
+  assert.equal(ig.followers, 420)
+  assert.equal(ig.delta, 20)
+  assert.equal(ig.engagement, 0.05)
+})
+
 test('a stale source marks its strip entry stale', async () => {
   const db = openTestDb()
   await recordSync(db, ok('steam', '2026-11-07T12:00:00.000Z'))

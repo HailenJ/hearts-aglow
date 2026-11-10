@@ -44,6 +44,13 @@ test('accepts a dated tiktok follower reading and stores it as a snapshot', asyn
   assert.equal(await count(db, 'readings'), 2)
 })
 
+test('accepts typed Instagram followers and 28-day engagement', async () => {
+  const db = openTestDb()
+  const res = await call(manualRoute, db, { source: 'instagram', date: '2026-11-09', values: { followers: 420, engagement_28d: 21 } })
+  assert.equal(res.status, 204)
+  assert.equal(await count(db, 'readings'), 2)
+})
+
 test('an event needs a known kind, a date and 1–140 chars of text', async () => {
   const db = openTestDb()
   const ok = { date: '2026-11-10', kind: 'trailer', text: '  Trailer 2 out  ' }

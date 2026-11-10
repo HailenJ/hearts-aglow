@@ -156,17 +156,14 @@ async function platform(c, name) {
     const delta = gained.length || lost.length ? (total(gained) ?? 0) - (total(lost) ?? 0) : null
     return { followers: null, delta, engagement: null }
   }
-  const manual = name === 'tiktok' || name === 'x'
+  const manual = name === 'tiktok' || name === 'x' || name === 'instagram'
   const f = manual ? await typed(db, name, 'followers') : await snapshot(db, name, 'followers', from30)
   let engagement = null
   if (name === 'bluesky') {
     // Bluesky gives no reach, so the rate is per-post engagement ÷ followers.
     engagement = engagementRate(mean((await postEngagement(db, 'bluesky')).map((r) => r.value)), f.value)
-  } else if (name === 'instagram') {
-    const reach = await series(db, { source: 'instagram', metric: 'reach', from: from30, to: today })
-    engagement = engagementRate(mean((await postEngagement(db, 'instagram')).map((r) => r.value)), mean(reach.map((r) => r.value)))
   } else {
-    // Typed-in TikTok/X give no reach either: 28-day engagement ÷ followers.
+    // Typed-in Instagram/TikTok/X give no reach either: 28-day engagement ÷ followers.
     engagement = engagementRate((await latest(db, { source: name, metric: 'engagement_28d' }))?.value ?? null, f.value)
   }
   return { followers: f.value, delta: f.delta, engagement }

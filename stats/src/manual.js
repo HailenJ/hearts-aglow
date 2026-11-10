@@ -4,6 +4,7 @@ import { upsertReadings, addEvent, setSetting } from './db.js'
 export const MANUAL_METRICS = {
   apple: ['listeners_28d', 'plays_28d'],
   tiktok: ['followers', 'engagement_28d'],
+  instagram: ['followers', 'engagement_28d'],
   x: ['followers', 'engagement_28d'],
 }
 export const EVENT_KINDS = ['trailer', 'release', 'newsletter', 'post', 'festival', 'other']
