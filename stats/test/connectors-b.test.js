@@ -110,3 +110,15 @@ test('goatcounter strips www. and lowercases referrer hosts', async () => {
   const refs = Object.fromEntries(readings.filter((r) => r.metric === 'referrer_visits').map((r) => [r.dim, r.value]))
   assert.deepEqual(refs, { 'bsky.app': 9, 'news.example.com': 3 })
 })
+
+test('bluesky skips reposts but keeps the account\'s own pinned post', async () => {
+  const post = (id, likes) => ({ uri: `at://did:plc:x/app.bsky.feed.post/${id}`, record: { text: id, createdAt: '2026-09-01T00:00:00Z' }, likeCount: likes, repostCount: 0, replyCount: 0, quoteCount: 0 })
+  const feed = { feed: [
+    { post: post('rep', 5), reason: { $type: 'app.bsky.feed.defs#reasonRepost' } },
+    { post: post('pin', 7), reason: { $type: 'app.bsky.feed.defs#reasonPin' } },
+  ] }
+  const fetch = async (u) => respond(String(u).includes('getProfile') ? fixture('bluesky-profile.json') : feed)
+  const { readings, items } = await bluesky.pull({ BSKY_HANDLE: 'h' }, { fetch, today })
+  assert.deepEqual(items.map((i) => i.title), ['pin'])
+  assert.deepEqual(readings.filter((r) => r.metric === 'engagement').map((r) => r.value), [7])
+})

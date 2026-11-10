@@ -5,9 +5,9 @@ export function parseBluesky(profile, feed, handle, today) {
   const items = []
   const add = (metric, dim, value) => Number.isFinite(value) && readings.push({ source: 'bluesky', metric, dim, date: today, value })
   add('followers', '', profile.followersCount)
-  // Reposts of other accounts carry a `reason`; they are not this account's posts.
+  // Reposts of other accounts are not this account's posts; a pin (reasonPin) is its own.
   for (const { post, reason } of feed.feed ?? []) {
-    if (reason) continue
+    if (reason?.$type === 'app.bsky.feed.defs#reasonRepost') continue
     const likes = post.likeCount, reposts = post.repostCount, replies = post.replyCount, quotes = post.quoteCount
     const counts = [likes, reposts, replies, quotes]
     if (counts.every(Number.isFinite)) add('engagement', post.uri, counts.reduce((a, b) => a + b, 0))
