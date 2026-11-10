@@ -22,6 +22,12 @@ export function youtubeId(url) {
   return m ? m[1] : ''
 }
 
+// Steam's page is a wishlist until release day, and saying so is the ask.
+// Takes the asGame shape.
+export function isWishlist(game) {
+  return /store\.steampowered\.com/.test(game?.storeUrl ?? '') && game?.status !== 'released'
+}
+
 export function asGame(g) {
   return {
     title: g?.title ?? '',

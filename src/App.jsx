@@ -172,10 +172,10 @@ function App() {
   // has always done: the takeover is exclusive, so the projection effect
   // writes #/game for it either way. Passing a game only picks which one
   // renders; null means the featured one.
-  const openGame = (game) => {
+  const openGame = (game, autoplay = false) => {
     // Mapped, not passed through: a games-grid card is a raw Sanity document
     // and the takeover reads the `keyArt`/`logline` shape.
-    setShownGame(game ? asGame(game) : null)
+    setShownGame(game ? { ...asGame(game), autoplay } : null)
     dispatch({ type: 'OPEN', id: 'game' })
     // The hash is written with replaceState, so no page view sees this.
     track('look-inside')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NEWSLETTER_URL } from '../lib/config'
-import { statusLabel } from '../lib/game'
+import { isWishlist, statusLabel } from '../lib/game'
 import { sized } from '../lib/img'
 import { track } from '../lib/track'
 
@@ -9,11 +9,11 @@ export default function Game({ game }) {
   const canSubscribe = Boolean(NEWSLETTER_URL)
   // The player loads only on request: an idle YouTube embed is ~1 MB of
   // script and a third-party cookie jar on a page most people only glance at.
-  const [watching, setWatching] = useState(false)
+  // The Games pane's "Watch the trailer" opens straight into the player.
+  const [watching, setWatching] = useState(Boolean(game?.autoplay && game?.trailer))
   const art = game?.keyArt ? sized(game.keyArt, 1600) : game?.trailer && `https://i.ytimg.com/vi/${game.trailer}/hqdefault.jpg`
   const alt = named ? game.title : 'Key art'
-  // Steam's page is a wishlist until release day, and saying so is the ask.
-  const wishlist = /store\.steampowered\.com/.test(game?.storeUrl ?? '') && game?.status !== 'released'
+  const wishlist = isWishlist(game)
 
   return (
     <div className="game">

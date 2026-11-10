@@ -1,4 +1,4 @@
-import { statusLabel } from '../lib/game'
+import { asGame, isWishlist, statusLabel } from '../lib/game'
 import { BANDCAMP_URL, NEWSLETTER_URL } from '../lib/config'
 import { sized } from '../lib/img'
 
@@ -303,16 +303,29 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
           // The pane already shows the art, title and logline, so the takeover
           // is "look inside", same verb as the hero, and the signup sits here
           // too rather than one click behind a near-duplicate view.
-          soloAction={item => (
-            <div className="works__solo-actions">
-              <button className="game__submit" onClick={() => onOpenGame(item)}>
-                Look inside{' '}<span aria-hidden="true">&rarr;</span>
-              </button>
-              <a className="works__solo-action" href={NEWSLETTER_URL} target="_blank" rel="noopener noreferrer">
-                Hear when it ships
-              </a>
-            </div>
-          )}
+          soloAction={item => {
+            const g = asGame(item)
+            return (
+              <div className="works__solo-actions">
+                <button className="game__submit" onClick={() => onOpenGame(item)}>
+                  Look inside{' '}<span aria-hidden="true">&rarr;</span>
+                </button>
+                {g.trailer && (
+                  <button className="works__solo-action" onClick={() => onOpenGame(item, true)}>
+                    <span aria-hidden="true">&#9654;</span>{' '}Watch the trailer
+                  </button>
+                )}
+                {g.storeUrl && (
+                  <a className="works__solo-action" href={g.storeUrl} target="_blank" rel="noopener noreferrer">
+                    {isWishlist(g) ? 'Wishlist on Steam' : 'Get it'}{' '}<span aria-hidden="true">&#8599;</span>
+                  </a>
+                )}
+                <a className="works__solo-action" href={NEWSLETTER_URL} target="_blank" rel="noopener noreferrer">
+                  Hear when it ships
+                </a>
+              </div>
+            )
+          }}
         />
       )}
 

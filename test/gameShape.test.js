@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { asGame, statusLabel, youtubeId } from '../src/lib/game.js'
+import { asGame, isWishlist, statusLabel, youtubeId } from '../src/lib/game.js'
 
 // The bug this guards: the Games grid handed the takeover a raw Sanity
 // document, whose art lives on `image`, and the takeover read `keyArt` — so
@@ -55,4 +55,11 @@ test('youtubeId reads every link shape the Video URL field might hold', () => {
   assert.equal(youtubeId('https://vimeo.com/123'), '')
   assert.equal(youtubeId(null), '')
   assert.equal(asGame({ videoUrl: 'https://youtu.be/ihJS3HBN5DI' }).trailer, 'ihJS3HBN5DI')
+})
+
+test('a Steam link is a wishlist until the game is released', () => {
+  const steam = 'https://store.steampowered.com/app/4433980/OTO/'
+  assert.equal(isWishlist(asGame({ url: steam, status: 'development' })), true)
+  assert.equal(isWishlist(asGame({ url: steam, status: 'released' })), false)
+  assert.equal(isWishlist(asGame({ url: 'https://heartsaglow.itch.io/x' })), false)
 })

@@ -585,6 +585,7 @@ a:hover {
    --signal, which has four sanctioned roles and this is not one of them. */
 .works__solo-action {
   align-self: flex-start;
+  line-height: inherit; /* a <button> here sets its own and sits shorter than the links */
   margin-top: var(--s-2);
   padding: var(--s-2) var(--s-4);
   border: 1px solid var(--hairline);
