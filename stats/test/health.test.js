@@ -16,7 +16,9 @@ test('health: ok within 1.5× cadence, stale after, broken when last_try > last_
 })
 
 test('health: tiktok is waiting until TIKTOK_CLIENT_KEY is configured; a manual source older than 7 days carries a nudge message', () => {
-  assert.equal(get({ status: [] }, 'tiktok').state, 'waiting')
+  const waiting = get({ status: [], manualLatest: { tiktok: '2026-11-08' } }, 'tiktok')
+  assert.deepEqual([waiting.state, waiting.message], ['waiting', 'typed in until TikTok approves'])
+  assert.equal(get({ status: [], manualLatest: { tiktok: '2026-11-01' } }, 'tiktok').message, 'typed in until TikTok approves · update')
   assert.equal(get({ status: [], configured: { tiktok: true } }, 'tiktok').state, 'manual')
   const old = get({ status: [], manualLatest: { apple: '2026-11-01' } }, 'apple')
   assert.deepEqual([old.state, old.message], ['manual', 'update'])

@@ -1,7 +1,7 @@
 // The dashboard's view model: stored readings in, one JSON object out. Reads only.
 import { series, latest, dims, events, getSetting, setSetting, syncStatus, latestRows, items } from './db.js'
 import { weekly, netWishlists, deleteRate4w, isAnomaly, pace, funnel, sinceLast, earningsThisMonth, engagementRate } from './derive.js'
-import { sourceHealth } from './health.js'
+import { sourceHealth, typedIsOld } from './health.js'
 import { CONNECTORS, MANUAL_SOURCES } from './sync.js'
 import { json } from './manual.js'
 
@@ -15,12 +15,12 @@ import { json } from './manual.js'
  *   health:{source:string, state:'ok'|'stale'|'broken'|'waiting'|'off'|'manual', since:string|null, message:string|null}[],
  *   events:{id:number, date:string, kind:string, text:string}[],
  *   overview:{
- *     since:{wishlists:number|null, subscribers:number|null},
+ *     since:{wishlists:number|null, subscribers:number|null, stale:boolean},  // null when nothing new arrived or the source is stale
  *     anomaly:{wishlists:boolean, deleteRate:boolean},
  *     tiles:{wishlists:Tile, newsletter:Tile, listeners:Tile},  // wishlists: last full week, delta = change vs the week before as a fraction; newsletter delta = subscribers gained in 7 days
  *     strip:{wishlists:Tile, itchViews:Tile, bandcampSales30d:Tile, youtubeViews28d:Tile,  // delta always null
  *            blueskyFollowers:Tile, instagramEngagement:Tile, tiktokFollowers:Tile, siteVisits30d:Tile},
- *     weekly:Week[]  // net wishlists, 12 weeks, the last one partial
+ *     weekly:Week[]  // net wishlists, 12 weeks, ending with the last full week
  *   },
  *   game:{total:Tile, deleteRate:Tile, conversion:Tile, pace:{reachDate:string|null, onTrack:boolean|null, launchDate:string|null},
  *         daily:Point[], utm:{source:string, visits:number|null, wishlists:number|null, conversion:number|null}[]},
@@ -115,7 +115,7 @@ async function gameTab(c) {
     net,
     lastWeeks: fullWeeks,
     anomaly: { wishlists: fullWeeks.every((v) => v != null) && isAnomaly(fullWeeks), deleteRate: rate != null && rate > 0.15 },
-    weekly: weekly(net, today),
+    weekly: weekly(net, lastFull),
     tab: {
       total: tile(totalNet, total(net.filter((p) => p.date > addDays(today, -7))), stale),
       deleteRate: tile(rate, rate != null && prevRate != null ? rate - prevRate : null, stale),
@@ -132,8 +132,8 @@ async function gameTab(c) {
 async function musicTab(c) {
   const [listeners, plays] = await Promise.all(['listeners_28d', 'plays_28d'].map((m) => typed(c.db, 'apple', m)))
   return {
-    listeners: tile(listeners.value, listeners.delta, false),
-    applePlays: tile(plays.value, plays.delta, false),
+    listeners: tile(listeners.value, listeners.delta, c.stale('apple')),
+    applePlays: tile(plays.value, plays.delta, c.stale('apple')),
     saveRate: tile(null, null, false),
     streamsPerListener: tile(null, null, false),
     streams: [],
@@ -199,7 +199,7 @@ async function socialTab(c) {
     clicks: refs.length ? clicks[p] ?? 0 : null,
   })))
   const present = (k) => platforms.map((p) => p[k]).filter((v) => v != null)
-  const autoStale = c.stale('youtube', 'bluesky', 'instagram')
+  const autoStale = c.stale('youtube', 'bluesky', 'instagram', 'tiktok', 'x')
 
   const videos = (await dims(db, { source: 'youtube', metric: 'views', from: from30, to: today })).filter((r) => r.dim)
   const posts = await Promise.all([
@@ -237,7 +237,7 @@ async function newsTab(c) {
       subscribers: tile(week.value, week.delta, stale),
       clickRate: tile(ratio(sum(sent.map((p) => stat('unique_clicks', p.id))), sum(sent.map((p) => stat('recipients', p.id)))), null, stale),
       openRate: tile(mean(opens), null, stale),
-      weekly: weekly(diffs(subs), today),
+      weekly: weekly(diffs(subs), addDays(mondayOf(today), -1)),
       sends: last5.map((p) => ({
         id: p.id, title: p.title, url: p.url, date: p.date,
         clickRate: ratio(stat('unique_clicks', p.id), stat('recipients', p.id)),
@@ -287,7 +287,9 @@ async function earningsTab(c) {
 export async function buildView(db, { now, env }) {
   const today = now.toISOString().slice(0, 10)
   const [lastSeen, health, allEvents] = await Promise.all([getSetting(db, 'last_seen'), buildHealth(db, env, now), events(db, { from: EPOCH, to: today })])
-  const bad = new Set(health.filter((h) => h.state === 'stale' || h.state === 'broken').map((h) => h.source))
+  // A typed source has no sync to go stale, so its newest entry's age stands in.
+  const typedOld = (h) => MANUAL_SOURCES.includes(h.source) && h.since && typedIsOld(h.since, now.getTime())
+  const bad = new Set(health.filter((h) => h.state === 'stale' || h.state === 'broken' || typedOld(h)).map((h) => h.source))
   const c = { db, today, from30: addDays(today, -29), stale: (...sources) => sources.some((s) => bad.has(s)) }
 
   const [game, music, social, news, site, earnings, itchViews, ytViews] = await Promise.all([
@@ -310,7 +312,12 @@ export async function buildView(db, { now, env }) {
     health,
     events: allEvents,
     overview: {
-      since: { wishlists: wish.delta, subscribers: subs.delta },
+      // A stale source's "since" would be a partial count read as the whole, so it is withheld.
+      since: {
+        wishlists: c.stale('steam') ? null : wish.delta,
+        subscribers: c.stale('beehiiv') ? null : subs.delta,
+        stale: c.stale('steam', 'beehiiv'),
+      },
       anomaly: game.anomaly,
       tiles: { wishlists: tile(lastWeek, growth(lastWeek, prevWeek), c.stale('steam')), newsletter: news.tab.subscribers, listeners: music.listeners },
       strip: {

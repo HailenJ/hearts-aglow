@@ -58,7 +58,10 @@ export function sinceLast(seriesBySource, lastSeen) {
   return seriesBySource.map(({ source, metric, kind, points }) => {
     let delta = null
     if (lastSeen) {
-      if (kind === 'flow') delta = sum(points.filter((p) => p.date > lastSeen))
+      if (kind === 'flow') {
+        const after = points.filter((p) => p.date > lastSeen)
+        if (after.length) delta = sum(after) // nothing new is no data, not 0
+      }
       else {
         const byDate = [...points].sort((x, y) => (x.date < y.date ? 1 : -1))
         const now = byDate[0]

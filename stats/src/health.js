@@ -3,6 +3,9 @@ import { MANUAL_SOURCES } from './sync.js'
 const HOUR = 3600e3
 const DAY = 24 * HOUR
 
+// A typed number past this age is stale: it is shown, but never as fresh.
+export const typedIsOld = (latest, now) => now - Date.parse(latest) > 7 * DAY
+
 // since = when the source last worked (or its newest manual reading).
 export function sourceHealth({ status, manualLatest = {}, connectors, now, configured = {} }) {
   const byName = Object.fromEntries(status.map((s) => [s.source, s]))
@@ -16,11 +19,12 @@ export function sourceHealth({ status, manualLatest = {}, connectors, now, confi
   })
   for (const source of MANUAL_SOURCES) {
     const latest = manualLatest[source] ?? null
+    const old = !latest || typedIsOld(latest, now)
     if (source === 'tiktok' && !configured.tiktok) {
-      out.push({ source, state: 'waiting', since: latest, message: 'waiting for TIKTOK_CLIENT_KEY' })
+      const message = 'typed in until TikTok approves'
+      out.push({ source, state: 'waiting', since: latest, message: old ? `${message} · update` : message })
       continue
     }
-    const old = !latest || now - Date.parse(latest) > 7 * DAY
     out.push({ source, state: 'manual', since: latest, message: old ? 'update' : null })
   }
   return out

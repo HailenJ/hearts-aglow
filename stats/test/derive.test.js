@@ -112,6 +112,11 @@ test('sinceLast: flow sums newer points, snapshot diffs against last seen, null 
   assert.ok(sinceLast(series, null).every((r) => r.delta === null))
 })
 
+test('sinceLast: a flow with no points after lastSeen is null, not 0', () => {
+  const [r] = sinceLast([{ source: 'steam', metric: 'net', kind: 'flow', points: [{ date: '2026-11-01', value: 5 }] }], '2026-11-02')
+  assert.equal(r.delta, null)
+})
+
 test('earnings keep currencies apart', () => {
   assert.deepEqual(earningsThisMonth([
     { source: 'bandcamp', currency: 'USD', cents: 500 },

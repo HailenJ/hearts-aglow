@@ -24,7 +24,7 @@ test('an empty database builds a view with nulls and empty series, and JSON.stri
   assert.deepEqual(v.game.pace, { reachDate: null, onTrack: null, launchDate: null })
   assert.deepEqual([v.overview.weekly, v.game.daily, v.game.utm, v.news.weekly, v.site.visits], [[], [], [], [], []])
   assert.deepEqual(v.site.funnel.map((s) => s.value), [null, null, null, null])
-  assert.deepEqual(v.overview.since, { wishlists: null, subscribers: null })
+  assert.deepEqual(v.overview.since, { wishlists: null, subscribers: null, stale: false })
   assert.equal(v.overview.anomaly.wishlists, false)
   assert.equal(v.music.listeners.value, null)
   assert.deepEqual(v.earnings.total, {})
@@ -44,7 +44,7 @@ test('since-last-visit sums only readings after lastSeen, separate from week-ove
   ])
   const v = await buildView(db, { now, env: {} })
   assert.equal(v.lastSeen, '2026-11-07T12:00:00.000Z')
-  assert.deepEqual(v.overview.since, { wishlists: 6, subscribers: 12 })
+  assert.deepEqual(v.overview.since, { wishlists: 6, subscribers: 12, stale: false })
   assert.equal(v.overview.tiles.wishlists.value, 8) // last full week, Nov 2–8
   assert.equal(v.game.total.value, 11)
 })
@@ -186,5 +186,55 @@ test('since-last-visit counts a reading dated the same UTC day as lastSeen, whic
     r('beehiiv', 'subscribers', '2026-11-09', 55),
   ])
   const v = await buildView(db, { now, env: {} })
-  assert.deepEqual(v.overview.since, { wishlists: 4, subscribers: 5 })
+  assert.deepEqual(v.overview.since, { wishlists: 4, subscribers: 5, stale: false })
+})
+
+test('since-last-visit is null, not 0, when nothing arrived after the visit', async () => {
+  const db = openTestDb()
+  await setSetting(db, 'last_seen', '2026-11-09T18:00:00.000Z')
+  await upsertReadings(db, [r('steam', 'wishlist_adds', '2026-11-05', 5)])
+  assert.equal((await buildView(db, { now, env: {} })).overview.since.wishlists, null)
+})
+
+test('since-last-visit is null and marked stale when its source is stale or broken', async () => {
+  const db = openTestDb()
+  await setSetting(db, 'last_seen', '2026-11-07T12:00:00.000Z')
+  await upsertReadings(db, [
+    r('steam', 'wishlist_adds', '2026-11-09', 4),
+    r('beehiiv', 'subscribers', '2026-11-06', 100),
+    r('beehiiv', 'subscribers', '2026-11-09', 112),
+  ])
+  await recordSync(db, ok('steam', '2026-11-07T12:00:00.000Z'))
+  await recordSync(db, ok('beehiiv'))
+  assert.deepEqual((await buildView(db, { now, env: {} })).overview.since, { wishlists: null, subscribers: 12, stale: true })
+})
+
+test('a typed number older than 7 days goes stale', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('apple', 'listeners_28d', '2026-11-01', 300),
+    r('tiktok', 'followers', '2026-11-02', 80),
+    r('x', 'followers', '2026-11-09', 40),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.equal(v.music.listeners.stale, true)
+  assert.equal(v.overview.tiles.listeners.stale, true)
+  assert.equal(v.overview.strip.tiktokFollowers.stale, true)
+  assert.equal(v.social.followers.stale, true)
+  const tiktok = v.health.find((h) => h.source === 'tiktok')
+  assert.deepEqual([tiktok.state, tiktok.message], ['waiting', 'typed in until TikTok approves · update'])
+})
+
+test('the weekly series ends at the last full week; the partial week is left out', async () => {
+  const db = openTestDb()
+  await upsertReadings(db, [
+    r('steam', 'wishlist_adds', '2026-11-03', 10),
+    r('steam', 'wishlist_adds', '2026-11-10', 1),
+    r('beehiiv', 'subscribers', '2026-11-03', 100),
+    r('beehiiv', 'subscribers', '2026-11-04', 105),
+    r('beehiiv', 'subscribers', '2026-11-10', 106),
+  ])
+  const v = await buildView(db, { now, env: {} })
+  assert.deepEqual(v.overview.weekly, [{ week: '2026-11-02', value: 10 }])
+  assert.deepEqual(v.news.weekly, [{ week: '2026-11-02', value: 5 }])
 })
