@@ -59,6 +59,10 @@ function validateSetting(body, today) {
 
 // now is injectable so tests don't depend on the clock
 const handle = (validate, store) => async (request, env, ctx, param, now = new Date()) => {
+  // A plain HTML form can't send application/json, so a cross-site form post stops here.
+  if (!request.headers.get('Content-Type')?.startsWith('application/json')) {
+    return json({ error: 'body must be application/json' }, 415)
+  }
   const body = await request.json().catch(() => undefined)
   if (body === undefined) return json({ error: 'body must be valid JSON' }, 400)
   const v = validate(body, now.toISOString().slice(0, 10))

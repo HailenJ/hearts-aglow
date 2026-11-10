@@ -5,7 +5,9 @@ import { getSetting, setSetting, series, events } from '../src/db.js'
 import { manualRoute, logRoute, settingsRoute } from '../src/manual.js'
 
 const now = new Date('2026-11-10T09:00:00Z')
-const post = (body) => new Request('https://x/api', { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) })
+const post = (body) => new Request('https://x/api', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body),
+})
 const call = (route, db, body) => route(post(body), { DB: db }, null, undefined, now)
 const count = async (db, t) => (await db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).first()).n
 

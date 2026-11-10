@@ -44,3 +44,12 @@ test('POST /api/sync runs the sync and returns each source\'s result', async (t)
   assert.equal((await worker.fetch(post('/api/sync', { site: 'cross-site' }), env())).status, 403)
   assert.equal((await worker.fetch(new Request('https://stats.heartsaglow.io/api/sync'), env())).status, 404)
 })
+
+// workerd gives a bodiless POST a non-null, empty body; Node's Request does not, so build it that way.
+test('the page\'s bodiless POSTs (seen, sync) pass even with an empty body stream', async () => {
+  for (const [path, status] of [['/api/seen', 204], ['/api/sync', 200]]) {
+    const req = new Request('https://stats.heartsaglow.io' + path, { method: 'POST', body: '', headers: { 'Sec-Fetch-Site': 'same-origin' } })
+    assert.notEqual(req.body, null)
+    assert.equal((await worker.fetch(req, env())).status, status)
+  }
+})

@@ -24,14 +24,11 @@ export default {
   async fetch(request, env, ctx) {
     if (!(await verifyAccess(request, env))) return new Response('Forbidden', { status: 403 })
 
-    // Access cookies ride along on cross-site requests, so writes must come from this page:
-    // browsers send Sec-Fetch-Site, and a plain form can't post application/json.
-    if (!['GET', 'HEAD'].includes(request.method)) {
-      const site = request.headers.get('Sec-Fetch-Site')
-      if (site && site !== 'same-origin') return new Response('Forbidden', { status: 403 })
-      if (request.body && !request.headers.get('Content-Type')?.startsWith('application/json')) {
-        return json({ error: 'body must be application/json' }, 415)
-      }
+    // Access cookies ride along on cross-site requests, so writes must come from this page.
+    // Routes that read a JSON body also require its content type (see manual.js).
+    const site = request.headers.get('Sec-Fetch-Site')
+    if (!['GET', 'HEAD'].includes(request.method) && site && site !== 'same-origin') {
+      return new Response('Forbidden', { status: 403 })
     }
 
     const { pathname } = new URL(request.url)
