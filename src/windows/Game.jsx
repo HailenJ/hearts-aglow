@@ -73,6 +73,12 @@ export default function Game({ game }) {
           {wishlist ? 'Wishlist on Steam →' : 'Get it →'}
         </a>
       )}
+
+      {game?.links?.map(b => (
+        <a key={b.url} className="game__store" href={b.url} target="_blank" rel="noopener noreferrer">
+          {b.label} →
+        </a>
+      ))}
     </div>
   )
 }

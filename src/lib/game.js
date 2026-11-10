@@ -37,5 +37,8 @@ export function asGame(g) {
     keyArt: g?.image ?? '',
     storeUrl: g?.url ?? '',
     trailer: youtubeId(g?.videoUrl),
+    // The Studio's Additional Buttons. One repeating the store link is dropped:
+    // that link already shows, labelled as a wishlist.
+    links: (g?.buttons ?? []).filter(b => b?.label && b?.url && b.url !== g?.url),
   }
 }

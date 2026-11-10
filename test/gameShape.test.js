@@ -23,12 +23,13 @@ test('a games-grid card maps onto the shape the takeover reads', () => {
     keyArt: 'https://cdn.sanity.io/images/x/y-1920x1080.png',
     storeUrl: '',
     trailer: '',
+    links: [],
   })
 })
 
 test('asGame fills every field, so no consumer reads undefined', () => {
   const g = asGame(undefined)
-  assert.deepEqual(Object.keys(g).sort(), ['keyArt', 'logline', 'status', 'storeUrl', 'title', 'trailer', 'year'])
+  assert.deepEqual(Object.keys(g).sort(), ['keyArt', 'links', 'logline', 'status', 'storeUrl', 'title', 'trailer', 'year'])
   assert.equal(g.status, 'in development')
   assert.equal(g.keyArt, '')
 })
@@ -62,4 +63,10 @@ test('a Steam link is a wishlist until the game is released', () => {
   assert.equal(isWishlist(asGame({ url: steam, status: 'development' })), true)
   assert.equal(isWishlist(asGame({ url: steam, status: 'released' })), false)
   assert.equal(isWishlist(asGame({ url: 'https://heartsaglow.itch.io/x' })), false)
+})
+
+test('Additional Buttons pass through, minus a repeat of the store link', () => {
+  const steam = 'https://store.steampowered.com/app/4433980/OTO/'
+  const g = asGame({ url: steam, buttons: [{ label: 'Steam', url: steam }, { label: 'Itch.io', url: 'https://heartsaglow.itch.io/oto' }, { label: 'Empty' }] })
+  assert.deepEqual(g.links, [{ label: 'Itch.io', url: 'https://heartsaglow.itch.io/oto' }])
 })

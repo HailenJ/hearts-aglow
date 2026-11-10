@@ -320,6 +320,11 @@ function Works({ musicReleases, games, software, onPlay, onOpenGame, activeTab, 
                     {isWishlist(g) ? 'Wishlist on Steam' : 'Get it'}{' '}<span aria-hidden="true">&#8599;</span>
                   </a>
                 )}
+                {g.links.map(b => (
+                  <a key={b.url} className="works__solo-action" href={b.url} target="_blank" rel="noopener noreferrer">
+                    {b.label}{' '}<span aria-hidden="true">&#8599;</span>
+                  </a>
+                ))}
                 <a className="works__solo-action" href={NEWSLETTER_URL} target="_blank" rel="noopener noreferrer">
                   Hear when it ships
                 </a>

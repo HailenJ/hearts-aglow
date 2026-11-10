@@ -24,6 +24,7 @@ const ALL_CONTENT_QUERY = `{
     url,
     featured,
     videoUrl,
+    buttons[]{ label, url },
     "image": artwork.asset->url
   },
   "software": *[_type == "software"] | order(year desc) {
