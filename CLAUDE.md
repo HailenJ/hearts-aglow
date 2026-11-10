@@ -26,3 +26,7 @@ This is a personal portfolio site (heartsaglow.io) built as a **single-page Reac
 ## Deployment
 
 `git push origin main` is the whole deploy. `.github/workflows/deploy.yml` builds once and publishes to both GitHub Pages and the Namecheap host — a cutover still in progress, so the live site never depends on the new path. Custom domain `heartsaglow.io` (see CNAME); the Vite base path is `/` because the domain serves from root. Never commit `dist/`.
+
+## Stats dashboard
+
+`stats/` is a separate, private Cloudflare Worker (stats.heartsaglow.io, behind Cloudflare Access) that syncs numbers from Steam, itch, YouTube, Instagram, beehiiv, GoatCounter and Bluesky into D1 once a day and serves a small dashboard. It has its own `package.json` and tests (`npm --prefix stats test`) and never touches the public build. `.github/workflows/stats.yml` deploys it on pushes to `main` that change `stats/**`, and skips the deploy until the `CLOUDFLARE_API_TOKEN` secret exists. One-time setup is in `docs/stats-setup.md`.
